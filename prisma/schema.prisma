@@ -1,0 +1,147 @@
+// TradeFlow — production Prisma schema
+// Models cover authentication (NextAuth/Auth.js), the user account itself,
+// and the paper-trading domain (wallet, positions, orders).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Auth.js core ────────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Domain ──────────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  name           String?
+  email          String   @unique
+  emailVerified  DateTime?
+  hashedPassword String?
+  image          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  accounts  Account[]
+  sessions  Session[]
+  wallet    PaperWallet?
+  positions PaperPosition[]
+  orders    PaperOrder[]
+}
+
+model PaperWallet {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  balance   Decimal  @default(10000) @db.Decimal(20, 8)
+  currency  String   @default("USDT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum OrderSide {
+  LONG
+  SHORT
+}
+
+enum PositionStatus {
+  OPEN
+  CLOSED
+}
+
+model PaperPosition {
+  id         String         @id @default(cuid())
+  userId     String
+  symbol     String
+  side       OrderSide
+  quantity   Decimal        @db.Decimal(20, 8)
+  entryPrice Decimal        @db.Decimal(20, 8)
+  exitPrice  Decimal?       @db.Decimal(20, 8)
+  takeProfit Decimal?       @db.Decimal(20, 8)
+  stopLoss   Decimal?       @db.Decimal(20, 8)
+  pnl        Decimal        @default(0) @db.Decimal(20, 8)
+  status     PositionStatus @default(OPEN)
+  createdAt  DateTime       @default(now())
+  closedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([symbol])
+}
+
+enum OrderType {
+  MARKET
+  LIMIT
+  STOP
+  STOP_LIMIT
+}
+
+enum OrderStatus {
+  PENDING
+  FILLED
+  CANCELLED
+  REJECTED
+}
+
+model PaperOrder {
+  id         String      @id @default(cuid())
+  userId     String
+  symbol     String
+  orderType  OrderType
+  side       OrderSide
+  quantity   Decimal     @db.Decimal(20, 8)
+  price      Decimal?    @db.Decimal(20, 8)
+  takeProfit Decimal?    @db.Decimal(20, 8)
+  stopLoss   Decimal?    @db.Decimal(20, 8)
+  status     OrderStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+  filledAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([symbol])
+}
