@@ -54,29 +54,39 @@ model VerificationToken {
 // ─── Domain ──────────────────────────────────────────────────────────────────
 
 model User {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   name           String?
-  email          String   @unique
+  email          String    @unique
   emailVerified  DateTime?
   hashedPassword String?
   image          String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  accounts  Account[]
-  sessions  Session[]
-  wallet    PaperWallet?
-  positions PaperPosition[]
-  orders    PaperOrder[]
+  accounts     Account[]
+  sessions     Session[]
+  wallet       PaperWallet?
+  positions    PaperPosition[]
+  orders       PaperOrder[]
+  tradeHistory TradeHistory[]
 }
 
+/// Binance-Futures style wallet.
+/// - `balance` = walletBalance, the cleared/realised cash. It mutates ONLY on
+///   position settlement (realizedPnL added/subtracted). Opening a position
+///   does NOT change `balance` — it only reserves margin via `usedMargin`.
+/// - `usedMargin` = sum of `PaperPosition.marginUsed` across all currently-
+///   open positions. Available balance is therefore `balance - usedMargin`.
+/// - Total equity = `balance + Σ unrealizedPnL across open positions` (computed
+///   live from market marks, never stored on the wallet row).
 model PaperWallet {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  balance   Decimal  @default(10000) @db.Decimal(20, 8)
-  currency  String   @default("USDT")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  balance    Decimal  @default(60000) @db.Decimal(20, 8)
+  usedMargin Decimal  @default(0) @db.Decimal(20, 8)
+  currency   String   @default("USDT")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -88,25 +98,74 @@ enum OrderSide {
 
 enum PositionStatus {
   OPEN
+  PARTIALLY_CLOSED
   CLOSED
+  STOP_LOSS_HIT
+  TAKE_PROFIT_HIT
+  EXPIRED
+  LIQUIDATED
 }
 
-model PaperPosition {
-  id         String         @id @default(cuid())
-  userId     String
-  symbol     String
-  side       OrderSide
-  quantity   Decimal        @db.Decimal(20, 8)
-  entryPrice Decimal        @db.Decimal(20, 8)
-  exitPrice  Decimal?       @db.Decimal(20, 8)
-  takeProfit Decimal?       @db.Decimal(20, 8)
-  stopLoss   Decimal?       @db.Decimal(20, 8)
-  pnl        Decimal        @default(0) @db.Decimal(20, 8)
-  status     PositionStatus @default(OPEN)
-  createdAt  DateTime       @default(now())
-  closedAt   DateTime?
+enum CloseReason {
+  MANUAL
+  STOP_LOSS
+  TAKE_PROFIT
+  EXPIRED
+  LIQUIDATED
+  AI_EXIT
+}
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum DecisionSource {
+  MANUAL
+  RULE
+  LLM
+}
+
+/// Perpetual-futures style paper position.
+///
+/// Accounting:
+///   - On open: `marginUsed = (initialQuantity * entryPrice) / leverage` is
+///     reserved on the wallet (`PaperWallet.usedMargin += marginUsed`); the
+///     wallet `balance` itself is NOT mutated.
+///   - While open: `unrealizedPnl` is the last mark-to-market snapshot. Live
+///     UI prefers recomputing from the current tick — this column is for
+///     post-mortem queries on closed rows.
+///   - On (full or partial) close: settlement is a *single* atomic step that
+///     adds `realizedPnl` to wallet `balance` and releases the proportional
+///     margin from `usedMargin`. The status guard in the update WHERE clause
+///     prevents double-settlement.
+///
+/// `walletBalanceSnapshot` is captured at open for audit / equity-curve
+/// reconstruction; `liquidationPrice` is informational only (the simulator
+/// does not currently force-liquidate, but it shows users the risk band).
+model PaperPosition {
+  id                    String         @id @default(cuid())
+  userId                String
+  symbol                String
+  side                  OrderSide
+  initialQuantity       Decimal        @db.Decimal(20, 8)
+  quantity              Decimal        @db.Decimal(20, 8)
+  entryPrice            Decimal        @db.Decimal(20, 8)
+  exitPrice             Decimal?       @db.Decimal(20, 8)
+  takeProfit            Decimal?       @db.Decimal(20, 8)
+  stopLoss              Decimal?       @db.Decimal(20, 8)
+  leverage              Int            @default(1)
+  marginUsed            Decimal        @default(0) @db.Decimal(20, 8)
+  liquidationPrice      Decimal?       @db.Decimal(20, 8)
+  walletBalanceSnapshot Decimal?       @db.Decimal(20, 8)
+  realizedPnl           Decimal        @default(0) @db.Decimal(20, 8)
+  unrealizedPnl         Decimal        @default(0) @db.Decimal(20, 8)
+  totalFees             Decimal        @default(0) @db.Decimal(20, 8)
+  status                PositionStatus @default(OPEN)
+  closeReason           CloseReason?
+  decisionSource        DecisionSource @default(MANUAL)
+  /// Free-form audit trail: LLM model name, rule signal type, etc.
+  decisionMeta          String?
+  createdAt             DateTime       @default(now())
+  closedAt              DateTime?
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history TradeHistory[]
 
   @@index([userId, status])
   @@index([symbol])
@@ -127,21 +186,53 @@ enum OrderStatus {
 }
 
 model PaperOrder {
-  id         String      @id @default(cuid())
-  userId     String
-  symbol     String
-  orderType  OrderType
-  side       OrderSide
-  quantity   Decimal     @db.Decimal(20, 8)
-  price      Decimal?    @db.Decimal(20, 8)
-  takeProfit Decimal?    @db.Decimal(20, 8)
-  stopLoss   Decimal?    @db.Decimal(20, 8)
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
-  filledAt   DateTime?
+  id             String         @id @default(cuid())
+  userId         String
+  symbol         String
+  orderType      OrderType
+  side           OrderSide
+  quantity       Decimal        @db.Decimal(20, 8)
+  price          Decimal?       @db.Decimal(20, 8)
+  filledPrice    Decimal?       @db.Decimal(20, 8)
+  takeProfit     Decimal?       @db.Decimal(20, 8)
+  stopLoss       Decimal?       @db.Decimal(20, 8)
+  status         OrderStatus    @default(PENDING)
+  decisionSource DecisionSource @default(MANUAL)
+  /**
+   * Free-form audit trail: LLM model name, rule signal type, etc.
+   */
+  decisionMeta   String?
+  expiresAt      DateTime?
+  createdAt      DateTime       @default(now())
+  filledAt       DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, status])
   @@index([symbol])
+}
+
+model TradeHistory {
+  id             String         @id @default(cuid())
+  userId         String
+  positionId     String
+  symbol         String
+  side           OrderSide
+  quantity       Decimal        @db.Decimal(20, 8)
+  entryPrice     Decimal        @db.Decimal(20, 8)
+  exitPrice      Decimal        @db.Decimal(20, 8)
+  pnl            Decimal        @db.Decimal(20, 8)
+  closeReason    CloseReason
+  decisionSource DecisionSource @default(MANUAL)
+  openedAt       DateTime
+  closedAt       DateTime       @default(now())
+  durationMs     Int
+  riskReward     Float?
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  position PaperPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([userId, closedAt])
+  @@index([symbol])
+  @@index([positionId])
 }

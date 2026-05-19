@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Term Structure Effect in Commodities",
+  "Category": "Commodity Strategy / Carry",
+  "Asset Class": "Commodities",
+  "Market Type": "Global",
+  "Strategy Description": "A strategy that exploits the roll yield in commodity futures by buying backwardated contracts and shorting contangoed contracts.",
+  "Core Logic": "Commodity futures prices depend on the net positions of hedgers; speculators earn a return for taking on price fluctuation risk.",
+  "Entry Conditions": "Buy the 20% of commodities with the highest roll-returns and short the 20% with the lowest.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "Roll Yield / Term Spread.",
+  "Risk Management Rules": "Equal weighting in each quintile; monthly rebalancing.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Unrelated to S&P500; offers diversification for equity portfolios.",
+  "Volatility Considerations": "Estimated volatility of 23.84%; high drawdown potential (-78.06%).",
+  "Momentum/Mean Reversion Classification": "Carry / Term Structure",
+  "Performance Metrics": {
+    "CAGR": "11.73%",
+    "Sharpe Ratio": "0.49",
+    "Max Drawdown": "-78.06%"
+  },
+  "Win Rate": "55%",
+  "Source URL": "https://quantpedia.com/strategies/term-structure-effect-in-commodities",
+  "Full Notes": "Based on Keynes (1930) and Cootner (1960). Term-structure strategies often have higher reward-to-risk than passive benchmarks.",
+  "Mathematical/Statistical Concepts": "Backwardation, Contango, Roll Yield, Principal Component Analysis."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Combining Smart Factors, Momentum and Market Portfolio",
+  "Category": "Factor Investing, Momentum, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A dynamic strategy that blends factor momentum (Value, Quality, Momentum, Size, Volatility) with a market portfolio based on relative past performance.",
+  "Core Logic": "Factor strategies and the market portfolio are negatively correlated. Combining them using a 'winning' moving average rule optimizes the return/risk profile.",
+  "Entry Conditions": "Calculate 1-month (fast) and 12-month (slow) momentum for factors. Rank factors by signal strength. Combine factors with the market portfolio (top 1500 US stocks) based on which has more 'winning' moving averages over the past 12 months.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Alpha Architect's Factor Investing Data, 1-month and 12-month returns, 12-month moving averages.",
+  "Risk Management Rules": "Dynamic weighting based on signal ranks and moving average performance comparison.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-short for factors, combined with a long market portfolio.",
+  "Market Regime Suitability": "Partially; minimizes drawdowns during market downturns by allocating more to factors.",
+  "Volatility Considerations": "Estimated volatility is 10.46%; the combination significantly lowers volatility compared to individual components.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 3.54% (indicative 11.91%), Sharpe Ratio: 0.1 (indicative 1.14), Max Drawdown: 12%",
+  "Win Rate (if available)": "58%",
+  "Source URL": "https://quantpedia.com/strategies/combining-smart-factors-momentum-and-market-portfolio",
+  "Full Notes": "The 'Smart Factor' strategy alone is often beaten by the market, but the combination is superior due to negative correlation.",
+  "Mathematical/Statistical Concepts": "Time-series and cross-sectional momentum, Moving averages, Dynamic rank-based weighting."
+}

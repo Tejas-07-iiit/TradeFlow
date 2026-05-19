@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Momentum Factor Effect in REITs",
+  "Category": "Momentum, Stock Picking, Factor Investing",
+  "Asset Class": "REITs",
+  "Market Type": "United States",
+  "Strategy Description": "Applies the momentum anomaly to the universe of Real Estate Investment Trusts (REITs), where past winners continue to outperform.",
+  "Core Logic": "Behavioral biases like herding and under-reaction to news create persistence in REIT returns.",
+  "Entry Conditions": "Rank all US REITs by past 11-month return (lagged one month). Go long the best performing tercile.",
+  "Exit Conditions": "3-month holding period.",
+  "Indicators Used": "11-month past return (lagged 1 month).",
+  "Risk Management Rules": "Equal weighting; tercile grouping; monthly rebalancing of 1/3 of the portfolio.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long only (though can be implemented as Long/Short).",
+  "Market Regime Suitability": "Strong exposure to equity market risk; not suitable as a hedge.",
+  "Volatility Considerations": "Momentum returns in REITs are higher when volatility is higher. Losers have higher idiosyncratic risk.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 9.51%, Sharpe Ratio: Not stated, Max Drawdown: -55.36%",
+  "Win Rate (if available)": "Not stated",
+  "Source URL": "https://quantpedia.com/strategies/momentum-factor-effect-in-reits",
+  "Full Notes": "Recent studies suggest the REIT momentum effect may be dissipating or subsumed by earnings drift.",
+  "Mathematical/Statistical Concepts": "Behavioral biases, GARCH-in-mean model, idiosyncratic volatility."
+}

@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Short Term Reversal in Stocks",
+  "Category": "Mean Reversion",
+  "Asset Class": "Equities",
+  "Market Type": "Global / US",
+  "Strategy Description": "A strategy that exploits the tendency of stocks with low returns over the past week/month to earn positive abnormal returns in the following period.",
+  "Core Logic": "Investor overreaction to past information leads to a short-term correction.",
+  "Entry Conditions": "Go long the 10 stocks with the lowest performance in the previous week and short the 10 with the greatest performance in the prior month.",
+  "Exit Conditions": "Rebalance weekly.",
+  "Indicators Used": "1-week and 1-month Price Performance.",
+  "Risk Management Rules": "Focus on large-cap stocks to reduce transaction costs; strict risk management during high volatility.",
+  "Timeframe": "Weekly",
+  "Rebalancing Frequency": "Weekly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Liquidity providing; performs well during market crises and weeks following large declines.",
+  "Volatility Considerations": "Estimated volatility of 14.94%; high drawdown potential (-52.94%).",
+  "Momentum/Mean Reversion Classification": "Mean Reversion",
+  "Performance Metrics": {
+    "CAGR": "16.25%",
+    "Sharpe Ratio": "1.09",
+    "Max Drawdown": "-52.94%"
+  },
+  "Win Rate": "45%",
+  "Source URL": "https://quantpedia.com/strategies/short-term-reversal-in-stocks",
+  "Full Notes": "Documented by DeBondt and Thaler. Net profits are significant among large-cap stocks where transaction costs are lower.",
+  "Mathematical/Statistical Concepts": "Overreaction, Liquidity Provision, Mean Reversion."
+}

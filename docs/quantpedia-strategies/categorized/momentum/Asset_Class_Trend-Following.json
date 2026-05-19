@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Asset Class Trend-Following",
+  "Category": "Tactical Asset Allocation",
+  "Asset Class": "Equities, Bonds, Commodities, REITs",
+  "Market Type": "Global",
+  "Strategy Description": "A market timing strategy that uses moving averages to gain exposure to asset classes only when they are in an uptrend, aiming to reduce volatility and drawdowns compared to passive buy-and-hold.",
+  "Core Logic": "Uses a 10-month Simple Moving Average (SMA) as a trend filter to switch between risky assets and risk-free investments (cash).",
+  "Entry Conditions": "Invest in an asset class ETF when its current price is above its 10-month Simple Moving Average.",
+  "Exit Conditions": "Exit the asset class and move to cash when its price falls below its 10-month Simple Moving Average.",
+  "Indicators Used": "10-month Simple Moving Average (SMA).",
+  "Risk Management Rules": "Binary investment decision (in or out); diversification across 5 major asset classes; exit to cash during downtrends.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (or cash).",
+  "Market Regime Suitability": "Performs well in trending markets; designed to avoid major bear markets and reduce tail risk.",
+  "Volatility Considerations": "Significantly reduces volatility and drawdowns compared to equities; achieves equity-like returns with bond-like volatility.",
+  "Momentum/Mean Reversion Classification": "Momentum / Trend-Following",
+  "Performance Metrics": {
+    "CAGR": "11.27%",
+    "Sharpe Ratio": "1.06",
+    "Max Drawdown": "-29.43%"
+  },
+  "Win Rate": "84%",
+  "Source URL": "https://quantpedia.com/strategies/asset-class-trend-following",
+  "Full Notes": "Popularized by Mebane Faber in 'A Quantitative Approach to Tactical Asset Allocation'. The strategy is robust across various markets and can be modified with risk parity weighting.",
+  "Mathematical/Statistical Concepts": "Simple Moving Average, Trend Following, Tactical Asset Allocation."
+}

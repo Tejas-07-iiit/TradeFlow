@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Payday Anomaly",
+  "Category": "Market Timing, Seasonality",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A market timing strategy that buys the S&P 500 index on the 16th day of each month to capture the payday-driven investment flow.",
+  "Core Logic": "Many companies pay employees on the 15th. Retirement contributions are processed and invested in the market on the following day (the 16th), creating upward pressure.",
+  "Entry Conditions": "Buy the S&P 500 index at the end of the 15th day (or start of the 16th).",
+  "Exit Conditions": "Hold the index during the 16th day and exit at the close.",
+  "Indicators Used": "Calendar day (16th of the month).",
+  "Risk Management Rules": "Long-only; timing the equity market factor for a single day.",
+  "Timeframe": "Intraday (1 day per month).",
+  "Rebalancing Frequency": "Daily (effectively monthly).",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Not a hedge; timing the equity market factor, so it remains exposed to broad market risk during the holding period.",
+  "Volatility Considerations": "Estimated Volatility: 4.31%.",
+  "Momentum/Mean Reversion Classification": "Seasonality / Market Timing.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 2.57%, Sharpe Ratio: 0.6, Max Drawdown: -12.06%.",
+  "Win Rate (if available)": "58% (QuantConnect OOS).",
+  "Source URL": "https://quantpedia.com/strategies/payday-anomaly",
+  "Full Notes": "The 16th day is statistically the 3rd best day of the month. The effect is linked to semi-monthly pay schedules.",
+  "Mathematical/Statistical Concepts": "Calendar effects, Seasonality, Market microstructure."
+}

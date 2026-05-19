@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Momentum and Reversal Combined with Volatility Effect in Stocks",
+  "Category": "Momentum, Stock Picking, Volatility Effect",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "Enhances momentum returns by focusing on high-volatility large-cap stocks, where information uncertainty intensifies return continuation.",
+  "Core Logic": "Large-cap/high-volatility stocks exhibit momentum, while large-cap/low-volatility stocks exhibit reversals.",
+  "Entry Conditions": "Filter for large-cap stocks (above size median). Rank by 6-month realized return and 6-month realized volatility. Long the highest performing quintile from the highest volatility group; Short the lowest performing quintile from the highest volatility group.",
+  "Exit Conditions": "6-month holding period.",
+  "Indicators Used": "6-month realized return, 6-month realized volatility.",
+  "Risk Management Rules": "Equal weighting; size median filter; price > $5; 1/6 of portfolio rebalanced monthly.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Unknown; long leg is equity-correlated, short leg may provide partial hedge.",
+  "Volatility Considerations": "Specifically targets high-volatility stocks to capture stronger momentum effects.",
+  "Momentum/Mean Reversion Classification": "Momentum (in high vol) / Reversal (in low vol)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 16.46% (Indicative), Sharpe Ratio: 0.65 (Indicative), Max Drawdown: -36.59%",
+  "Win Rate (if available)": "50%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-and-reversal-combined-with-volatility-effect-in-stocks",
+  "Full Notes": "Skips one week prior to rebalancing to avoid microstructure biases. Works well within the large-cap universe.",
+  "Mathematical/Statistical Concepts": "Information uncertainty, behavioral under-reaction, realized volatility, quintile sorting."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Return Asymmetry Effect in Commodity Futures",
+  "Category": "Commodities, Smart Beta, Market Factors",
+  "Asset Class": "Commodities",
+  "Market Type": "Futures",
+  "Strategy Description": "A long-short strategy in commodity futures based on a distribution-based asymmetry measure (IE).",
+  "Core Logic": "Investors overvalue assets with high upside potential (high IE) and undervalue those with high downside potential. Going long on low IE and short on high IE commodities captures this mispricing.",
+  "Entry Conditions": "Calculate IE = (days return > avg + 2std) - (days return < avg - 2std) over the last 260 days for 22 commodity futures. Long the bottom 7 (lowest IE) and short the top 7 (highest IE).",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Daily returns, Standard deviation, IE measure.",
+  "Risk Management Rules": "Equally weighted; uses a universe of 22 liquid commodity futures.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long bottom 7, short top 7 of IE ranking.",
+  "Market Regime Suitability": "Yes; serves as a hedge for stocks due to negative correlation with the S&P 500.",
+  "Volatility Considerations": "Estimated volatility is 7.53%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion/Asymmetry",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 3.85% (indicative 4.36%), Sharpe Ratio: 0.1 (indicative 0.58), Max Drawdown: 48% (indicative -47.55%)",
+  "Win Rate (if available)": "51%",
+  "Source URL": "https://quantpedia.com/strategies/return-asymmetry-effect-in-commodity-futures",
+  "Full Notes": "The asymmetry effect is distinct from the skewness effect, providing additional diversification benefits.",
+  "Mathematical/Statistical Concepts": "Distribution-based asymmetry (IE), Empirical distribution, Standard deviation thresholds."
+}

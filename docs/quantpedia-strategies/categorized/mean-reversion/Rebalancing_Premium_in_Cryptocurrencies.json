@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Rebalancing Premium in Cryptocurrencies",
+  "Category": "Crypto, Diversification",
+  "Asset Class": "Crypto",
+  "Market Type": "Crypto",
+  "Strategy Description": "A strategy that captures the 'rebalancing premium' by going long a daily rebalanced crypto portfolio and shorting a buy-and-hold (drifting) portfolio.",
+  "Core Logic": "Periodic rebalancing of volatile, uncorrelated assets forces selling of winners and buying of losers, earning a diversification return that buy-and-hold strategies miss.",
+  "Entry Conditions": "Create two portfolios of 27 cryptos. Portfolio 1 is daily rebalanced to equal weights. Portfolio 2 is buy-and-hold (weights drift). Long Portfolio 1 and short Portfolio 2 with 70% weight.",
+  "Exit Conditions": "Daily rebalancing of the long-short ratio.",
+  "Indicators Used": "Daily prices of 27 cryptocurrencies.",
+  "Risk Management Rules": "70% short weight to mitigate crypto market volatility; uses Bitfinex for broad crypto coverage.",
+  "Timeframe": "Daily",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long rebalanced portfolio, short buy-and-hold portfolio.",
+  "Market Regime Suitability": "Unknown; risks are lower than long-only crypto due to the short position.",
+  "Volatility Considerations": "Estimated volatility is 2.62% (indicative); rebalancing significantly lowers variance.",
+  "Momentum/Mean Reversion Classification": "Rebalancing/Mean Reversion",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 10.12% (indicative 7.65%), Sharpe Ratio: 0.4 (indicative 2.93), Max Drawdown: 56% (indicative -99.99%)",
+  "Win Rate (if available)": "45%",
+  "Source URL": "https://quantpedia.com/strategies/rebalancing-premium-in-cryptocurrencies",
+  "Full Notes": "The strategy relies on the proposition that no single asset consistently outperforms the others. BTG is often excluded due to data issues.",
+  "Mathematical/Statistical Concepts": "Rebalancing premium, Diversification return, Variance reduction, Portfolio drift."
+}

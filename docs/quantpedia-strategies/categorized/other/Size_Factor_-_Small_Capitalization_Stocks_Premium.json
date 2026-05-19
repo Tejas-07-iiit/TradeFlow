@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Size Factor - Small Capitalization Stocks Premium",
+  "Category": "Factor Investing / Size",
+  "Asset Class": "Equities",
+  "Market Type": "US",
+  "Strategy Description": "A strategy that exploits the 'size effect' by investing in stocks with low market capitalization, which historically earn premiums over large-cap stocks.",
+  "Core Logic": "Small companies have more space to grow and higher flexibility, but also higher illiquidity and risk.",
+  "Entry Conditions": "Form decile portfolios based on market cap; go long the lowest decile (small) and short the highest decile (big).",
+  "Exit Conditions": "Rebalance yearly.",
+  "Indicators Used": "Market Capitalization.",
+  "Risk Management Rules": "Yearly rebalancing; can be implemented as long-only to avoid disastrous drawdowns.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long/Short (standard) or Long-only.",
+  "Market Regime Suitability": "Performs poorly leading up to crises; performs well after economic crises.",
+  "Volatility Considerations": "Estimated volatility of 25.6%; high drawdown potential (-39.68%).",
+  "Momentum/Mean Reversion Classification": "Size / Factor",
+  "Performance Metrics": {
+    "CAGR": "6.1%",
+    "Sharpe Ratio": "0.24",
+    "Max Drawdown": "-39.68%"
+  },
+  "Win Rate": "44%",
+  "Source URL": "https://quantpedia.com/strategies/small-capitalization-stocks-premium-anomaly",
+  "Full Notes": "Documented by Fama and French (1993). The effect is dismantled when controlling for 'junk' (quality).",
+  "Mathematical/Statistical Concepts": "Size Effect, SMB (Small Minus Big), Decile Ranking."
+}

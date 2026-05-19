@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Paired Switching",
+  "Category": "Momentum, Asset Class Picking, Rotational System, Market Timing, Fund Picking",
+  "Asset Class": "Equities, Bonds",
+  "Market Type": "ETFs, Funds, Stocks",
+  "Strategy Description": "A rotational strategy that switches between two negatively correlated assets (e.g., stocks and bonds) based on their relative performance over a recent period.",
+  "Core Logic": "Exploits the negative correlation between asset classes by holding the one with the strongest recent momentum, aiming to improve risk-adjusted returns over a static mix.",
+  "Entry Conditions": "Compare the performance of two assets (e.g., VFINX equity fund and VUSTX bond fund) over the prior quarter. Buy the asset with the higher return.",
+  "Exit Conditions": "Hold for one quarter and repeat the comparison.",
+  "Indicators Used": "Relative performance (prior quarter return).",
+  "Risk Management Rules": "Quarterly rebalancing; rotation into defensive assets during equity stress.",
+  "Timeframe": "Quarterly",
+  "Rebalancing Frequency": "Quarterly",
+  "Long/Short Logic": "Long-only (Rotational).",
+  "Market Regime Suitability": "Partially suitable as a hedge; tactical allocation rotates out of equities during stress.",
+  "Volatility Considerations": "Estimated volatility: 9.3%.",
+  "Momentum/Mean Reversion Classification": "Momentum (Relative Strength)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 11.3%, Sharpe Ratio: 0.78, Max Drawdown: -18.41%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/paired-switching",
+  "Full Notes": "Simple criteria for switching can lead to lower volatility without significant return penalties. Works well with passive ETFs.",
+  "Mathematical/Statistical Concepts": "Negative correlation, Relative pricing, Relative volatility, Trend following."
+}

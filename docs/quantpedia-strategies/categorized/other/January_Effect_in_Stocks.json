@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "January Effect in Stocks",
+  "Category": "Equities, Seasonality, Stock Picking",
+  "Asset Class": "ETFs, Funds, Futures, CFDs",
+  "Market Type": "Global, Equities",
+  "Strategy Description": "A well-known anomaly where small-cap stocks tend to perform exceptionally well during the month of January compared to other months.",
+  "Core Logic": "Attributed to tax-loss selling; individual investors sell small-cap losers in December to claim capital losses and reinvest in January, driving prices up.",
+  "Entry Conditions": "Invest in small-cap stocks at the beginning of January.",
+  "Exit Conditions": "Switch investment to large-cap stocks for the remainder of the year (February to December).",
+  "Indicators Used": "Calendar (January).",
+  "Risk Management Rules": "Long-only strategy; does not provide a hedge against market crises.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (Small-cap in Jan, Large-cap rest of year).",
+  "Market Regime Suitability": "Not suitable as a hedge.",
+  "Volatility Considerations": "Not explicitly stated in source paper; QuantConnect backtest shows high drawdown.",
+  "Momentum/Mean Reversion Classification": "Seasonality",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "12.7%",
+    "Sharpe Ratio": 0.3,
+    "Max Drawdown": "-54.98%"
+  },
+  "Win Rate (if available)": "61%",
+  "Source URL": "https://quantpedia.com/strategies/january-effect-in-stocks",
+  "Full Notes": "The effect has shown a declining trend since 1988 and may be difficult to trade profitably after transaction costs.",
+  "Mathematical/Statistical Concepts": "Tax-loss selling hypothesis, behavioral finance, market capitalization deciles, Efficient Market Hypothesis challenge."
+}

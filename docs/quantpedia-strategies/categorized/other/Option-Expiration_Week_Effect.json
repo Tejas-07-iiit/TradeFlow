@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Option-Expiration Week Effect",
+  "Category": "Equities, Market Timing, Seasonality, Stock Picking",
+  "Asset Class": "ETFs, Futures, CFDs, Stocks",
+  "Market Type": "United States, Equities",
+  "Strategy Description": "Large-cap stocks with active options tend to have higher average weekly returns during the week before options expiration (the 3rd Friday of the month).",
+  "Core Logic": "Delta-hedge rebalancing by option market makers. As options approach expiration, a reduction in call-open interest leads market makers to buy back stocks to close their short-stock hedge positions.",
+  "Entry Conditions": "Go long on S&P 100 stocks (or a representative ETF) at the beginning of the option-expiration week.",
+  "Exit Conditions": "Exit the position and stay in cash during all other weeks of the month.",
+  "Indicators Used": "Calendar (Option expiration week).",
+  "Risk Management Rules": "Market timing strategy that limits exposure to only one week per month.",
+  "Timeframe": "Weekly",
+  "Rebalancing Frequency": "Weekly",
+  "Long/Short Logic": "Long-only (Stocks or Cash).",
+  "Market Regime Suitability": "Not suitable as a hedge during market crises as it remains long-only in equities.",
+  "Volatility Considerations": "Estimated Volatility: 8.7%.",
+  "Momentum/Mean Reversion Classification": "Seasonality",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "9.3%",
+    "Sharpe Ratio": 0.61,
+    "Max Drawdown": "-15.14%"
+  },
+  "Win Rate (if available)": "58%",
+  "Source URL": "https://quantpedia.com/strategies/option-expiration-week-effect",
+  "Full Notes": "Performance includes the expected return on the cash position held during non-expiration weeks.",
+  "Mathematical/Statistical Concepts": "Delta hedging, open interest, market maker behavior, idiosyncratic volatility puzzle."
+}

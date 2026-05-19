@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Time Series Momentum Effect",
+  "Category": "Equities, Bonds, Commodities, Currencies, Momentum, Factor Investing, Smart Beta",
+  "Asset Class": "Futures, CFDs",
+  "Market Type": "Global",
+  "Strategy Description": "Unlike cross-sectional momentum, time series momentum focuses on an asset's own past return. The past 12-month excess return of an instrument is a positive predictor of its future return.",
+  "Core Logic": "Consistent with behavioral theories of initial under-reaction and delayed over-reaction to information dissemination.",
+  "Entry Conditions": "For each asset in the universe (e.g., 58 liquid futures), if the excess return over the past 12 months is positive, go long. If negative, go short.",
+  "Exit Conditions": "Rebalance the portfolio monthly based on the updated 12-month excess returns.",
+  "Indicators Used": "12-month excess return, volatility (GARCH or historical).",
+  "Risk Management Rules": "Position sizing is inversely proportional to the instrument's volatility to maintain a stable risk profile.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short based on absolute return sign.",
+  "Market Regime Suitability": "Acts as a hedge for extreme events; typically has negative correlation to equity market risk.",
+  "Volatility Considerations": "Estimated Volatility: 15.74%.",
+  "Momentum/Mean Reversion Classification": "Momentum (Time Series)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "20.7%",
+    "Sharpe Ratio": 1.31,
+    "Max Drawdown": "-33.87%"
+  },
+  "Win Rate (if available)": "69%",
+  "Source URL": "https://quantpedia.com/strategies/time-series-momentum-effect",
+  "Full Notes": "Performance is remarkably stable and robust across asset classes. Alpha is estimated using Fama-French factors.",
+  "Mathematical/Statistical Concepts": "Time series momentum, GARCH volatility modeling, risk parity, autocorrelation, under-reaction/over-reaction."
+}

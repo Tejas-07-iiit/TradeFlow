@@ -1,0 +1,417 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
+
+import {
+  assessTradeQuality,
+  type TradeAssessment,
+  type TradeProposal,
+} from "@/lib/trade-quality";
+import { closePaperPosition, createPaperOrder } from "@/server/trading";
+import { decisionSide } from "@/services/ai/schemas";
+import { useAiDecisionStore, type DecisionEntry } from "@/store/ai-decision-store";
+import { useMarketStore } from "@/store/market-store";
+import { usePortfolioStore } from "@/store/portfolio-store";
+import type { PaperPositionView } from "@/types/portfolio";
+
+/**
+ * Autonomous LLM execution engine.
+ *
+ * Two paths:
+ *   - Entry: build a `TradeProposal` from the LLM decision + live state, run
+ *     it through `assessTradeQuality()`, fire the order on approval or log a
+ *     structured rejection otherwise.
+ *   - Exit:  close an LLM-owned position when the LLM flips its view.
+ *
+ * Hard-gated by `NEXT_PUBLIC_AI_AUTONOMY`. While "off" the engine still scores
+ * incoming decisions and emits rejection log entries, but never sends orders —
+ * so the operator can watch what *would* have traded without committing
+ * capital.
+ *
+ * The validator / scorer themselves live in `src/lib/trade-quality/` and are
+ * pure. This component is the thin glue between the LLM decision store, the
+ * live market store, and the trading server actions.
+ */
+
+const FLAG = "on";
+
+const PER_SYMBOL_EXIT_COOLDOWN_MS = 60 * 1000;
+const MAX_POSITION_SIZE_PCT = 50;
+const MAX_POSITION_SIZE_PCT_A_PLUS = 100;
+const MIN_QUANTITY = 1e-5;
+/** Quantity rounding precision — 6 decimals works for every watchlist symbol. */
+const QTY_PRECISION = 6;
+
+export function AiExecutionEngine() {
+  const decisions = useAiDecisionStore((s) => s.bySymbol);
+  const lastExecutedAt = useAiDecisionStore((s) => s.lastExecutedAt);
+  const lastExitAt = useAiDecisionStore((s) => s.lastExitAt);
+  const markExecuted = useAiDecisionStore((s) => s.markExecuted);
+  const markExited = useAiDecisionStore((s) => s.markExited);
+  const appendLog = useAiDecisionStore((s) => s.appendLog);
+
+  const positions = usePortfolioStore((s) => s.positions);
+  const walletBalance = usePortfolioStore((s) => s.walletBalance);
+  const usedMargin = usePortfolioStore((s) => s.usedMargin);
+  // Sizing is done against *available* balance (cash that isn't already
+  // locked as margin against open positions). Using the gross wallet here
+  // would let the LLM repeatedly try to open positions it can't afford.
+  const availableBalance = walletBalance - usedMargin;
+
+  // Dedup: each decision (identified by its cache key) is acted on at most
+  // once, even if multiple effects fire across re-renders. We track both
+  // executed and rejected keys so we don't repeatedly toast the same gate.
+  const seenDecisionKeys = useRef<Set<string>>(new Set());
+  const inFlightSymbols = useRef<Set<string>>(new Set());
+
+  // Snapshot store refs so async promise callbacks see fresh portfolio
+  // values even if they resolve a few ticks after the effect fired.
+  const stateRef = useRef({ positions, availableBalance, lastExecutedAt, lastExitAt });
+  useEffect(() => {
+    stateRef.current = { positions, availableBalance, lastExecutedAt, lastExitAt };
+  }, [positions, availableBalance, lastExecutedAt, lastExitAt]);
+
+  useEffect(() => {
+    const autonomyOn = process.env.NEXT_PUBLIC_AI_AUTONOMY === FLAG;
+
+    for (const symbol of Object.keys(decisions)) {
+      const entry = decisions[symbol];
+      if (!entry) continue;
+      if (seenDecisionKeys.current.has(entry.key)) continue;
+      seenDecisionKeys.current.add(entry.key);
+
+      const { positions: pos, availableBalance: avail } = stateRef.current;
+      const livePrice = useMarketStore.getState().tickers[symbol]?.last;
+      if (livePrice == null || !Number.isFinite(livePrice) || livePrice <= 0) {
+        continue;
+      }
+
+      const existingPosition = pos.find(
+        (p) =>
+          p.symbol === symbol &&
+          p.decisionSource === "LLM" &&
+          (p.status === "OPEN" || p.status === "PARTIALLY_CLOSED"),
+      );
+
+      // 1) Exit path — see if the fresh decision invalidates an open LLM trade.
+      if (existingPosition) {
+        const exitReason = evaluateExit(symbol, existingPosition, entry);
+        if (exitReason) {
+          if (autonomyOn) {
+            fireExit(symbol, existingPosition, entry, livePrice, exitReason);
+          }
+          continue;
+        }
+      }
+
+      // 2) Entry path — only when no existing LLM position on this symbol.
+      if (existingPosition) continue;
+
+      const side = decisionSide(entry.decision.decision);
+      if (!side) {
+        // Non-directional decision — assessor will flag it, but we skip the
+        // proposal build because TradeProposal needs a side.
+        const fakeAssessment: TradeAssessment = {
+          approved: false,
+          rejections: [
+            {
+              code: "no_trade_decision",
+              message: `Decision is ${entry.decision.decision}`,
+            },
+          ],
+          warnings: [],
+          metrics: {
+            expectedProfitPercent: 0,
+            expectedLossPercent: 0,
+            riskRewardRatio: 0,
+            entryDriftBps: 0,
+            volatilityScore: 0,
+          },
+          score: { value: 0, grade: "D", factors: [] },
+          llmSetupQuality: entry.decision.setupQuality,
+        };
+        logRejection(entry, symbol, fakeAssessment);
+        continue;
+      }
+
+      const proposal = buildProposal(symbol, side, entry, livePrice, pos, avail);
+      const assessment = assessTradeQuality(proposal);
+
+      if (!assessment.approved) {
+        logRejection(entry, symbol, assessment);
+        if (autonomyOn) {
+          toast.info(
+            `AI rejected ${symbol.replace("USDT", "")} — ${assessment.rejections[0]?.message ?? "validation failed"}`,
+          );
+        }
+        continue;
+      }
+
+      // Approved. Fire the order (if autonomy is live).
+      if (autonomyOn) {
+        fireEntry(symbol, side, entry, assessment, livePrice, avail);
+      } else {
+        logExecution(entry, symbol, assessment, undefined, "shadow");
+      }
+    }
+
+    function buildProposal(
+      symbol: string,
+      side: "LONG" | "SHORT",
+      entry: DecisionEntry,
+      livePrice: number,
+      pos: PaperPositionView[],
+      availableBalance: number,
+    ): TradeProposal {
+      const openCount = pos.filter(
+        (p) => p.status === "OPEN" || p.status === "PARTIALLY_CLOSED",
+      ).length;
+      const hasDupSide = pos.some(
+        (p) =>
+          p.symbol === symbol &&
+          p.side === side &&
+          (p.status === "OPEN" || p.status === "PARTIALLY_CLOSED"),
+      );
+      const lastExec = useAiDecisionStore.getState().lastExecutedAt[symbol];
+      const msSinceLast = lastExec ? Date.now() - lastExec : null;
+
+      // ATR% from the candle store for this symbol/interval. Best-effort —
+      // the assessor tolerates `null` and skips volatility checks.
+      const interval = useMarketStore.getState().interval;
+      const candleKey = `${symbol}:${interval}`;
+      const candles = useMarketStore.getState().candles[candleKey];
+      const last = candles?.at(-1);
+      const atrPct =
+        last && last.close > 0 && "atrPct" in last
+          ? (last as { atrPct?: number }).atrPct ?? null
+          : null;
+
+      return {
+        symbol,
+        side,
+        decision: entry.decision,
+        livePrice,
+        atrPct,
+        marketRegime: useMarketStore.getState().regime ?? "Sideways",
+        book: {
+          openPositionsCount: openCount,
+          hasDuplicateSide: hasDupSide,
+          msSinceLastExecution: msSinceLast,
+          availableBalance,
+        },
+      };
+    }
+
+    function fireEntry(
+      symbol: string,
+      side: "LONG" | "SHORT",
+      entry: DecisionEntry,
+      assessment: TradeAssessment,
+      livePrice: number,
+      bal: number,
+    ) {
+      const d = entry.decision;
+      const capPct =
+        d.setupQuality === "A+"
+          ? MAX_POSITION_SIZE_PCT_A_PLUS
+          : MAX_POSITION_SIZE_PCT;
+      const pct = Math.min(d.positionSizePercent, capPct);
+      const notional = (bal * pct) / 100;
+      const rawQty = notional / livePrice;
+      const quantity = Math.max(
+        MIN_QUANTITY,
+        Math.round(rawQty * 10 ** QTY_PRECISION) / 10 ** QTY_PRECISION,
+      );
+
+      if (quantity < MIN_QUANTITY) return;
+      if (inFlightSymbols.current.has(symbol)) return;
+      inFlightSymbols.current.add(symbol);
+      markExecuted(symbol);
+
+      const meta = JSON.stringify({
+        model: entry.model,
+        decision: d.decision,
+        confidence: d.confidence,
+        setupQuality: d.setupQuality,
+        riskLevel: d.riskLevel,
+        sizePct: pct,
+        expectedHoldMins: d.expectedHoldTimeMinutes,
+        quality: {
+          score: assessment.score.value,
+          grade: assessment.score.grade,
+          expectedProfitPct: assessment.metrics.expectedProfitPercent,
+          expectedLossPct: assessment.metrics.expectedLossPercent,
+          rr: assessment.metrics.riskRewardRatio,
+          regime: useMarketStore.getState().regime,
+        },
+      });
+
+      createPaperOrder({
+        symbol,
+        side,
+        type: "MARKET",
+        quantity,
+        takeProfit: d.takeProfit,
+        stopLoss: d.stopLoss,
+        decisionSource: "LLM",
+        decisionMeta: meta,
+      })
+        .then((res) => {
+          logExecution(entry, symbol, assessment, res.id, "executed");
+          toast.success(
+            `AI ${d.decision} ${symbol.replace("USDT", "")} · ${assessment.score.grade} (${assessment.score.value.toFixed(0)}) · RR ${assessment.metrics.riskRewardRatio.toFixed(2)}`,
+          );
+        })
+        .catch((err) => {
+          logExecution(
+            entry,
+            symbol,
+            assessment,
+            undefined,
+            "rejected",
+            err instanceof Error ? err.message : "Server error",
+          );
+          toast.error(`AI order failed: ${symbol}`);
+        })
+        .finally(() => {
+          inFlightSymbols.current.delete(symbol);
+        });
+    }
+
+    function fireExit(
+      symbol: string,
+      position: PaperPositionView,
+      entry: DecisionEntry,
+      livePrice: number,
+      reasonLabel: string,
+    ) {
+      const exitKey = `exit:${symbol}`;
+      if (inFlightSymbols.current.has(exitKey)) return;
+      inFlightSymbols.current.add(exitKey);
+      markExited(symbol);
+
+      closePaperPosition(position.id, livePrice, { reason: "AI_EXIT" })
+        .then(() => {
+          appendLog({
+            id: `${entry.key}:exit`,
+            symbol,
+            at: Date.now(),
+            decision: entry.decision.decision,
+            setupQuality: entry.decision.setupQuality,
+            confidence: entry.decision.confidence,
+            outcome: "executed",
+            headline: `Exit: ${reasonLabel}`,
+          });
+          toast(
+            `AI closed ${symbol.replace("USDT", "")} — ${reasonLabel}`,
+            { description: entry.decision.reasoning[0] },
+          );
+        })
+        .catch((err) => {
+          toast.error(
+            `AI exit failed: ${symbol} — ${err instanceof Error ? err.message : "server error"}`,
+          );
+        })
+        .finally(() => {
+          inFlightSymbols.current.delete(exitKey);
+        });
+    }
+
+    function logRejection(
+      entry: DecisionEntry,
+      symbol: string,
+      assessment: TradeAssessment,
+    ) {
+      const first = assessment.rejections[0];
+      appendLog({
+        id: `${entry.key}:rejected`,
+        symbol,
+        at: Date.now(),
+        decision: entry.decision.decision,
+        setupQuality: entry.decision.setupQuality,
+        confidence: entry.decision.confidence,
+        outcome: "rejected",
+        rejectionReason: first?.message,
+        rejections: assessment.rejections.map(({ code, message }) => ({ code, message })),
+        headline: entry.decision.reasoning[0] ?? "",
+        quality: {
+          qualityScore: assessment.score.value,
+          grade: assessment.score.grade,
+          expectedProfitPercent: assessment.metrics.expectedProfitPercent,
+          expectedLossPercent: assessment.metrics.expectedLossPercent,
+          riskRewardRatio: assessment.metrics.riskRewardRatio,
+          volatilityScore: assessment.metrics.volatilityScore,
+          marketRegime: useMarketStore.getState().regime ?? "Sideways",
+        },
+      });
+    }
+
+    function logExecution(
+      entry: DecisionEntry,
+      symbol: string,
+      assessment: TradeAssessment,
+      orderId: string | undefined,
+      tag: "executed" | "shadow" | "rejected",
+      errorMessage?: string,
+    ) {
+      appendLog({
+        id: `${entry.key}:${tag}`,
+        symbol,
+        at: Date.now(),
+        decision: entry.decision.decision,
+        setupQuality: entry.decision.setupQuality,
+        confidence: entry.decision.confidence,
+        outcome: tag === "rejected" ? "rejected" : "executed",
+        rejectionReason: errorMessage,
+        orderId,
+        headline:
+          tag === "shadow"
+            ? `Shadow approval (autonomy off) · ${entry.decision.reasoning[0] ?? ""}`
+            : entry.decision.reasoning[0] ?? "",
+        quality: {
+          qualityScore: assessment.score.value,
+          grade: assessment.score.grade,
+          expectedProfitPercent: assessment.metrics.expectedProfitPercent,
+          expectedLossPercent: assessment.metrics.expectedLossPercent,
+          riskRewardRatio: assessment.metrics.riskRewardRatio,
+          volatilityScore: assessment.metrics.volatilityScore,
+          marketRegime: useMarketStore.getState().regime ?? "Sideways",
+        },
+      });
+    }
+  }, [decisions, positions, availableBalance, appendLog, markExecuted, markExited]);
+
+  return null;
+}
+
+/**
+ * Decide whether a fresh decision should close the currently-open LLM
+ * position on this symbol. Returns null to leave it open, or a short reason
+ * label that goes into the toast + execution log.
+ *
+ * Cooldown prevents thrash if the LLM oscillates near a boundary.
+ */
+function evaluateExit(
+  symbol: string,
+  position: PaperPositionView,
+  entry: DecisionEntry,
+): string | null {
+  const d = entry.decision;
+  const lastExit = useAiDecisionStore.getState().lastExitAt[symbol];
+  if (lastExit && Date.now() - lastExit < PER_SYMBOL_EXIT_COOLDOWN_MS) return null;
+
+  if (d.setupQuality === "Avoid") return "setup graded Avoid";
+  if (d.decision === "AVOID" && d.confidence >= 65) {
+    return `LLM flipped to AVOID @ ${d.confidence}%`;
+  }
+  const newSide = decisionSide(d.decision);
+  if (newSide && newSide !== position.side && d.confidence >= 60) {
+    return `LLM flipped ${position.side} → ${newSide}`;
+  }
+  if (d.decision === "HOLD" && d.confidence >= 75) {
+    const ageMs = Date.now() - new Date(position.createdAt).getTime();
+    if (ageMs > 30 * 60 * 1000) return "HOLD after held >30min";
+  }
+  return null;
+}

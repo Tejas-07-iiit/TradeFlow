@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Betting Against Beta Factor in International Equities",
+  "Category": "Equities, Long/Short, Country Picking, Beta Factor",
+  "Asset Class": "Equities (ETFs/Futures)",
+  "Market Type": "Global",
+  "Strategy Description": "Applying the 'Betting Against Beta' principle to country equity indexes using ETFs or futures.",
+  "Core Logic": "Similar to the stock-level BAB, investors' leverage constraints lead to the overvaluation of high-beta countries.",
+  "Entry Conditions": "Rank country ETFs by beta relative to the MSCI US Equity Index; assign to low-beta and high-beta portfolios.",
+  "Exit Conditions": "Monthly rebalancing.",
+  "Indicators Used": "Beta (1-year rolling window).",
+  "Risk Management Rules": "Portfolios are rescaled to a beta of one; zero-cost, zero-beta construction.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long low-beta countries, short high-beta countries.",
+  "Market Regime Suitability": "Partial hedge against equity risk; low-beta countries are safer during turmoil.",
+  "Volatility Considerations": "Estimated volatility of 13.08%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion (Anomaly)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 6.8% (Indicative), Sharpe Ratio: 0.51, Max Drawdown: -46.56%",
+  "Win Rate (if available)": "50%",
+  "Source URL": "https://quantpedia.com/strategies/betting-against-beta-factor-in-country-equity-indexes",
+  "Full Notes": "The investment universe typically consists of around 13-23 country ETFs. Rebalancing is done every calendar month.",
+  "Mathematical/Statistical Concepts": "Beta, Leverage Constraints, Portfolio Rescaling, Zero-Beta."
+}

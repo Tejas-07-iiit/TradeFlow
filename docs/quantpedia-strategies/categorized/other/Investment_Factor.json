@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Investment Factor",
+  "Category": "Stock Picking, Fundamental Analysis, Factor Investing",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "Exploits the 'Conservative Minus Aggressive' (CMA) factor, where firms with low asset growth (conservative) outperform firms with high asset growth (aggressive).",
+  "Core Logic": "Aggressive investments often fail to improve returns in the near future. Conservative firms with lower investment rates tend to yield higher risk-adjusted returns.",
+  "Entry Conditions": "Stocks are sorted into five Size groups and five Investment (Inv) groups. Long the portfolio with the highest Size and lowest Investment; Short the portfolio with the highest Size and highest Investment.",
+  "Exit Conditions": "Rebalanced yearly at the end of June.",
+  "Indicators Used": "Total Assets Growth (Inv), Market Capitalization (Size).",
+  "Risk Management Rules": "Value-weighted portfolios; independent sorting by size and investment.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long low-investment firms, Short high-investment firms.",
+  "Market Regime Suitability": "Partially suitable as a hedge due to negative correlation with the broad equity market.",
+  "Volatility Considerations": "Drawdown of -19.81% in the source paper; QuantConnect backtest shows 26% drawdown.",
+  "Momentum/Mean Reversion Classification": "Factor (Investment/Quality)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 3.54% (Indicative), Sharpe Ratio: 0.2 (QC), Max Drawdown: -19.81%",
+  "Win Rate (if available)": "51%",
+  "Source URL": "https://quantpedia.com/strategies/investment-factor",
+  "Full Notes": "Based on the Fama-French five-factor model. Investment is defined as the growth of total assets for the fiscal year ending in t-1 divided by total assets at the end of t-1.",
+  "Mathematical/Statistical Concepts": "Asset growth, Fama-French factors, cross-sectional variance, value-weighting."
+}

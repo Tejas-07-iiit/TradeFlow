@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "The Positive Similarity of Company Filings and Stock Returns",
+  "Category": "Alternative Data, Fundamental Analysis, Machine Learning",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A long-short strategy based on the similarity of positive language in company 10-K and 10-Q filings.",
+  "Core Logic": "Management's effort to change positive language in reports is a signal of future performance. Stocks with low positive similarity (high change) outperform those with high similarity (low change).",
+  "Entry Conditions": "Rank the largest 1000 US stocks based on the cosine similarity of positive language in their most recent filing. Long the bottom decile (lowest similarity) and short the top decile (highest similarity).",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Brain Company's positive similarity score (textual analysis).",
+  "Risk Management Rules": "Equally weighted portfolio; focuses on large-cap stocks to ensure liquidity.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long bottom decile, short top decile of positive similarity.",
+  "Market Regime Suitability": "Yes; uncorrelated to the market factor and consistent during crises.",
+  "Volatility Considerations": "Estimated volatility is 6.48%; the strategy has low drawdowns.",
+  "Momentum/Mean Reversion Classification": "Factor/Alternative Data",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 4.58% (indicative 5.47%), Sharpe Ratio: 0.259 (indicative 0.84), Max Drawdown: 43.3%",
+  "Win Rate (if available)": "47%",
+  "Source URL": "https://quantpedia.com/strategies/the-positive-similarity-of-company-filings-and-stock-returns",
+  "Full Notes": "This is a distinct anomaly from the 'Lazy Prices' effect, which looks at the similarity of all language. Shorter holding periods (1 month) are more effective here.",
+  "Mathematical/Statistical Concepts": "Cosine similarity, Textual analysis, Sentiment extraction."
+}

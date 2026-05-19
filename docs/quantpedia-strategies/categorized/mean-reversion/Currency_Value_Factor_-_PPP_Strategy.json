@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Currency Value Factor - PPP Strategy",
+  "Category": "FX Strategy",
+  "Asset Class": "Currencies",
+  "Market Type": "Global",
+  "Strategy Description": "A value-based FX strategy that buys 'undervalued' currencies and sells 'overvalued' ones based on Purchasing Power Parity (PPP).",
+  "Core Logic": "Currencies tend to move towards their fair value in the long run; price differences narrow over time through exchange rate movements.",
+  "Entry Conditions": "Go long the 3 most undervalued currencies (lowest PPP fair value figure) and short the 3 most overvalued.",
+  "Exit Conditions": "Rebalance quarterly or monthly.",
+  "Indicators Used": "OECD Purchasing Power Parity (PPP), CPI changes.",
+  "Risk Management Rules": "Quarterly rebalancing; diversification across 10-20 currencies.",
+  "Timeframe": "Quarterly / Monthly",
+  "Rebalancing Frequency": "Quarterly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Valuable hedge during stress; low correlation to traditional equity factors.",
+  "Volatility Considerations": "Estimated volatility of 9.33%.",
+  "Momentum/Mean Reversion Classification": "Value / Mean Reversion (Long-term)",
+  "Performance Metrics": {
+    "CAGR": "7.82%",
+    "Sharpe Ratio": "0.36",
+    "Max Drawdown": "-39.38%"
+  },
+  "Win Rate": "58%",
+  "Source URL": "https://quantpedia.com/strategies/currency-value-factor-ppp-strategy",
+  "Full Notes": "Based on the Law of One Price. Refined valuation measures relate closely to macroeconomic fundamentals.",
+  "Mathematical/Statistical Concepts": "Purchasing Power Parity, Real Exchange Rates, Fair Value."
+}

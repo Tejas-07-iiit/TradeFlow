@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Earnings Announcement Premium",
+  "Category": "Equities, Long/Short, Earnings Announcement",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "Exploiting the rise in stock prices around earnings announcement dates, particularly for stocks with high past announcement volume.",
+  "Core Logic": "Buying pressure from individual investors increases around announcement dates when the news catches their attention, driving prices higher.",
+  "Entry Conditions": "Rank stocks by volume concentration ratio; long high-volume expected announcers and short high-volume expected non-announcers.",
+  "Exit Conditions": "Monthly rebalancing.",
+  "Indicators Used": "Volume Concentration Ratio (past 16 announcement months volume / total 48 months volume).",
+  "Risk Management Rules": "Stocks are value-weighted within portfolios; rebalanced monthly.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long high-volume announcers, short high-volume non-announcers.",
+  "Market Regime Suitability": "Unknown; long leg is correlated to the market, short leg may act as a partial hedge.",
+  "Volatility Considerations": "Estimated volatility of 16.12%.",
+  "Momentum/Mean Reversion Classification": "Event-driven / Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 18.36% (Indicative), Sharpe Ratio: 0.89, Max Drawdown: -57.25%",
+  "Win Rate (if available)": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/earnings-announcement-premium",
+  "Full Notes": "The premium is strong in large-cap stocks and has been consistent since 1927. It is unrelated to standard market risk factors.",
+  "Mathematical/Statistical Concepts": "Volume Concentration, Attention Bias, Value-Weighting."
+}

@@ -3,6 +3,8 @@ import { LiveDecisionPanel } from "@/features/ai-decision/live-decision-panel";
 import { ChartPanel } from "@/features/chart/chart-panel";
 import { LiveMarketMetrics } from "@/features/dashboard/live-market-metrics";
 import { LiveWatchlist } from "@/features/markets/live-watchlist";
+import { LiveAutoExecFeed } from "@/features/dashboard/live-auto-exec-feed";
+import { NewsWidget } from "@/features/news/news-widget";
 import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -15,20 +17,20 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-5.5rem)] grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_390px]">
-      <section className="flex min-w-0 flex-col gap-4">
-        <DashboardHeroMetrics />
+    <div className="flex flex-col gap-4 pb-8">
+      <DashboardHeroMetrics />
 
-        <div className="min-h-[620px] flex-1">
-          <ChartPanel />
-        </div>
-      </section>
+      <div className="h-[650px] w-full">
+        <ChartPanel />
+      </div>
 
-      <aside className="flex min-w-0 flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         <LiveDecisionPanel />
+        <LiveAutoExecFeed />
+        <NewsWidget />
         <LiveMarketMetrics />
         <LiveWatchlist compact />
-      </aside>
+      </div>
     </div>
   );
 }

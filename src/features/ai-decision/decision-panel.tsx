@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import {
   AlertTriangle,
   Brain,
@@ -13,12 +12,11 @@ import {
   Zap,
 } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
-import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createPaperOrder } from "@/server/trading";
+import { useSignalStore } from "@/store/signal-store";
+import { usePortfolioStore } from "@/store/portfolio-store";
 import type { AIDecision } from "@/types/ai-decision";
 
 interface DecisionPanelProps {
@@ -48,31 +46,31 @@ const QUALITY_COLOR: Record<AIDecision["setupQuality"], string> = {
 };
 
 export function DecisionPanel({ decision }: DecisionPanelProps) {
-  const [isPending, startTransition] = useTransition();
   const signal = SIGNAL_STYLE[decision.signal];
   const SignalIcon = signal.icon;
 
   const isExpired = decision.status === "EXPIRED";
 
-  const handleExecute = () => {
-    if (!decision.entryPrice) return;
-    
-    startTransition(async () => {
-      try {
-        await createPaperOrder({
-          symbol: decision.symbol,
-          side: decision.signal === "BUY" ? "LONG" : "SHORT",
-          type: "MARKET",
-          quantity: decision.signal === "BUY" ? 0.025 : 0.025, // Mock quantity for now
-          takeProfit: decision.takeProfit ?? undefined,
-          stopLoss: decision.stopLoss ?? undefined,
-        });
-        toast.success("AI Signal executed successfully");
-      } catch (error) {
-        toast.error("Failed to execute signal");
-      }
-    });
-  };
+  // The global AiSignalEngine auto-executes signal transitions for every
+  // watchlist symbol. We surface that status on the panel so the user can see
+  // which signals the engine has already opened positions on.
+  //
+  // We cross-reference with PortfolioStore to ensure we only show the "AUTO-EXECUTED"
+  // badge if the position is actually still LIVE.
+  const autoExec = useSignalStore((s) => s.autoExec[decision.symbol]);
+  const positions = usePortfolioStore((s) => s.positions);
+
+  const isAutoFired =
+    !!autoExec &&
+    (decision.signal === "BUY" || decision.signal === "SELL") &&
+    autoExec.signal === decision.signal &&
+    autoExec.type === decision.type &&
+    positions.some(
+      (p) =>
+        p.symbol === decision.symbol &&
+        p.status === "OPEN" &&
+        p.side === (decision.signal === "BUY" ? "LONG" : "SHORT"),
+    );
 
   return (
     <div className={cn("panel overflow-hidden transition-opacity", isExpired && "opacity-60 grayscale-[0.5]")}>
@@ -147,17 +145,28 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
           </div>
         )}
 
-        {/* Execution Action */}
+        {/* Auto-execution status */}
         {decision.signal !== "HOLD" && !isExpired && (
           <div className="pt-1">
-            <Button
-              className="w-full h-10 font-bold tracking-tight"
-              variant={decision.signal === "BUY" ? "bull" : "bear"}
-              onClick={handleExecute}
-              disabled={isPending}
+            <div
+              className={cn(
+                "w-full rounded-md border px-3 py-2.5 text-center text-[13px] font-semibold tracking-wide",
+                isAutoFired
+                  ? decision.signal === "BUY"
+                    ? "border-[var(--color-bull)]/30 bg-[var(--color-bull-soft)] text-[var(--color-bull)]"
+                    : "border-[var(--color-bear)]/30 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
+                  : "border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-muted)]",
+              )}
             >
-              {isPending ? "Executing..." : `EXECUTE AI ${decision.signal} SIGNAL`}
-            </Button>
+              {isAutoFired
+                ? `AI AUTO-EXECUTED ${decision.signal} · ${decision.type}`
+                : `Awaiting transition — ${decision.signal} ${decision.type}`}
+            </div>
+            <p className="mt-2 text-[10px] text-center text-[var(--color-fg-subtle)] leading-relaxed">
+              Rule-engine context. When NEXT_PUBLIC_AI_AUTONOMY=on the LLM owns
+              execution; this signal is informational only. When off, the rule
+              engine fires paper orders on transitions (60s cooldown).
+            </p>
           </div>
         )}
 
@@ -219,7 +228,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
         <p className="text-[10.5px] text-[var(--color-fg-subtle)] leading-relaxed italic border-t border-[var(--color-border)] pt-3">
           Signals expire after 60 minutes or upon trend invalidation.
-          Manual paper execution only.
+          Paper simulation only — no real-money execution.
         </p>
       </div>
     </div>

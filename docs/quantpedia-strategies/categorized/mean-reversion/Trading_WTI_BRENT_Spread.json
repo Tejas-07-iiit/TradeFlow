@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Trading WTI/BRENT Spread",
+  "Category": "Commodities, Pairs Trading, Arbitrage, Spread Trading",
+  "Asset Class": "Futures",
+  "Market Type": "Global, Commodities",
+  "Strategy Description": "Exploits the price difference between West Texas Intermediate (WTI) and Brent Crude oil. The spread is mean-reverting because price shocks are typically temporal.",
+  "Core Logic": "WTI and Brent are chemically similar but differ in production and transportation. The spread moves back to long-term economic equilibrium after deviations.",
+  "Entry Conditions": "Calculate a 20-day SMA of the WTI/Brent spread. If the current spread is above the SMA, enter a short position in the spread (Short WTI, Long Brent). If below the SMA, enter a long position (Long WTI, Short Brent).",
+  "Exit Conditions": "Close the short position when the spread crosses below the SMA. Close the long position when the spread crosses above the SMA.",
+  "Indicators Used": "20-day Simple Moving Average (SMA).",
+  "Risk Management Rules": "Mean reversion strategy; caution is advised as alpha may deteriorate in out-of-sample periods.",
+  "Timeframe": "Daily",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long/Short spread (Pairs trading).",
+  "Market Regime Suitability": "Unknown; commodities often have negative correlation to equities, potentially providing diversification.",
+  "Volatility Considerations": "Estimated Volatility: 11.27%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "9.92%",
+    "Sharpe Ratio": 0.88,
+    "Max Drawdown": "-68.86%"
+  },
+  "Win Rate (if available)": "48%",
+  "Source URL": "https://quantpedia.com/strategies/trading-wti-brent-spread",
+  "Full Notes": "Indicative performance is a weighted average of in-sample and out-of-sample periods. Out-of-sample performance has shown signs of deterioration.",
+  "Mathematical/Statistical Concepts": "Mean reversion, moving averages, cointegration, ARMA models, Hidden Markov Models."
+}

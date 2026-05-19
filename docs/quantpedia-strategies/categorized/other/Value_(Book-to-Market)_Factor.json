@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Value (Book-to-Market) Factor",
+  "Category": "Factor Investing / Value",
+  "Asset Class": "Equities",
+  "Market Type": "US",
+  "Strategy Description": "A strategy that buys stocks with high book-to-market ratios (fundamentally cheap) and sells those with low ratios (growth/expensive).",
+  "Core Logic": "Investors overreact to growth aspects, leading to undervaluation of value stocks.",
+  "Entry Conditions": "Go long high book-to-price stocks and short low book-to-price stocks (HML portfolio).",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "Book-to-Market Ratio (B/M).",
+  "Risk Management Rules": "Monthly rebalancing; average of small and large cap HML portfolios.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short (standard) or Long-only.",
+  "Market Regime Suitability": "Value stocks are generally less sensitive to major stock market declines than growth stocks.",
+  "Volatility Considerations": "Estimated volatility of 12.02%; high drawdown potential (-55.99%).",
+  "Momentum/Mean Reversion Classification": "Value / Factor",
+  "Performance Metrics": {
+    "CAGR": "3.6%",
+    "Sharpe Ratio": "0.3",
+    "Max Drawdown": "-55.99%"
+  },
+  "Win Rate": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/value-book-to-market-factor",
+  "Full Notes": "Based on Fama and French (1993). Value premium is linked to liquidity and growth risk.",
+  "Mathematical/Statistical Concepts": "Value Premium, HML (High Minus Low), Book-to-Market Ratio."
+}

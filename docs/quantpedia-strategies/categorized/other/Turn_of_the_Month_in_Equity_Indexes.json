@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Turn of the Month in Equity Indexes",
+  "Category": "Market Timing, Seasonality",
+  "Asset Class": "Equities",
+  "Market Type": "ETFs, Funds, Futures, CFDs, Options",
+  "Strategy Description": "A seasonal strategy that buys equity indexes at the end of the month and sells them after the first few trading days of the next month, capturing the period where most market returns occur.",
+  "Core Logic": "Historically, almost all excess market returns are accrued during a four-day turn-of-the-month period, likely due to month-end cash flows, pension fund reinvestments, and portfolio rebalancing.",
+  "Entry Conditions": "Buy the equity index (e.g., SPY ETF) 1 trading day before the end of the month.",
+  "Exit Conditions": "Sell on the 3rd trading day of the new month at the close.",
+  "Indicators Used": "Calendar date (Turn-of-the-month period).",
+  "Risk Management Rules": "Market timing; remains in cash for the majority of the month (approx. 16 days).",
+  "Timeframe": "Daily (Monthly cycle)",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Not a hedge for bear markets; timing equity market factor.",
+  "Volatility Considerations": "Estimated volatility: 6.9%.",
+  "Momentum/Mean Reversion Classification": "Seasonality",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 7.2%, Sharpe Ratio: 1.04, Max Drawdown: -20.79%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/turn-of-the-month-in-equity-indexes",
+  "Full Notes": "The effect is persistent across 30 different markets and is not confined to small-cap stocks or specific quarter-ends.",
+  "Mathematical/Statistical Concepts": "Calendar seasonality, ARMA (1,1), EGARCH (1,1), Percentile-t-bootstrap."
+}

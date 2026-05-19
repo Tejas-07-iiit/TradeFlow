@@ -10,11 +10,12 @@ import { cn } from "@/lib/utils";
 import { EMPTY_ARRAY, useMarketStore } from "@/store/market-store";
 
 export function LiveInsightsPage() {
+  const symbol = useMarketStore((state) => state.symbol);
   const interval = useMarketStore((state) => state.interval);
   const allCandles = useMarketStore((state) => state.candles);
-  const candles = allCandles[`BTCUSDT:${interval}`] ?? EMPTY_ARRAY;
+  const candles = allCandles[`${symbol}:${interval}`] ?? EMPTY_ARRAY;
   const indicators = calculateIndicators(candles);
-  const decision = generateDecision("BTCUSDT", allCandles, interval);
+  const decision = generateDecision(symbol, allCandles, interval);
 
   const volatility =
     indicators.atrPct == null
@@ -61,7 +62,7 @@ export function LiveInsightsPage() {
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Indicator Commentary</CardTitle>
-              <Badge variant="muted">{interval.toUpperCase()} BTCUSDT</Badge>
+              <Badge variant="muted">{interval.toUpperCase()} {symbol}</Badge>
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)]/60 p-5">

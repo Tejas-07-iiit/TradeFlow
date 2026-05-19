@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Market Seasonality Effect in World Equity Indexes",
+  "Category": "Market Timing / Seasonality",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "A market timing strategy based on the 'Sell in May and go away' maxim, holding equities only during the winter months.",
+  "Core Logic": "Stocks deliver a risk premium from November through April and close to zero returns from May through October.",
+  "Entry Conditions": "Be invested in global equity markets during the November - April period.",
+  "Exit Conditions": "Stay in cash during the May - October period.",
+  "Indicators Used": "Calendar Month.",
+  "Risk Management Rules": "Exit to cash for 6 months of the year; reduces overall equity risk.",
+  "Timeframe": "6 Months",
+  "Rebalancing Frequency": "6 Months",
+  "Long/Short Logic": "Long-only (or cash).",
+  "Market Regime Suitability": "Market timing overlay to manage equity representation; decreases overall risk.",
+  "Volatility Considerations": "Reduces volatility and drawdowns compared to buy-and-hold.",
+  "Momentum/Mean Reversion Classification": "Seasonality",
+  "Performance Metrics": {
+    "CAGR": "8.8%",
+    "Sharpe Ratio": "0.2",
+    "Max Drawdown": "-36.58%"
+  },
+  "Win Rate": "78%",
+  "Source URL": "https://quantpedia.com/strategies/market-seasonality-effect-in-world-equity-indexes",
+  "Full Notes": "Attributed to the SAD (Seasonal Affective Disorder) effect or an optimism cycle at the start of the year.",
+  "Mathematical/Statistical Concepts": "Seasonality, Calendar Effects, Market Timing."
+}

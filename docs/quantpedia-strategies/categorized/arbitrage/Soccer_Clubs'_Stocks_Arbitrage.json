@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Soccer Clubs' Stocks Arbitrage",
+  "Category": "Equities, Stock Picking, Reversal, Arbitrage, Short Selling, Alternative Data",
+  "Asset Class": "Stocks",
+  "Market Type": "Europe, Equities",
+  "Strategy Description": "Exploits inefficiencies in publicly listed soccer club stocks where investors systematically overvalue teams before important matches due to sentiment bias.",
+  "Core Logic": "Investors are overly optimistic about match outcomes. Bookmaker odds are compiled by experts and are more efficient, while equity prices reflect biased investor sentiment.",
+  "Entry Conditions": "Sell short stocks of soccer clubs playing UEFA Championship or other important matches at the end of the business day before the match.",
+  "Exit Conditions": "Hold the short position for one day and close after the match.",
+  "Indicators Used": "Match schedule (Alternative data).",
+  "Risk Management Rules": "Short-selling strategy acts as a natural hedge to the equity market factor during bear markets.",
+  "Timeframe": "Daily",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Short-only.",
+  "Market Regime Suitability": "Suitable as a hedge/diversification during bear markets.",
+  "Volatility Considerations": "Estimated Volatility: 50%.",
+  "Momentum/Mean Reversion Classification": "Reversal / Arbitrage",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "42%",
+    "Sharpe Ratio": 0.76,
+    "Max Drawdown": "-48%"
+  },
+  "Win Rate (if available)": "48%",
+  "Source URL": "https://quantpedia.com/strategies/soccer-clubs-stocks-arbitrage",
+  "Full Notes": "Performance is estimated based on approximately 40 match days per year. Actual number of liquid stocks may vary.",
+  "Mathematical/Statistical Concepts": "Sentiment analysis, probability distribution bias, prediction markets, abnormal returns."
+}

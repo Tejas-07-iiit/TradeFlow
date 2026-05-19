@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Post-Earnings Announcement Effect",
+  "Category": "Event-Driven / Fundamental",
+  "Asset Class": "Equities",
+  "Market Type": "US",
+  "Strategy Description": "A strategy that exploits the tendency for a stock's cumulative abnormal returns to drift for several weeks following a positive earnings announcement.",
+  "Core Logic": "Investors under-react to earnings news, leading to a gradual incorporation of information into prices.",
+  "Entry Conditions": "Go long stocks in the intersection of top SUE (Standardized Unexpected Earnings) and EAR (Earnings Announcement Return) quintiles.",
+  "Exit Conditions": "Hold for one quarter (60 working days).",
+  "Indicators Used": "SUE (Standardized Unexpected Earnings), EAR (Earnings Announcement Return).",
+  "Risk Management Rules": "Quarterly rebalancing; avoid financial/utility firms and low-priced stocks.",
+  "Timeframe": "Quarterly",
+  "Rebalancing Frequency": "Quarterly",
+  "Long/Short Logic": "Long-only (standard) or Long/Short.",
+  "Market Regime Suitability": "Short leg can potentially act as a hedge during bad times; long leg is strongly correlated to the market.",
+  "Volatility Considerations": "Strongest in small-cap stocks; caution recommended due to liquidity risk.",
+  "Momentum/Mean Reversion Classification": "Earnings Momentum",
+  "Performance Metrics": {
+    "CAGR": "15%",
+    "Sharpe Ratio": "Not available",
+    "Max Drawdown": "-11.2%"
+  },
+  "Win Rate": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/post-earnings-announcement-effect",
+  "Full Notes": "First discovered by Ball and Brown (1968). EAR captures market reaction to unexpected information beyond just earnings.",
+  "Mathematical/Statistical Concepts": "PEAD (Post-Earnings Announcement Drift), SUE, Abnormal Returns."
+}

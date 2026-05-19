@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Dollar Carry Trade",
+  "Category": "Carry Trade, FX Anomaly",
+  "Asset Class": "Currencies",
+  "Market Type": "Global",
+  "Strategy Description": "A strategy that times the US dollar against a basket of developed country currencies based on the average forward premium difference, capturing the US-specific compensation for bearing risk.",
+  "Core Logic": "The strategy exploits the dollar risk premium. It uses the average forward discount (AFD) of a basket of currencies compared to the 3-month US Treasury rate to predict excess returns.",
+  "Entry Conditions": "Go long on the US dollar and short on a basket of developed currencies if the 3-month US Treasury rate is higher than the AFD. Go short on the USD and long on the basket if the 3-month US Treasury rate is lower than the AFD.",
+  "Exit Conditions": "The portfolio is rebalanced monthly based on the updated interest rate and AFD data.",
+  "Indicators Used": "Average Forward Discount (AFD), 3-month US Treasury rate.",
+  "Risk Management Rules": "Monthly rebalancing; diversification across a basket of 10 developed currencies.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short based on the interest rate differential between the US and the average of the basket.",
+  "Market Regime Suitability": "Counter-cyclical; performs well when US risk price is high, often during recessions.",
+  "Volatility Considerations": "Indicative annualized volatility of 8.53%.",
+  "Momentum/Mean Reversion Classification": "Carry (Yield-based)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 5.6%, Sharpe Ratio: 0.66, Max Drawdown: -31.72%",
+  "Win Rate (if available)": "50%",
+  "Source URL": "https://quantpedia.com/strategies/dollar-carry-trade",
+  "Full Notes": "The basket includes currencies from the Euro area, Australia, Canada, Denmark, Japan, New Zealand, Norway, Sweden, Switzerland, and the United Kingdom.",
+  "Mathematical/Statistical Concepts": "Forward discount/premium, interest rate parity, risk premium, counter-cyclicality."
+}

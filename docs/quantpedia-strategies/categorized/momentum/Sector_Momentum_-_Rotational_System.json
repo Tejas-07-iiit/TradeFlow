@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Sector Momentum - Rotational System",
+  "Category": "Sector Rotation",
+  "Asset Class": "Equities",
+  "Market Type": "US",
+  "Strategy Description": "A strategy that rotates between different industry sectors based on their past performance, aiming to outperform a broad equity index.",
+  "Core Logic": "Industry components of stock returns exhibit strong momentum; rotating into winning sectors captures this effect.",
+  "Entry Conditions": "Pick the top 3 sector ETFs (out of 10) with the strongest 12-month momentum.",
+  "Exit Conditions": "Rebalance monthly; exit sectors that are no longer in the top 3.",
+  "Indicators Used": "12-month Rate of Change (ROC).",
+  "Risk Management Rules": "Equal weighting of the top 3 sectors; monthly rebalancing.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (can be long-short if shorting the market index).",
+  "Market Regime Suitability": "Utilizes different sector sensitivities to business cycles; not a hedge for bear markets as it is 100% equity.",
+  "Volatility Considerations": "Volatility is comparable to the US equity index (approx. 18.38%).",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics": {
+    "CAGR": "13.94%",
+    "Sharpe Ratio": "0.54",
+    "Max Drawdown": "-46.29%"
+  },
+  "Win Rate": "75%",
+  "Source URL": "https://quantpedia.com/strategies/sector-momentum-rotational-system",
+  "Full Notes": "Based on Mebane Faber's 'Relative Strength Strategies for Investing'. Industry momentum often explains a large part of individual stock momentum.",
+  "Mathematical/Statistical Concepts": "Momentum, Sector Rotation, Relative Strength."
+}

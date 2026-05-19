@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Reversal During Earnings-Announcements",
+  "Category": "Reversal, Earnings Announcement",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A short-term reversal strategy that targets stocks around their earnings announcement dates.",
+  "Core Logic": "Market makers demand higher compensation for inventory risks ahead of earnings announcements, leading to temporary price distortions that reverse after the news is released.",
+  "Entry Conditions": "Sort large-cap stocks by returns in the window (t-4 to t-2). Long the bottom quintile (losers) and short the top quintile (winners).",
+  "Exit Conditions": "Hold the stocks during the 3-day window (t-1, t, t+1) around the earnings announcement.",
+  "Indicators Used": "3-day window returns (t-4 to t-2), Earnings announcement date.",
+  "Risk Management Rules": "Equally weighted; focus on the largest quintile of stocks by market capitalization for liquidity.",
+  "Timeframe": "Very short-term (3 days).",
+  "Rebalancing Frequency": "Daily.",
+  "Long/Short Logic": "Long-short.",
+  "Market Regime Suitability": "Unknown; long leg is correlated to the market, but the strategy targets specific event-driven reversals.",
+  "Volatility Considerations": "Estimated Volatility: 3.76%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 6.5%, Sharpe Ratio: 1.73, Max Drawdown: -65.88%.",
+  "Win Rate (if available)": "51% (OOS).",
+  "Source URL": "https://quantpedia.com/strategies/reversal-during-earnings-announcements",
+  "Full Notes": "The reversal effect is six times stronger around earnings announcements than during random periods.",
+  "Mathematical/Statistical Concepts": "Inventory risk, Liquidity provision, Short-term reversal."
+}

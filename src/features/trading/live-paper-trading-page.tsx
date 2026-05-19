@@ -1,239 +1,262 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { BarChart3, CircleDollarSign, SlidersHorizontal, Wallet, X } from "lucide-react";
-import { toast } from "sonner";
+import {
+  Activity,
+  BrainCog,
+  Cpu,
+  Zap,
+} from "lucide-react";
+import { formatDistanceToNowStrict } from "date-fns";
 
-import { EmptyState, MetricCard, PageShell, StatusBadge } from "@/components/shared/page-shell";
+import { AccountSummary } from "@/components/shared/account-summary";
+import {
+  EmptyState,
+  PageShell,
+  StatusBadge,
+} from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import {
+  formatDuration,
+  usePositionMetrics,
+} from "@/hooks/use-position-metrics";
 import { cn, formatCurrency, formatPrice } from "@/lib/utils";
-import { cancelPaperOrder, closePaperPosition, createPaperOrder } from "@/server/trading";
+import { useAiDecisionStore } from "@/store/ai-decision-store";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
-import type { PaperOrderView, PaperPositionView } from "@/types/portfolio";
+import type { CloseReasonView, DecisionSourceView } from "@/types/portfolio";
+
+const CLOSE_REASON_LABEL: Record<CloseReasonView, string> = {
+  MANUAL: "Manual",
+  STOP_LOSS: "Stop Loss",
+  TAKE_PROFIT: "Take Profit",
+  EXPIRED: "Expired",
+  LIQUIDATED: "Liquidated",
+  AI_EXIT: "AI Exit",
+};
+
+const CLOSE_REASON_TONE: Record<CloseReasonView, "bull" | "bear" | "muted" | "accent"> = {
+  MANUAL: "muted",
+  STOP_LOSS: "bear",
+  TAKE_PROFIT: "bull",
+  EXPIRED: "muted",
+  LIQUIDATED: "bear",
+  AI_EXIT: "accent",
+};
+
+const SOURCE_LABEL: Record<DecisionSourceView, string> = {
+  MANUAL: "Manual",
+  RULE: "Rule",
+  LLM: "LLM",
+};
+
+const SOURCE_TONE: Record<DecisionSourceView, "muted" | "warn" | "accent"> = {
+  MANUAL: "muted",
+  RULE: "warn",
+  LLM: "accent",
+};
+
+const AUTONOMY_ON = process.env.NEXT_PUBLIC_AI_AUTONOMY === "on";
 
 export function LivePaperTradingPage() {
-  const tickers = useMarketStore((state) => state.tickers);
-  const symbol = useMarketStore((state) => state.symbol);
-  
-  const balance = usePortfolioStore((s) => s.balance);
+  const symbol = useMarketStore((s) => s.symbol);
+
   const positions = usePortfolioStore((s) => s.positions);
   const orders = usePortfolioStore((s) => s.orders);
+  const tradeHistory = usePortfolioStore((s) => s.tradeHistory);
 
-  const ticker = tickers[symbol];
-  const lastPrice = ticker?.last ?? 0;
+  const executionLog = useAiDecisionStore((s) => s.executionLog);
+  const llmDecisions = useAiDecisionStore((s) => s.bySymbol);
 
   const pendingOrders = orders.filter((o) => o.status === "PENDING");
-  const orderHistory = orders.filter((o) => o.status !== "PENDING");
 
-  const [side, setSide] = useState<"LONG" | "SHORT">("LONG");
-  const [orderType, setOrderType] = useState<"MARKET" | "LIMIT">("MARKET");
-  const [quantity, setQuantity] = useState("0.025");
-  const [price, setPrice] = useState("");
-  const [takeProfit, setTakeProfit] = useState("");
-  const [stopLoss, setStopLoss] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const portfolioMetrics = usePositionMetrics(positions);
+  const { positions: enrichedPositions } = portfolioMetrics;
 
-  const livePnL = positions.reduce((sum, position) => {
-    const mark = tickers[position.symbol]?.last ?? position.entryPrice;
-    const direction = position.side === "LONG" ? 1 : -1;
-    return sum + (mark - position.entryPrice) * position.quantity * direction;
-  }, 0);
+  const llmPositionsCount = positions.filter(
+    (p) =>
+      p.decisionSource === "LLM" &&
+      (p.status === "OPEN" || p.status === "PARTIALLY_CLOSED"),
+  ).length;
 
-  const handleSubmit = () => {
-    if (!lastPrice) return;
-    const qty = parseFloat(quantity);
-    if (isNaN(qty) || qty <= 0) {
-      toast.error("Invalid quantity");
-      return;
-    }
+  const wins = tradeHistory.filter((t) => t.pnl > 0).length;
+  const losses = tradeHistory.filter((t) => t.pnl < 0).length;
+  const winRate = wins + losses > 0 ? (wins / (wins + losses)) * 100 : null;
 
-    const limitPrice = orderType === "LIMIT" ? parseFloat(price) : undefined;
-    if (orderType === "LIMIT" && (isNaN(limitPrice!) || limitPrice! <= 0)) {
-      toast.error("Invalid limit price");
-      return;
-    }
-
-    const tp = parseFloat(takeProfit);
-    const sl = parseFloat(stopLoss);
-
-    startTransition(async () => {
-      try {
-        await createPaperOrder({
-          symbol,
-          side,
-          type: orderType,
-          quantity: qty,
-          price: limitPrice,
-          takeProfit: isNaN(tp) ? undefined : tp,
-          stopLoss: isNaN(sl) ? undefined : sl,
-        });
-        toast.success(`${side} order submitted`);
-        if (orderType === "LIMIT") setPrice("");
-        setTakeProfit("");
-        setStopLoss("");
-      } catch (error) {
-        toast.error("Failed to submit order");
-      }
-    });
-  };
-
-  const handleCancel = (id: string) => {
-    startTransition(async () => {
-      try {
-        await cancelPaperOrder(id);
-        toast.success("Order cancelled");
-      } catch (error) {
-        toast.error("Failed to cancel order");
-      }
-    });
-  };
-
-  const handleClosePosition = (id: string, currentPrice: number) => {
-    startTransition(async () => {
-      try {
-        await closePaperPosition(id, currentPrice);
-        toast.success("Position closed");
-      } catch (error) {
-        toast.error("Failed to close position");
-      }
-    });
-  };
+  const activeLlmDecision = llmDecisions[symbol]?.decision;
 
   return (
     <PageShell
-      eyebrow="Paper Trading"
-      title="Simulated Execution Workspace"
-      description="Virtual order entry, realtime mark prices, live unrealized PnL, and risk controls. No real exchange execution is enabled."
-      action={<Badge variant="warn">Simulation mode only</Badge>}
+      eyebrow="Autonomous Paper Trading"
+      title="AI Quant Simulation Workstation"
+      description="The LLM analyzes the market, decides the trade, opens paper positions, manages risk, and closes them. No real exchange execution is wired."
+      action={
+        <Badge variant={AUTONOMY_ON ? "bull" : "warn"}>
+          <Cpu className="size-3" />
+          {AUTONOMY_ON ? "Autonomy Live" : "Autonomy Standby"}
+        </Badge>
+      }
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <MetricCard label="Paper Balance" value={formatCurrency(balance)} detail="Virtual USDT" icon={Wallet} tone="accent" />
-        <MetricCard label="Open PnL" value={formatCurrency(livePnL)} detail="Realtime mark-to-market" icon={BarChart3} tone={livePnL >= 0 ? "bull" : "bear"} />
-        <MetricCard label="Mark Price" value={lastPrice ? formatPrice(lastPrice) : "Connecting"} detail={ticker ? `${ticker.changePct.toFixed(2)}% 24h` : "Binance stream"} icon={SlidersHorizontal} tone={ticker && ticker.changePct < 0 ? "bear" : "bull"} />
-        <MetricCard label="Pending Orders" value={pendingOrders.length.toString()} detail="Database-backed" icon={CircleDollarSign} tone="muted" />
+      <AccountSummary />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <SecondaryStat
+          label="Open Positions"
+          value={positions.length.toString()}
+          detail={`${llmPositionsCount} LLM-owned`}
+        />
+        <SecondaryStat
+          label="Pending Orders"
+          value={pendingOrders.length.toString()}
+          detail="Awaiting fill"
+        />
+        <SecondaryStat
+          label="Closed Trades"
+          value={tradeHistory.length.toString()}
+          detail={`${wins}W · ${losses}L`}
+        />
+        <SecondaryStat
+          label="Win Rate"
+          value={winRate != null ? `${winRate.toFixed(1)}%` : "—"}
+          detail={winRate != null && winRate >= 50 ? "Above breakeven" : "Building sample"}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[390px_minmax(0,1fr)]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Order Entry</CardTitle>
-            <StatusBadge tone={side === "LONG" ? "bull" : "bear"}>{side}</StatusBadge>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant={side === "LONG" ? "bull" : "outline"}
-                onClick={() => setSide("LONG")}
-                className="h-11"
-              >
-                Buy / Long
-              </Button>
-              <Button
-                variant={side === "SHORT" ? "bear" : "outline"}
-                onClick={() => setSide("SHORT")}
-                className="h-11"
-              >
-                Sell / Short
-              </Button>
-            </div>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[420px_minmax(0,1fr)]">
+        <section className="flex flex-col gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BrainCog className="size-4 text-[var(--color-accent)]" />
+                Active LLM Decision
+              </CardTitle>
+              <Badge variant="muted">{symbol}</Badge>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!activeLlmDecision ? (
+                <p className="text-xs text-[var(--color-fg-subtle)]">
+                  Awaiting first decision for this symbol.
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <StatusBadge
+                      tone={
+                        activeLlmDecision.executeTrade
+                          ? activeLlmDecision.decision.toString().includes("SHORT") ||
+                            activeLlmDecision.decision === "SELL"
+                            ? "bear"
+                            : "bull"
+                          : "muted"
+                      }
+                    >
+                      {activeLlmDecision.decision}
+                    </StatusBadge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="accent">{activeLlmDecision.setupQuality}</Badge>
+                      <Badge variant="muted">{activeLlmDecision.confidence}%</Badge>
+                    </div>
+                  </div>
+                  <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">
+                    {activeLlmDecision.marketSummary}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
+                    <Metric
+                      label="Entry"
+                      value={formatPrice(activeLlmDecision.entryPrice)}
+                    />
+                    <Metric
+                      label="TP"
+                      value={formatPrice(activeLlmDecision.takeProfit)}
+                      tone="bull"
+                    />
+                    <Metric
+                      label="SL"
+                      value={formatPrice(activeLlmDecision.stopLoss)}
+                      tone="bear"
+                    />
+                  </div>
+                  <ul className="space-y-1 pt-1">
+                    {activeLlmDecision.reasoning.slice(0, 3).map((r) => (
+                      <li
+                        key={r}
+                        className="text-[11px] text-[var(--color-fg-muted)] leading-snug before:content-['•'] before:mr-1.5 before:text-[var(--color-accent)]"
+                      >
+                        {r}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
-            <div className="grid grid-cols-2 gap-2 p-1 rounded-md bg-white/[0.02] border border-[var(--color-border)]">
-              <button
-                onClick={() => setOrderType("MARKET")}
-                className={cn(
-                  "py-1.5 text-xs font-medium rounded transition-colors",
-                  orderType === "MARKET" ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]"
-                )}
-              >
-                Market
-              </button>
-              <button
-                onClick={() => setOrderType("LIMIT")}
-                className={cn(
-                  "py-1.5 text-xs font-medium rounded transition-colors",
-                  orderType === "LIMIT" ? "bg-[var(--color-accent)] text-white" : "text-[var(--color-fg-subtle)] hover:text-[var(--color-fg)]"
-                )}
-              >
-                Limit
-              </button>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>Symbol</Label>
-              <Input value={symbol} readOnly className="bg-white/[0.01]" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label>Quantity</Label>
-                <Input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="0.00"
-                />
+          <Card className="flex-1 min-h-0 flex flex-col">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="size-4 text-[var(--color-accent)]" />
+                AI Execution Log
+              </CardTitle>
+              <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wider">
+                <Activity className="size-3 text-[var(--color-bull)]" />
+                {executionLog.length} events
               </div>
-              <div className="space-y-1.5">
-                <Label>{orderType === "LIMIT" ? "Limit Price" : "Market Price"}</Label>
-                <Input
-                  type="number"
-                  value={orderType === "LIMIT" ? price : lastPrice.toString()}
-                  onChange={(e) => setPrice(e.target.value)}
-                  readOnly={orderType === "MARKET"}
-                  className={orderType === "MARKET" ? "bg-white/[0.01] opacity-60" : ""}
-                  placeholder={lastPrice.toString()}
-                />
-              </div>
-            </div>
-
-            <Separator className="bg-white/[0.05]" />
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-[var(--color-bull)]">Take Profit</Label>
-                <Input
-                  type="number"
-                  value={takeProfit}
-                  onChange={(e) => setTakeProfit(e.target.value)}
-                  placeholder="Exit target"
-                  className="border-[var(--color-bull-soft)] focus-visible:ring-[var(--color-bull)]"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[var(--color-bear)]">Stop Loss</Label>
-                <Input
-                  type="number"
-                  value={stopLoss}
-                  onChange={(e) => setStopLoss(e.target.value)}
-                  placeholder="Risk limit"
-                  className="border-[var(--color-bear-soft)] focus-visible:ring-[var(--color-bear)]"
-                />
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button
-                className="w-full h-11"
-                variant={side === "LONG" ? "bull" : "bear"}
-                disabled={isPending || !lastPrice}
-                onClick={handleSubmit}
-              >
-                {isPending ? "Submitting..." : `Submit ${side} Order`}
-              </Button>
-            </div>
-
-            <p className="text-[10px] text-center text-[var(--color-fg-subtle)] leading-relaxed">
-              Execution is simulated. Market orders fill at current mark price.
-              Position risk controls (TP/SL) will auto-close the trade.
-            </p>
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-y-auto min-h-0 pt-0">
+              {executionLog.length === 0 ? (
+                <div className="mt-3">
+                  <EmptyState
+                    title="No AI activity yet"
+                    description={
+                      AUTONOMY_ON
+                        ? "The engine is live — once decisions arrive and clear the risk gates, they'll show here."
+                        : "Set NEXT_PUBLIC_AI_AUTONOMY=on to let the LLM drive paper execution. Until then, only the rule engine fires."
+                    }
+                  />
+                </div>
+              ) : (
+                <div className="mt-3 space-y-1.5">
+                  {executionLog.map((e) => (
+                    <div
+                      key={e.id}
+                      className={cn(
+                        "rounded-md border px-2.5 py-2 space-y-1",
+                        e.outcome === "executed"
+                          ? "border-[var(--color-accent)]/30 bg-[var(--color-accent-soft)]"
+                          : "border-[var(--color-border)] bg-white/[0.01]",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant={e.outcome === "executed" ? "accent" : "muted"}
+                            className="text-[9px] h-4 px-1.5"
+                          >
+                            {e.decision}
+                          </Badge>
+                          <span className="text-xs font-medium text-[var(--color-fg)]">
+                            {e.symbol.replace("USDT", "")}
+                          </span>
+                          <Badge variant="muted" className="text-[9px] h-4 px-1">
+                            {e.setupQuality} · {e.confidence}%
+                          </Badge>
+                        </div>
+                        <span className="text-[10px] text-[var(--color-fg-subtle)] shrink-0">
+                          {formatDistanceToNowStrict(e.at, { addSuffix: true })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[var(--color-fg-muted)] leading-snug">
+                        {e.outcome === "rejected"
+                          ? `Rejected — ${e.rejectionReason ?? "no reason"}`
+                          : e.headline || "Executed"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </section>
 
         <section className="space-y-4">
           <Card>
@@ -242,34 +265,105 @@ export function LivePaperTradingPage() {
               <Badge variant="muted">{positions.length} positions</Badge>
             </CardHeader>
             <CardContent className="space-y-2">
-              {positions.length === 0 ? (
-                <EmptyState title="No open positions" description="Open positions will mark to live Binance prices once the paper execution engine creates them." />
-              ) : positions.map((position) => {
-                const ticker = tickers[position.symbol];
-                const mark = ticker?.last ?? position.entryPrice;
-                const direction = position.side === "LONG" ? 1 : -1;
-                const pnl = (mark - position.entryPrice) * position.quantity * direction;
-                return (
-                  <div key={position.id} className="grid grid-cols-2 gap-3 rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3 md:grid-cols-7">
-                    <Cell label="Symbol" value={position.symbol} />
-                    <Cell label="Side" value={position.side} tone={position.side === "LONG" ? "bull" : "bear"} />
-                    <Cell label="Qty" value={position.quantity.toString()} />
-                    <Cell label="Entry" value={formatPrice(position.entryPrice)} />
-                    <Cell label="TP / SL" value={`${position.takeProfit ? formatPrice(position.takeProfit) : "—"} / ${position.stopLoss ? formatPrice(position.stopLoss) : "—"}`} />
-                    <Cell label="Mark" value={formatPrice(mark)} />
-                    <div className="flex items-center justify-between col-span-2 md:col-span-1">
-                      <Cell label="PnL" value={formatCurrency(pnl)} tone={pnl >= 0 ? "bull" : "bear"} />
-                      <button
-                        onClick={() => handleClosePosition(position.id, mark)}
-                        className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--color-bear)] hover:bg-[var(--color-bear-soft)]"
-                        title="Close Position"
-                      >
-                        <X className="size-4" />
-                      </button>
+              {enrichedPositions.length === 0 ? (
+                <EmptyState
+                  title="No open positions"
+                  description="The autonomous engine will populate this once an LLM decision clears the risk gates."
+                />
+              ) : (
+                enrichedPositions.map(
+                  ({
+                    position,
+                    mark,
+                    unrealizedPnl: pnl,
+                    unrealizedPnlPct,
+                    durationMs,
+                    riskReward,
+                  }) => (
+                    <div
+                      key={position.id}
+                      className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-[var(--color-fg)]">
+                            {position.symbol}
+                          </span>
+                          <Badge
+                            variant={position.side === "LONG" ? "bull" : "bear"}
+                            className="text-[10px]"
+                          >
+                            {position.side}
+                          </Badge>
+                          {position.leverage > 1 ? (
+                            <Badge variant="warn" className="text-[10px]">
+                              {position.leverage}x
+                            </Badge>
+                          ) : null}
+                          <Badge
+                            variant={SOURCE_TONE[position.decisionSource]}
+                            className="text-[9px] h-4 px-1"
+                          >
+                            {SOURCE_LABEL[position.decisionSource]}
+                          </Badge>
+                        </div>
+                        <div
+                          className={cn(
+                            "text-right text-sm font-mono tabular-nums leading-tight",
+                            pnl >= 0
+                              ? "text-[var(--color-bull)]"
+                              : "text-[var(--color-bear)]",
+                          )}
+                        >
+                          {formatCurrency(pnl)}
+                          <span className="block text-[10px] text-[var(--color-fg-subtle)]">
+                            {unrealizedPnlPct >= 0 ? "+" : ""}
+                            {unrealizedPnlPct.toFixed(2)}% ROE
+                          </span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8 text-[11px]">
+                        <div className="space-y-0.5">
+                          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                            Qty / Notional
+                          </div>
+                          <div className="mt-1 text-mono-tabular text-xs text-[var(--color-fg)]">
+                            {position.quantity}
+                            {position.status === "PARTIALLY_CLOSED"
+                              ? ` / ${position.initialQuantity}`
+                              : ""}
+                            <span className="text-[10px] text-[var(--color-fg-subtle)] block">
+                              {formatCurrency(position.quantity * position.entryPrice)}
+                            </span>
+                          </div>
+                        </div>
+                        <Cell label="Entry" value={formatPrice(position.entryPrice)} />
+                        <Cell label="Mark" value={formatPrice(mark)} />
+                        <Cell label="Margin" value={formatCurrency(position.marginUsed)} />
+                        <Cell
+                          label="Liq"
+                          value={
+                            position.liquidationPrice && Number.isFinite(position.liquidationPrice)
+                              ? formatPrice(position.liquidationPrice)
+                              : "—"
+                          }
+                        />
+                        <Cell
+                          label="TP / SL"
+                          value={`${position.takeProfit ? formatPrice(position.takeProfit) : "—"} / ${
+                            position.stopLoss ? formatPrice(position.stopLoss) : "—"
+                          }`}
+                        />
+                        <Cell label="Held" value={formatDuration(durationMs)} />
+                        <Cell
+                          label="RR"
+                          value={riskReward != null ? `${riskReward.toFixed(2)}:1` : "—"}
+                        />
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  ),
+                )
+              )}
             </CardContent>
           </Card>
 
@@ -280,71 +374,219 @@ export function LivePaperTradingPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {pendingOrders.length === 0 ? (
-                <EmptyState title="No pending orders" description="Orders waiting for execution will appear here. Market orders fill nearly instantly." />
-              ) : pendingOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between rounded-md bg-white/[0.025] px-3 py-2.5">
-                  <div className="flex gap-4 items-center">
-                    <div className={cn("text-xs font-bold px-1.5 py-0.5 rounded", order.side === "LONG" ? "bg-[var(--color-bull-soft)] text-[var(--color-bull)]" : "bg-[var(--color-bear-soft)] text-[var(--color-bear)]")}>
-                      {order.side}
+                <EmptyState
+                  title="No pending orders"
+                  description="Autonomous market orders fill nearly instantly — anything visible here is a limit order still waiting on price."
+                />
+              ) : (
+                pendingOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between rounded-md bg-white/[0.025] px-3 py-2.5"
+                  >
+                    <div className="flex gap-3 items-center">
+                      <Badge
+                        variant={order.side === "LONG" ? "bull" : "bear"}
+                        className="text-[10px]"
+                      >
+                        {order.side}
+                      </Badge>
+                      <div>
+                        <div className="text-sm font-medium text-[var(--color-fg)]">
+                          {order.symbol}
+                        </div>
+                        <div className="text-xs text-[var(--color-fg-subtle)]">
+                          {order.orderType} · {order.quantity} @{" "}
+                          {order.price ? formatPrice(order.price) : "MARKET"}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm font-medium text-[var(--color-fg)]">{order.symbol}</div>
-                      <div className="text-xs text-[var(--color-fg-subtle)]">{order.orderType} · {order.quantity} @ {order.price ? formatPrice(order.price) : "MARKET"}</div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={SOURCE_TONE[order.decisionSource]}
+                        className="text-[9px] h-4 px-1"
+                      >
+                        {SOURCE_LABEL[order.decisionSource]}
+                      </Badge>
+                      <Badge variant="muted">{order.status}</Badge>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="muted">{order.status}</Badge>
-                    <button
-                      onClick={() => handleCancel(order.id)}
-                      className="p-1 hover:bg-white/10 rounded-md transition-colors text-[var(--color-bear)]"
-                      title="Cancel Order"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
               <CardTitle>Trade History</CardTitle>
-              <Badge variant="muted">Last 10</Badge>
+              <Badge variant="muted">{tradeHistory.length} closed</Badge>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {orderHistory.length === 0 ? (
-                <div className="py-4 text-center text-xs text-[var(--color-fg-subtle)]">No recent trade history</div>
-              ) : orderHistory.slice(0, 10).map((order) => (
-                <div key={order.id} className="flex items-center justify-between rounded-md bg-white/[0.01] px-3 py-2 border border-[var(--color-border)] opacity-70">
-                  <div className="flex gap-4 items-center">
-                    <div className={cn("text-[10px] font-bold px-1 py-0.5 rounded", order.side === "LONG" ? "text-[var(--color-bull)]" : "text-[var(--color-bear)]")}>
-                      {order.side}
-                    </div>
-                    <div>
-                      <div className="text-xs font-medium text-[var(--color-fg)]">{order.symbol}</div>
-                      <div className="text-[10px] text-[var(--color-fg-subtle)]">{order.orderType} · {order.quantity}</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-[10px] font-mono text-[var(--color-fg-subtle)]">{order.price ? formatPrice(order.price) : "MARKET"}</div>
-                    <Badge variant="muted" className="text-[9px] h-4 px-1">{order.status}</Badge>
-                  </div>
+            <CardContent className="space-y-1.5">
+              {tradeHistory.length === 0 ? (
+                <div className="py-4 text-center text-xs text-[var(--color-fg-subtle)]">
+                  No closed trades yet
                 </div>
-              ))}
+              ) : (
+                tradeHistory.slice(0, 25).map((trade) => (
+                  <div
+                    key={trade.id}
+                    className="flex items-center justify-between rounded-md bg-white/[0.01] px-3 py-2 border border-[var(--color-border)]"
+                  >
+                    <div className="flex gap-3 items-center min-w-0">
+                      <div
+                        className={cn(
+                          "text-[10px] font-bold px-1 py-0.5 rounded",
+                          trade.side === "LONG"
+                            ? "text-[var(--color-bull)]"
+                            : "text-[var(--color-bear)]",
+                        )}
+                      >
+                        {trade.side}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-medium text-[var(--color-fg)]">
+                          {trade.symbol}
+                        </div>
+                        <div className="text-[10px] text-[var(--color-fg-subtle)] flex items-center gap-2">
+                          <span>
+                            {trade.quantity} @ {formatPrice(trade.entryPrice)} →{" "}
+                            {formatPrice(trade.exitPrice)}
+                          </span>
+                          <span className="text-[var(--color-fg-subtle)]/60">·</span>
+                          <span>{formatDuration(trade.durationMs)}</span>
+                          {trade.riskReward != null && (
+                            <>
+                              <span className="text-[var(--color-fg-subtle)]/60">·</span>
+                              <span>RR {trade.riskReward.toFixed(2)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant={SOURCE_TONE[trade.decisionSource]}
+                        className="text-[9px] h-4 px-1"
+                      >
+                        {SOURCE_LABEL[trade.decisionSource]}
+                      </Badge>
+                      <Badge
+                        variant={CLOSE_REASON_TONE[trade.closeReason]}
+                        className="text-[9px] h-4 px-1"
+                      >
+                        {CLOSE_REASON_LABEL[trade.closeReason]}
+                      </Badge>
+                      <div
+                        className={cn(
+                          "text-xs font-mono text-mono-tabular w-20 text-right",
+                          trade.pnl >= 0
+                            ? "text-[var(--color-bull)]"
+                            : "text-[var(--color-bear)]",
+                        )}
+                      >
+                        {formatCurrency(trade.pnl)}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </section>
       </div>
+
+      <p className="text-[10.5px] text-[var(--color-fg-subtle)] leading-relaxed italic text-center pt-2">
+        Paper trading only — no real capital, no live exchange execution.
+        Mark price streams from Binance Spot; execution is fully simulated.
+        Toggle <code>NEXT_PUBLIC_AI_AUTONOMY</code> between <code>on</code> and{" "}
+        <code>off</code> to hand the wheel between the LLM and the rule engine.
+      </p>
     </PageShell>
   );
 }
 
-function Cell({ label, value, tone }: { label: string; value: string; tone?: "bull" | "bear" }) {
+function Cell({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "bull" | "bear";
+}) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">{label}</div>
-      <div className={cn("mt-1 text-mono-tabular text-sm", tone === "bull" ? "text-[var(--color-bull)]" : tone === "bear" ? "text-[var(--color-bear)]" : "text-[var(--color-fg)]")}>{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+        {label}
+      </div>
+      <div
+        className={cn(
+          "mt-1 text-mono-tabular text-xs",
+          tone === "bull"
+            ? "text-[var(--color-bull)]"
+            : tone === "bear"
+              ? "text-[var(--color-bear)]"
+              : "text-[var(--color-fg)]",
+        )}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function SecondaryStat({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+}) {
+  return (
+    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] px-3 py-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+        {label}
+      </div>
+      <div className="mt-1 text-mono-tabular text-base font-semibold tabular-nums text-[var(--color-fg)]">
+        {value}
+      </div>
+      {detail ? (
+        <div className="mt-0.5 text-[10px] text-[var(--color-fg-subtle)] truncate">
+          {detail}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function Metric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "bull" | "bear";
+}) {
+  return (
+    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-2">
+      <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+        {label}
+      </div>
+      <div
+        className={cn(
+          "mt-0.5 text-mono-tabular font-semibold",
+          tone === "bull"
+            ? "text-[var(--color-bull)]"
+            : tone === "bear"
+              ? "text-[var(--color-bear)]"
+              : "text-[var(--color-fg)]",
+        )}
+      >
+        {value}
+      </div>
     </div>
   );
 }

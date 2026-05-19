@@ -1,65 +1,138 @@
 "use client";
 
-import { BarChart3, PieChart, ShieldCheck, Target, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  Coins,
+  ShieldCheck,
+  Target,
+} from "lucide-react";
 
-import { MetricCard, MiniBars, PageShell, StatusBadge } from "@/components/shared/page-shell";
+import { AccountSummary } from "@/components/shared/account-summary";
+import {
+  MetricCard,
+  MiniBars,
+  PageShell,
+  StatusBadge,
+} from "@/components/shared/page-shell";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { useMarketStore } from "@/store/market-store";
 import type { PaperPositionView } from "@/types/portfolio";
 
+/**
+ * Server-hydrated portfolio analytics view. The numbers here come from the
+ * RSC route (wallet + positions) and are recomputed live against the market
+ * tickers — wallet/usedMargin are SSR-fixed, but unrealizedPnL and totalEquity
+ * track the mark in real time.
+ */
 export function LivePortfolioPage({
-  balance,
+  walletBalance,
+  usedMargin,
   positions,
 }: {
-  balance: number;
+  walletBalance: number;
+  usedMargin: number;
   positions: PaperPositionView[];
 }) {
   const tickers = useMarketStore((state) => state.tickers);
   const btcPrice = tickers.BTCUSDT?.last ?? 0;
-  const unrealized = positions.reduce((sum, position) => {
+
+  const unrealizedPnl = positions.reduce((sum, position) => {
     const ticker = tickers[position.symbol];
     const mark = ticker?.last ?? position.entryPrice;
     const direction = position.side === "LONG" ? 1 : -1;
     return sum + (mark - position.entryPrice) * position.quantity * direction;
   }, 0);
-  const equity = balance + unrealized;
-  const positionValue = positions.reduce((sum, position) => {
-    const ticker = tickers[position.symbol];
-    const mark = ticker?.last ?? position.entryPrice;
-    return sum + mark * position.quantity;
+
+  const totalEquity = walletBalance + unrealizedPnl;
+  const availableBalance = walletBalance - usedMargin;
+  const grossNotional = positions.reduce((sum, position) => {
+    return sum + position.entryPrice * position.quantity;
   }, 0);
-  const cashPct = equity > 0 ? Math.max(0, Math.min(100, (balance / equity) * 100)) : 100;
-  const exposurePct = equity > 0 ? Math.max(0, Math.min(100, (positionValue / equity) * 100)) : 0;
+
+  // Layout ratios use Total Equity as the denominator so the bars stay
+  // sane even when wallet is split between margin and free cash.
+  const denom = Math.max(totalEquity, 1);
+  const marginPct = Math.max(0, Math.min(100, (usedMargin / denom) * 100));
+  const cashPct = Math.max(0, Math.min(100, (availableBalance / denom) * 100));
 
   return (
     <PageShell
       eyebrow="Portfolio"
       title="Paper Portfolio Analytics"
-      description="Realtime equity, exposure, distribution, and performance analytics for the simulated trading account."
+      description="Wallet balance, used margin, unrealized PnL, and total equity — kept strictly separate, futures-style."
       action={<Badge variant="muted">Live marks</Badge>}
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <MetricCard label="Total Equity" value={formatCurrency(equity)} detail="Balance + live PnL" icon={PieChart} tone="accent" />
-        <MetricCard label="Unrealized PnL" value={formatCurrency(unrealized)} detail="Realtime mark" icon={TrendingUp} tone={unrealized >= 0 ? "bull" : "bear"} />
-        <MetricCard label="Position Value" value={formatCurrency(positionValue)} detail={`${exposurePct.toFixed(1)}% exposure`} icon={BarChart3} tone="warn" />
-        <MetricCard label="Open Positions" value={positions.length.toString()} detail="Database-backed" icon={Target} tone="muted" />
+      <AccountSummary />
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <MetricCard
+          label="Gross Notional"
+          value={formatCurrency(grossNotional)}
+          detail={`Across ${positions.length} open`}
+          icon={BarChart3}
+          tone="muted"
+        />
+        <MetricCard
+          label="Open Positions"
+          value={positions.length.toString()}
+          detail="Database-backed"
+          icon={Target}
+          tone="muted"
+        />
+        <MetricCard
+          label="Margin Utilisation"
+          value={`${marginPct.toFixed(1)}%`}
+          detail={`Avail ${formatCurrency(availableBalance)}`}
+          icon={ShieldCheck}
+          tone={marginPct > 80 ? "bear" : marginPct > 50 ? "warn" : "accent"}
+        />
+        <MetricCard
+          label="Live Drawdown"
+          value={
+            unrealizedPnl < 0 ? formatCurrency(unrealizedPnl) : formatCurrency(0)
+          }
+          detail="From open positions"
+          icon={Coins}
+          tone={unrealizedPnl < 0 ? "bear" : "muted"}
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardHeader>
-            <CardTitle>Live Equity Curve Basis</CardTitle>
-            <StatusBadge tone={unrealized >= 0 ? "bull" : "bear"}>{unrealized >= 0 ? "Positive" : "Negative"} PnL</StatusBadge>
+            <CardTitle>Equity vs Wallet</CardTitle>
+            <StatusBadge tone={unrealizedPnl >= 0 ? "bull" : "bear"}>
+              {unrealizedPnl >= 0 ? "Positive" : "Negative"} PnL
+            </StatusBadge>
           </CardHeader>
           <CardContent>
             <div className="h-[280px] rounded-lg border border-[var(--color-border)] bg-[linear-gradient(180deg,rgba(0,212,255,0.08),transparent)] p-5">
               <div className="flex h-full items-end justify-between gap-2">
-                {[balance * 0.96, balance * 0.98, balance, equity].map((value, index) => (
-                  <div key={`${value}-${index}`} className="flex flex-1 flex-col items-center gap-2">
-                    <div className="w-full rounded-t bg-[var(--color-accent)]/75" style={{ height: `${Math.max(8, (value / Math.max(equity, balance)) * 90)}%` }} />
-                    <span className="text-[10px] text-[var(--color-fg-subtle)]">{index === 3 ? "Live" : index + 1}</span>
+                {[
+                  { label: "Wallet", value: walletBalance },
+                  { label: "Avail", value: availableBalance },
+                  { label: "Margin", value: usedMargin },
+                  { label: "Equity", value: totalEquity },
+                ].map((bar) => (
+                  <div
+                    key={bar.label}
+                    className="flex flex-1 flex-col items-center gap-2"
+                  >
+                    <div
+                      className="w-full rounded-t bg-[var(--color-accent)]/75"
+                      style={{
+                        height: `${Math.max(
+                          8,
+                          (Math.max(bar.value, 0) / Math.max(totalEquity, walletBalance, 1)) *
+                            90,
+                        )}%`,
+                      }}
+                    />
+                    <span className="text-[10px] text-[var(--color-fg-subtle)]">
+                      {bar.label}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -75,11 +148,17 @@ export function LivePortfolioPage({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex h-3 overflow-hidden rounded-full bg-white/[0.04]">
-                <span className="bg-[var(--color-accent)]" style={{ width: `${cashPct}%` }} />
-                <span className="bg-[var(--color-bull)]" style={{ width: `${exposurePct}%` }} />
+                <span
+                  className="bg-[var(--color-accent)]"
+                  style={{ width: `${cashPct}%` }}
+                />
+                <span
+                  className="bg-[var(--color-bull)]"
+                  style={{ width: `${marginPct}%` }}
+                />
               </div>
-              <AllocationRow label="Cash" value={cashPct} />
-              <AllocationRow label="Open exposure" value={exposurePct} />
+              <AllocationRow label="Available cash" value={cashPct} />
+              <AllocationRow label="Used margin" value={marginPct} />
             </CardContent>
           </Card>
 
@@ -89,16 +168,33 @@ export function LivePortfolioPage({
               <ShieldCheck className="size-4 text-[var(--color-bull)]" />
             </CardHeader>
             <CardContent className="space-y-2">
-              <RiskRow label="Portfolio heat" value={`${exposurePct.toFixed(1)}%`} />
-              <RiskRow label="BTC mark" value={btcPrice ? formatCurrency(btcPrice, "USDT") : "Connecting"} />
-              <RiskRow label="Max live drawdown" value={unrealized < 0 ? formatCurrency(unrealized) : "0.00 USDT"} />
+              <RiskRow
+                label="Margin utilisation"
+                value={`${marginPct.toFixed(1)}%`}
+              />
+              <RiskRow
+                label="BTC mark"
+                value={btcPrice ? formatCurrency(btcPrice, "USDT") : "Connecting"}
+              />
+              <RiskRow
+                label="Live drawdown"
+                value={
+                  unrealizedPnl < 0 ? formatCurrency(unrealizedPnl) : "0.00 USDT"
+                }
+              />
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader><CardTitle>Return Distribution</CardTitle></CardHeader>
+            <CardHeader>
+              <CardTitle>Equity Distribution</CardTitle>
+              <Coins className="size-4 text-[var(--color-fg-muted)]" />
+            </CardHeader>
             <CardContent>
-              <MiniBars values={[cashPct, exposurePct, Math.abs(unrealized) + 1]} tone={unrealized >= 0 ? "bull" : "bear"} />
+              <MiniBars
+                values={[cashPct, marginPct, Math.abs(unrealizedPnl) + 1]}
+                tone={unrealizedPnl >= 0 ? "bull" : "bear"}
+              />
             </CardContent>
           </Card>
         </aside>
@@ -111,7 +207,9 @@ function AllocationRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between text-sm">
       <span className="text-[var(--color-fg-muted)]">{label}</span>
-      <span className="text-mono-tabular text-[var(--color-fg)]">{value.toFixed(1)}%</span>
+      <span className="text-mono-tabular text-[var(--color-fg)]">
+        {value.toFixed(1)}%
+      </span>
     </div>
   );
 }

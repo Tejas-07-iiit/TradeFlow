@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "January Barometer",
+  "Category": "Equities, Market Timing, Seasonality",
+  "Asset Class": "ETFs, Funds, Futures, CFDs",
+  "Market Type": "Global, Equities",
+  "Strategy Description": "A calendar anomaly suggesting that the equity market return in January predicts the performance for the remainder of the year (February to December).",
+  "Core Logic": "The adage 'As goes January, so goes the rest of the year.' A strong January predicts a strong year, while a weak January predicts a weak year.",
+  "Entry Conditions": "Invest in the equity market every January. If the January return is positive, stay invested in equities for the rest of the year.",
+  "Exit Conditions": "If the January return is negative, switch the investment to T-Bills (or cash) for the remainder of the year.",
+  "Indicators Used": "January monthly return.",
+  "Risk Management Rules": "Market timing strategy that rotates into safe-haven assets (T-Bills) during predicted down years.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly (after January).",
+  "Long/Short Logic": "Long-only (Equities or T-Bills).",
+  "Market Regime Suitability": "Not suitable as a hedge during crises as it remains long-only in equities during bull signals.",
+  "Volatility Considerations": "Estimated Volatility: 16.8%.",
+  "Momentum/Mean Reversion Classification": "Seasonality",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "10.38%",
+    "Sharpe Ratio": 0.38,
+    "Max Drawdown": "-30.22%"
+  },
+  "Win Rate (if available)": "67%",
+  "Source URL": "https://quantpedia.com/strategies/january-barometer",
+  "Full Notes": "The strategy's alpha may be deteriorating, and the spread over passive investment is small. Caution is advised regarding data mining.",
+  "Mathematical/Statistical Concepts": "Calendar anomalies, data mining, predictive signaling, risk-adjustment."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Betting Against Beta Factor in Stocks",
+  "Category": "Equities, Long/Short, Beta Factor",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A strategy that goes long on low-beta stocks and short on high-beta stocks, using leverage to neutralize market exposure.",
+  "Core Logic": "Leverage-constrained investors over-weigh high-beta stocks to achieve higher returns, making them overvalued. Low-beta stocks deliver higher risk-adjusted returns.",
+  "Entry Conditions": "Rank stocks by beta; long the low-beta decile and short the high-beta decile.",
+  "Exit Conditions": "Monthly rebalancing.",
+  "Indicators Used": "Beta (calculated using a 1-year rolling window against the market index).",
+  "Risk Management Rules": "Both portfolios are rescaled to have a beta of one at formation to create a zero-beta portfolio.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long low-beta (leveraged), short high-beta (de-leveraged).",
+  "Market Regime Suitability": "Partial hedge during market turmoil; low-beta stocks are generally safer.",
+  "Volatility Considerations": "Estimated volatility of 11.5%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion (Anomaly)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 8.86% (Indicative), Sharpe Ratio: 0.42, Max Drawdown: -61.52%",
+  "Win Rate (if available)": "57%",
+  "Source URL": "https://quantpedia.com/strategies/betting-against-beta-factor-in-stocks",
+  "Full Notes": "The effect is strongest in small-cap stocks. Caution is needed regarding transaction costs and slippage.",
+  "Mathematical/Statistical Concepts": "Beta, Leverage Constraints, Risk-Adjusted Returns, Zero-Beta Portfolio Construction."
+}

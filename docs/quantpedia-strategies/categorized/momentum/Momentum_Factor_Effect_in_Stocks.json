@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Momentum Factor Effect in Stocks",
+  "Category": "Factor Investing",
+  "Asset Class": "Equities",
+  "Market Type": "US / Global",
+  "Strategy Description": "A strategy that buys stocks that have performed well in the past and sells those that have performed poorly, expecting the trend to continue.",
+  "Core Logic": "Stocks that outperformed peers over a 3-12 month period tend to continue to perform well in the upcoming period.",
+  "Entry Conditions": "Go long stocks with high relative past 12-month returns (skipping the most recent month) and short those with low returns.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "12-month Momentum (12-1 month return).",
+  "Risk Management Rules": "Managing time-varying specific risk can eliminate crashes and double the Sharpe ratio.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short (standard) or Long-only.",
+  "Market Regime Suitability": "Prone to 'momentum crashes' during market rebounds following large declines.",
+  "Volatility Considerations": "Estimated volatility of 16.6%; very high drawdown potential (-87.41%).",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics": {
+    "CAGR": "8.3%",
+    "Sharpe Ratio": "0.5",
+    "Max Drawdown": "-87.41%"
+  },
+  "Win Rate": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/momentum-factor-effect-in-stocks",
+  "Full Notes": "Based on Jegadeesh and Titman (1993). Behavioral explanations include herding and over/underreaction.",
+  "Mathematical/Statistical Concepts": "Momentum, Relative Strength, Decile Ranking."
+}

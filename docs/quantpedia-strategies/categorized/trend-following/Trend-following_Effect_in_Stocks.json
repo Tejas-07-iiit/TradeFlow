@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Trend-following Effect in Stocks",
+  "Category": "Momentum, Trend-following, Stock Picking",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A simple trend-following system applied to individual stocks using all-time highs as entry signals and ATR as a trailing stop.",
+  "Core Logic": "Trend-following cuts the left tail of the return distribution. Buying stocks at new highs captures momentum while trailing stops manage risk.",
+  "Entry Conditions": "Buy if today's close is greater than or equal to the highest close in the stock's entire history.",
+  "Exit Conditions": "10-period Average True Range (ATR) trailing stop.",
+  "Indicators Used": "All-time high price, Average True Range (ATR).",
+  "Risk Management Rules": "ATR trailing stop; liquidity and minimum price filters; equal weighting.",
+  "Timeframe": "Daily",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long only.",
+  "Market Regime Suitability": "Not a hedge; highly correlated to the broad equity market.",
+  "Volatility Considerations": "Estimated Volatility: 15.6%. ATR stop adapts to individual stock volatility.",
+  "Momentum/Mean Reversion Classification": "Trend-following",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 19.3%, Sharpe Ratio: 1.24, Max Drawdown: -33.74%",
+  "Win Rate (if available)": "Not stated",
+  "Source URL": "https://quantpedia.com/strategies/trend-following-effect-in-stocks",
+  "Full Notes": "Backtest includes 0.5% round-turn transaction costs. The strategy suggests trend-following works on stocks as well as futures.",
+  "Mathematical/Statistical Concepts": "Trailing stops, ATR, all-time highs, non-normal return distribution (fat tails)."
+}

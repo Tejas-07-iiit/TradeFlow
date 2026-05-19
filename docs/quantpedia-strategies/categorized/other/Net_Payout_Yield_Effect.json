@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Net Payout Yield Effect",
+  "Category": "Value, Fundamental Analysis, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that invests in stocks with high net payout yields (dividends plus repurchases minus issuances) and shorts those with low yields, based on the premise that total shareholder yield is a better predictor of returns than dividend yield alone.",
+  "Core Logic": "Dividend yield has lost its predictive power as companies increasingly use stock repurchases to distribute cash. Net payout yield captures the total cash returned to shareholders, which remains a strong predictor of future performance.",
+  "Entry Conditions": "At the end of June each year, rank stocks by net payout yield. Form ten portfolios (deciles). Buy the portfolio with the highest net payout yield.",
+  "Exit Conditions": "Hold the portfolio for one year and rebalance annually.",
+  "Indicators Used": "Net Payout Yield = (Dividends + Repurchases - Common Share Issuances) / Market Capitalization.",
+  "Risk Management Rules": "Annual rebalancing; diversification across approximately 1000 instruments.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Can be implemented as long-only (highest yield decile) or long-short (long high yield, short low yield).",
+  "Market Regime Suitability": "Not suitable as a hedge for bear markets; high correlation to equity market premium.",
+  "Volatility Considerations": "Not stated in source paper.",
+  "Momentum/Mean Reversion Classification": "Value (Fundamental)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 22.13%, Sharpe Ratio: Not stated, Max Drawdown: -52.5%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/net-payout-yield-effect",
+  "Full Notes": "Investment universe includes NYSE, AMEX, and NASDAQ stocks. The strategy shows negative market betas and negative loading on the size factor.",
+  "Mathematical/Statistical Concepts": "Net Payout Yield calculation, Fama-MacBeth regressions, Cross-sectional time-series analysis."
+}

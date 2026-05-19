@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Residual Momentum Factor",
+  "Category": "Momentum, Stock Picking, Equity Long/Short",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A momentum strategy that ranks stocks based on residual returns from the Fama-French three-factor model to reduce systematic factor exposures and volatility.",
+  "Core Logic": "Traditional momentum has time-varying exposures to systematic factors. Residual momentum removes these dependencies, leading to more consistent risk-adjusted profits.",
+  "Entry Conditions": "Rank the 10% largest stocks by past 12-month residual returns (excluding the most recent month), standardized by the standard deviation of residuals. Long the top decile and Short the bottom decile.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Residual returns (from 36-month Fama-French regression), Standard deviation of residuals.",
+  "Risk Management Rules": "Standardization of returns; factor neutrality; focus on large-cap stocks.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long top decile, Short bottom decile.",
+  "Market Regime Suitability": "Hedge potential; shows positive returns during recession months (NBER defined).",
+  "Volatility Considerations": "Estimated Volatility: 15.27%. Residual momentum has lower volatility than total return momentum.",
+  "Momentum/Mean Reversion Classification": "Momentum (Residual)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 9.18%, Sharpe Ratio: 0.34, Max Drawdown: -59.74%",
+  "Win Rate (if available)": "53%",
+  "Source URL": "https://quantpedia.com/strategies/residual-momentum-factor",
+  "Full Notes": "Residual returns are estimated each month using a regression model over the past 36 months with Fama-French three factors as independent variables.",
+  "Mathematical/Statistical Concepts": "Multiple linear regression, Fama-French 3-factor model, standardization, residual returns."
+}

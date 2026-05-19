@@ -18,13 +18,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useAccountMetrics } from "@/hooks/use-position-metrics";
+import { WATCHLIST_SYMBOLS } from "@/lib/market/symbols";
 import { cn, formatCurrency, formatPct, formatPrice } from "@/lib/utils";
 import { useMarketStore } from "@/store/market-store";
-import { usePortfolioStore } from "@/store/portfolio-store";
 
 import { ConnectionStatus } from "./connection-status";
 
-const SUPPORTED_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+// Use the canonical watchlist so this dropdown can't drift from the rest
+// of the system (signal engine, news subscriber, AI decision watcher).
+const SUPPORTED_SYMBOLS = WATCHLIST_SYMBOLS;
 
 export function Topbar() {
   const { data: session } = useSession();
@@ -33,8 +41,7 @@ export function Topbar() {
   const ticker = useMarketStore((s) => s.ticker);
   const lastPrice = useMarketStore((s) => s.lastPrice);
   
-  const walletBalance = usePortfolioStore((s) => s.balance);
-  const currency = usePortfolioStore((s) => s.currency);
+  const account = useAccountMetrics();
 
   const change = ticker?.changePct ?? 0;
   const up = change >= 0;
@@ -112,14 +119,36 @@ export function Topbar() {
 
         {/* Right: wallet + profile */}
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end leading-tight">
-            <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
-              Paper balance
-            </span>
-            <span className="text-mono-tabular text-[13px] text-[var(--color-fg)]">
-              {formatCurrency(walletBalance, currency)}
-            </span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="hidden sm:flex flex-col items-end leading-tight cursor-help">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                  Equity
+                </span>
+                <span className="text-mono-tabular text-[13px] text-[var(--color-fg)]">
+                  {formatCurrency(account.totalEquity, account.currency)}
+                </span>
+                <span className="text-mono-tabular text-[10px] text-[var(--color-fg-subtle)]">
+                  Avail {formatCurrency(account.availableBalance, account.currency)}
+                </span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="text-[11px] leading-relaxed">
+              <div className="space-y-1">
+                <Row label="Wallet" value={formatCurrency(account.walletBalance, account.currency)} />
+                <Row label="Used margin" value={formatCurrency(account.usedMargin, account.currency)} />
+                <Row label="Available" value={formatCurrency(account.availableBalance, account.currency)} />
+                <Row
+                  label="Unrealized PnL"
+                  value={formatCurrency(account.unrealizedPnl, account.currency)}
+                  tone={account.unrealizedPnl >= 0 ? "bull" : "bear"}
+                />
+                <div className="pt-1 mt-1 border-t border-[var(--color-border)]">
+                  <Row label="Total equity" value={formatCurrency(account.totalEquity, account.currency)} strong />
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
 
           <button
             type="button"
@@ -170,5 +199,36 @@ export function Topbar() {
         </div>
       </div>
     </header>
+  );
+}
+
+function Row({
+  label,
+  value,
+  tone,
+  strong,
+}: {
+  label: string;
+  value: string;
+  tone?: "bull" | "bear";
+  strong?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-6">
+      <span className="text-[var(--color-fg-muted)]">{label}</span>
+      <span
+        className={cn(
+          "text-mono-tabular tabular-nums",
+          strong && "font-semibold",
+          tone === "bull"
+            ? "text-[var(--color-bull)]"
+            : tone === "bear"
+              ? "text-[var(--color-bear)]"
+              : "text-[var(--color-fg)]",
+        )}
+      >
+        {value}
+      </span>
+    </div>
   );
 }

@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Currency Momentum Factor",
+  "Category": "FX Strategy",
+  "Asset Class": "Currencies",
+  "Market Type": "Global",
+  "Strategy Description": "A trend-following strategy in the FX market that buys currencies that have appreciated in the past and sells those that have depreciated.",
+  "Core Logic": "Exchange rates tend to trend on a multi-year basis due to investor underreaction to news and market segmentation.",
+  "Entry Conditions": "Go long the 3 currencies with the highest 12-month momentum against USD and short the 3 with the lowest.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "12-month Momentum (Price Return).",
+  "Risk Management Rules": "Monthly rebalancing; diversification across 10-20 currencies.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Hedge for global economic risk; spread is larger in high return dispersion (crisis) states.",
+  "Volatility Considerations": "Estimated volatility of 10.22%; high drawdown potential (-45.87%).",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics": {
+    "CAGR": "7.61%",
+    "Sharpe Ratio": "0.3",
+    "Max Drawdown": "-45.87%"
+  },
+  "Win Rate": "56%",
+  "Source URL": "https://quantpedia.com/strategies/currency-momentum-factor",
+  "Full Notes": "Documented by Menkhoff et al. (2012). Distinct from carry trade as it is driven by spot rate continuation.",
+  "Mathematical/Statistical Concepts": "Momentum, Cross-sectional Spread, Return Dispersion."
+}

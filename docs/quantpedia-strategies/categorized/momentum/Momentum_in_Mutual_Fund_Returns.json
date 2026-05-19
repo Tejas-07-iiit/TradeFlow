@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Momentum in Mutual Fund Returns",
+  "Category": "Equities, Momentum, Fund Picking",
+  "Asset Class": "Funds",
+  "Market Type": "United States",
+  "Strategy Description": "A strategy that selects mutual funds based on their past performance, exploiting the momentum effect in fund returns.",
+  "Core Logic": "Investors tend to chase performance, and there is a strong momentum effect between equity styles and management strategies.",
+  "Entry Conditions": "Sort no-load equity funds by past 6-month return; select the top decile.",
+  "Exit Conditions": "Quarterly rebalancing.",
+  "Indicators Used": "6-month past return.",
+  "Risk Management Rules": "Equal weighting of selected funds; universe limited to no-load funds to avoid fees.",
+  "Timeframe": "Quarterly",
+  "Rebalancing Frequency": "Quarterly",
+  "Long/Short Logic": "Long only.",
+  "Market Regime Suitability": "Not suitable as a hedge; long-only momentum exposure.",
+  "Volatility Considerations": "Estimated volatility of 19.5%.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 19% (Indicative), Sharpe Ratio: 0.77, Max Drawdown: -24%",
+  "Win Rate (if available)": "67%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-in-mutual-fund-returns",
+  "Full Notes": "Other measures like closeness to 1-year high in NAV and momentum factor loading also provide independent predictive power.",
+  "Mathematical/Statistical Concepts": "Performance Chasing, Style Momentum, Decile Sorting."
+}

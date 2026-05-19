@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Overnight Seasonality in Bitcoin",
+  "Category": "Seasonality, Cryptocurrencies",
+  "Asset Class": "Crypto",
+  "Market Type": "Crypto",
+  "Strategy Description": "The strategy exploits intraday seasonality in the Bitcoin market, specifically targeting a two-hour window where returns have historically been significantly higher than average. This window coincides with the period when most major global traditional financial exchanges are closed.",
+  "Core Logic": "Bitcoin returns are not uniformly distributed throughout the day. The hours of 22:00 and 23:00 UTC+0 show the most economically and statistically significant positive returns.",
+  "Entry Conditions": "Open a long position in Bitcoin (BTC) at 22:00 UTC+0.",
+  "Exit Conditions": "Close the position after a two-hour holding period at 00:00 UTC+0.",
+  "Indicators Used": "Time of day (UTC+0).",
+  "Risk Management Rules": "Long-only strategy. It does not serve as a hedge during bear markets and carries high risk during periods of market uncertainty.",
+  "Timeframe": "Intraday (2-hour holding period)",
+  "Rebalancing Frequency": "Daily (Intraday)",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Best suited for normal or bullish crypto market conditions; performs poorly during crypto bear markets.",
+  "Volatility Considerations": "Estimated Volatility is 20.93%. Bitcoin is characterized by high intrinsic volatility.",
+  "Momentum/Mean Reversion Classification": "Seasonality.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 33%, Sharpe Ratio: 1.58, Max Drawdown: -34.04% (Source paper metrics).",
+  "Win Rate (if available)": "51% (based on out-of-sample implementation).",
+  "Source URL": "https://quantpedia.com/strategies/intraday-seasonality-in-bitcoin",
+  "Full Notes": "The fundamental reason for this seasonality is attributed to the 'off-hours' of major exchanges (NYSE, Tokyo, Hong Kong, London). During this time, BTC remains one of the few active trading venues, potentially concentrating buying pressure.",
+  "Mathematical/Statistical Concepts": "Hourly return distribution analysis, statistical significance testing (5% level), economic significance."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Synthetic Lending Rates Predict Subsequent Market Return",
+  "Category": "Market Timing, Sentiment Trading, Short Selling, Alternative Data",
+  "Asset Class": "Equities",
+  "Market Type": "ETFs",
+  "Strategy Description": "This strategy utilizes synthetic lending rates (borrow intensity) derived from the options market to predict subsequent market returns. It posits that changes in shorting costs reflect market sentiment, where rising borrow intensity (lower shorting costs) signals positive sentiment and falling intensity (higher shorting costs) signals negative sentiment.",
+  "Core Logic": "There is a statistically significant positive correlation (0.137) between the daily change in aggregate borrow intensity and the subsequent daily return of the SPY ETF. A rise in aggregate borrow intensity predicts a positive next-day return, while a fall predicts a negative return.",
+  "Entry Conditions": "Calculate the change in aggregate borrow intensity at 15:57 (day t minus day t-1). Buy the SPY ETF at 15:59 if the difference is positive; short the SPY ETF at 15:59 if the difference is negative.",
+  "Exit Conditions": "Close the position at 15:58 on the following trading day.",
+  "Indicators Used": "CBOE Hanweck Borrow Intensity Indicators (equally-weighted mean of approximately 4,877 stocks/ETFs).",
+  "Risk Management Rules": "The strategy involves daily rebalancing and market timing. It is noted to be most effective during crises and may lag during calm market periods.",
+  "Timeframe": "Daily (Intraday entry/exit)",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long/Short based on the sign of the borrow intensity change.",
+  "Market Regime Suitability": "Performs best during high-volatility or crisis periods (e.g., late 2018, COVID-19 pandemic); less effective in stable, trending bull markets.",
+  "Volatility Considerations": "Estimated Volatility is 19.52%. The borrow intensity change is negatively correlated with the VIX (fear index).",
+  "Momentum/Mean Reversion Classification": "Market Timing / Sentiment (with potential links to short-term reversal effects).",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 15.47%, Sharpe Ratio: 0.79, Max Drawdown: -28.51% (Source paper metrics).",
+  "Win Rate (if available)": "50% (based on out-of-sample implementation).",
+  "Source URL": "https://quantpedia.com/strategies/synthetic-lending-rates-predict-subsequent-market-return",
+  "Full Notes": "The predictive power of synthetic lending rates is short-lived, typically reversing within two days. The strategy's outperformance is largely driven by its behavior during market crashes, where it acts as a potential hedge or opportunistic timing tool.",
+  "Mathematical/Statistical Concepts": "Correlation analysis, t-statistics (4.17), equally-weighted aggregate mean, synthetic shorting replication (buying puts and shorting calls)."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Short Term Reversal with Futures",
+  "Category": "Equities, Bonds, Commodities, Currencies, Reversal",
+  "Asset Class": "Futures",
+  "Market Type": "United States",
+  "Strategy Description": "A contrarian strategy in the futures market that buys past losers and sells past winners, filtered by trading volume and open interest.",
+  "Core Logic": "Market overreaction leads to price reversals. High trading volume and low open interest are indicators of irrationality-induced inefficiencies that precede reversals.",
+  "Entry Conditions": "Contracts in the high-volume, low-open interest group with the lowest (long) or greatest (short) returns in the previous week.",
+  "Exit Conditions": "Weekly rebalancing.",
+  "Indicators Used": "Weekly Returns, Detrended Trading Volume, Changes in Open Interest.",
+  "Risk Management Rules": "Contract weights are proportional to the difference between the contract's return and the equal-weighted average return of the group.",
+  "Timeframe": "Weekly",
+  "Rebalancing Frequency": "Weekly",
+  "Long/Short Logic": "Long past losers, short past winners (Contrarian).",
+  "Market Regime Suitability": "Liquidity providing; often performs well during market crises but carries short-volatility risks.",
+  "Volatility Considerations": "Estimated volatility of 31.4%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 29.64% (Indicative), Sharpe Ratio: 0.82, Max Drawdown: -58.65%",
+  "Win Rate (if available)": "50%",
+  "Source URL": "https://quantpedia.com/strategies/short-term-reversal-with-futures",
+  "Full Notes": "Uses 24 types of US futures contracts. Volume is detrended by dividing by its sample mean to ensure comparability across markets.",
+  "Mathematical/Statistical Concepts": "Overreaction Hypothesis, Detrending, Median Filtering, Proportional Weighting."
+}

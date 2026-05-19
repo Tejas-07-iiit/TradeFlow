@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Consistent Momentum Strategy",
+  "Category": "Momentum, Stock Picking",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "An enhanced momentum strategy that buys 'consistent winners' and sells 'consistent losers' to improve the persistence of returns.",
+  "Core Logic": "Stocks that are winners in both the formation month and the preceding period (consistent winners) outperform those that are only recent winners due to slower price adjustment.",
+  "Entry Conditions": "Long stocks in the top decile of returns for both (t-7 to t-1) and (t-6 to t); short stocks in the bottom decile for both periods.",
+  "Exit Conditions": "Positions are held for six months with no rebalancing during the period.",
+  "Indicators Used": "Past returns (momentum) over 7-month and 6-month windows.",
+  "Risk Management Rules": "Equally weighted; one-month skip between the formation and holding periods to avoid short-term reversal.",
+  "Timeframe": "Medium-term (6 months).",
+  "Rebalancing Frequency": "6 Months.",
+  "Long/Short Logic": "Long-short.",
+  "Market Regime Suitability": "Unknown; long leg is correlated to the market, but the strategy is designed to be zero-investment.",
+  "Volatility Considerations": "Estimated Volatility: 25.33%.",
+  "Momentum/Mean Reversion Classification": "Momentum.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 16.08%, Sharpe Ratio: 0.48, Max Drawdown: -59.29%.",
+  "Win Rate (if available)": "52% (OOS).",
+  "Source URL": "https://quantpedia.com/strategies/consistent-momentum-strategy",
+  "Full Notes": "Universe includes NYSE, AMEX, and NASDAQ stocks. Persistence is associated with size, idiosyncratic risk, and institutional ownership.",
+  "Mathematical/Statistical Concepts": "Duration analysis, Momentum persistence, Information asymmetry."
+}

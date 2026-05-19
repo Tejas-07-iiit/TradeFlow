@@ -6,12 +6,14 @@ import { useState } from "react";
 import {
   Activity,
   Brain,
+  BrainCog,
   ChevronsLeft,
   CircuitBoard,
   Compass,
   GanttChartSquare,
   LayoutDashboard,
   LineChart,
+  Newspaper,
   Settings,
   Wallet,
 } from "lucide-react";
@@ -27,9 +29,11 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/groq", label: "Groq AI", icon: BrainCog, badge: "AI" },
   { href: "/markets", label: "Markets", icon: LineChart },
   { href: "/ai-signals", label: "AI Signals", icon: Brain, badge: "Live" },
   { href: "/paper-trading", label: "Paper Trading", icon: CircuitBoard },
+  { href: "/news", label: "News", icon: Newspaper },
   { href: "/portfolio", label: "Portfolio", icon: GanttChartSquare },
   { href: "/ai-insights", label: "AI Insights", icon: Compass },
   { href: "/settings", label: "Settings", icon: Settings },

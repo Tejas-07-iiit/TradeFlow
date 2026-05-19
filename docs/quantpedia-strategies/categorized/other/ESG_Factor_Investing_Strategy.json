@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "ESG Factor Investing Strategy",
+  "Category": "ESG Investing, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A long-short strategy that exploits the mispricing of corporate social performance by going long on stocks with high ESG scores and short on those with low ESG scores.",
+  "Core Logic": "Financial markets are inefficient in pricing ESG factors in the short and long run. High ESG scores are associated with long-term sustainability and prosperity, leading to abnormal returns that the market fails to fully appreciate initially.",
+  "Entry Conditions": "Rank stocks in the North America region (Canada and US) based on their Environmental (E), Social (S), and Governance (G) scores. Go long the top 20% and short the bottom 20% for each score.",
+  "Exit Conditions": "Positions are held for a long-term horizon and rebalanced annually.",
+  "Indicators Used": "ESG scores (Environment, Social, Governance) from providers like Asset4.",
+  "Risk Management Rules": "The strategy controls for risk factors such as size, book-to-market ratio, and momentum by matching stocks to benchmark portfolios with similar characteristics.",
+  "Timeframe": "Long-term",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long top quintile (high ESG), short bottom quintile (low ESG).",
+  "Market Regime Suitability": "Unknown; source papers do not provide specific correlation data to equity market risk during crises.",
+  "Volatility Considerations": "High ESG stocks are generally identified as less risky and can reduce a firm's exposure to risk.",
+  "Momentum/Mean Reversion Classification": "Factor/Fundamental",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: -0.86% (indicative 3.25% in paper), Sharpe Ratio: -0.5, Max Drawdown: 30%",
+  "Win Rate (if available)": "44%",
+  "Source URL": "https://quantpedia.com/strategies/esg-factor-investing-strategy",
+  "Full Notes": "The strategy consists of three individual sub-strategies (E, S, and G) which are equally weighted. Performance varies significantly by region, with North America and Europe showing the best results.",
+  "Mathematical/Statistical Concepts": "Abnormal returns (Daniel et al. 1997 methodology), Bootstrap tests, Quintile sorting."
+}

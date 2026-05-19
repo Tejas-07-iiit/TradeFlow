@@ -6,14 +6,22 @@ import { ArrowDown, ArrowUp, CircleDot, Clock4 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAiDecisionStore } from "@/store/ai-decision-store";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
+import { decisionSide } from "@/services/ai/schemas";
 import type { Timeframe } from "@/types/market";
 import { cn, formatPct, formatPrice } from "@/lib/utils";
 
-import { PriceChart, type ChartMarker } from "./price-chart";
+import { PriceChart, type ChartMarker, type ChartPriceLine } from "./price-chart";
 
 import { SYMBOL_NAMES } from "@/lib/market/symbols";
+
+const SOURCE_PREFIX: Record<string, string> = {
+  LLM: "AI",
+  RULE: "RULE",
+  MANUAL: "MAN",
+};
 
 const TIMEFRAMES: Timeframe[] = ["1m", "5m", "15m", "1h", "4h", "1d"];
 
@@ -28,44 +36,133 @@ export function ChartPanel() {
   
   const orders = usePortfolioStore((s) => s.orders);
   const positions = usePortfolioStore((s) => s.positions);
+  const llmDecision = useAiDecisionStore((s) => s.bySymbol[symbol]);
+
+  const priceLines = useMemo<ChartPriceLine[]>(() => {
+    const lines: ChartPriceLine[] = [];
+    for (const p of positions) {
+      if (p.symbol !== symbol) continue;
+      if (p.status !== "OPEN" && p.status !== "PARTIALLY_CLOSED") continue;
+      const sideTag = p.side === "LONG" ? "L" : "S";
+      const prefix = p.decisionSource === "LLM" ? "AI " : "";
+      lines.push({
+        id: `${p.id}:entry`,
+        price: p.entryPrice,
+        color: p.side === "LONG" ? "#00E676" : "#FF5252",
+        title: `${prefix}${sideTag} ENTRY ${p.quantity}`,
+      });
+      if (p.takeProfit != null) {
+        lines.push({
+          id: `${p.id}:tp`,
+          price: p.takeProfit,
+          color: "#00E676",
+          title: `${prefix}TP`,
+        });
+      }
+      if (p.stopLoss != null) {
+        lines.push({
+          id: `${p.id}:sl`,
+          price: p.stopLoss,
+          color: "#FF5252",
+          title: `${prefix}SL`,
+        });
+      }
+    }
+
+    // LLM-projected trade — render when the active decision is executable
+    // AND we don't already hold an LLM position for this symbol (otherwise
+    // we'd be double-drawing the same levels). Distinct colors + an "AI
+    // PROJ" prefix so it's clearly an intention, not a live order.
+    if (llmDecision?.decision) {
+      const d = llmDecision.decision;
+      const side = decisionSide(d.decision);
+      const hasOpenLlmPos = positions.some(
+        (p) =>
+          p.symbol === symbol &&
+          p.decisionSource === "LLM" &&
+          (p.status === "OPEN" || p.status === "PARTIALLY_CLOSED"),
+      );
+      if (d.executeTrade && side && !hasOpenLlmPos) {
+        lines.push({
+          id: `llm:entry:${symbol}`,
+          price: d.entryPrice,
+          color: "#00D4FF",
+          title: `AI PROJ ${side} ${d.setupQuality}`,
+        });
+        lines.push({
+          id: `llm:tp:${symbol}`,
+          price: d.takeProfit,
+          color: "#80E1FF",
+          title: `AI PROJ TP`,
+        });
+        lines.push({
+          id: `llm:sl:${symbol}`,
+          price: d.stopLoss,
+          color: "#FF8080",
+          title: `AI PROJ SL`,
+        });
+      }
+    }
+
+    return lines;
+  }, [positions, symbol, llmDecision]);
+
+  const tradeHistory = usePortfolioStore((s) => s.tradeHistory);
 
   const markers = useMemo(() => {
-    const symbolOrders = orders.filter(o => o.symbol === symbol && o.status === "FILLED");
-    const symbolClosed = positions.filter(p => p.symbol === symbol && p.status === "CLOSED");
+    // 1. Filter and limit raw inputs to prevent performance degradation
+    const symbolOrders = orders
+      .filter((o) => o.symbol === symbol && o.status === "FILLED")
+      .slice(-50);
+    const symbolHistory = tradeHistory
+      .filter((t) => t.symbol === symbol)
+      .slice(-50);
 
     const list: ChartMarker[] = [];
 
-    // Add entry markers
-    symbolOrders.forEach(o => {
-      const time = o.filledAt ? Math.floor(new Date(o.filledAt).getTime() / 1000) : 0;
-      if (!time) return;
+    // 2. Process fills (Entry/Add markers)
+    symbolOrders.forEach((o) => {
+      const rawTime = o.filledAt ? new Date(o.filledAt).getTime() : 0;
+      const time = Math.floor(rawTime / 1000);
+      if (time <= 0) return;
 
+      const fillPrice = o.filledPrice ?? o.price ?? 0;
+      const sourcePrefix = SOURCE_PREFIX[o.decisionSource] ?? "";
       list.push({
         time,
         position: o.side === "LONG" ? "belowBar" : "aboveBar",
         color: o.side === "LONG" ? "#00E676" : "#FF5252",
         shape: o.side === "LONG" ? "arrowUp" : "arrowDown",
-        text: `${o.side} @ ${o.price}`,
+        text: `${o.side} @ ${fillPrice}`,
       });
     });
 
-    // Add exit markers
-    symbolClosed.forEach(p => {
-      const time = p.closedAt ? Math.floor(new Date(p.closedAt).getTime() / 1000) : 0;
-      if (!time) return;
+    // 3. Process history (Exit/Close markers)
+    symbolHistory.forEach((t) => {
+      const rawTime = t.closedAt ? new Date(t.closedAt).getTime() : 0;
+      const time = Math.floor(rawTime / 1000);
+      if (time <= 0) return;
 
-      const side = p.side === "LONG" ? "SELL" : "COVER";
+      const side = t.side === "LONG" ? "SELL" : "COVER";
+      const sourcePrefix = SOURCE_PREFIX[t.decisionSource] ?? "";
       list.push({
         time,
-        position: p.side === "LONG" ? "aboveBar" : "belowBar",
-        color: "#FACC15", // Yellow for exit
-        shape: p.side === "LONG" ? "arrowDown" : "arrowUp",
-        text: `${side} @ ${p.exitPrice}`,
+        position: t.side === "LONG" ? "aboveBar" : "belowBar",
+        color:
+          t.closeReason === "TAKE_PROFIT"
+            ? "#00E676"
+            : t.closeReason === "STOP_LOSS"
+              ? "#FF5252"
+              : t.closeReason === "AI_EXIT"
+                ? "#00D4FF"
+                : "#FACC15",
+        shape: t.side === "LONG" ? "arrowDown" : "arrowUp",
+        text: `${side} @ ${t.exitPrice}`,
       });
     });
 
     return list.sort((a, b) => a.time - b.time);
-  }, [orders, positions, symbol]);
+  }, [orders, tradeHistory, symbol]);
 
   const isUp = (ticker?.changePct ?? 0) >= 0;
   const lastPrice = liveCandle?.close ?? ticker?.last ?? null;
@@ -89,6 +186,10 @@ export function ChartPanel() {
     ],
     [ticker],
   );
+
+  // Professional History Check: Don't mount chart until we have enough baseline candles.
+  // This prevents the "single candle" visual jump and broken scaling.
+  const hasEnoughHistory = history && history.length > 20;
 
   return (
     <div className="panel flex flex-col h-full overflow-hidden">
@@ -171,12 +272,19 @@ export function ChartPanel() {
       </div>
 
       <div className="relative flex-1 min-h-[420px]">
-        {!history || history.length === 0 ? (
+        {!hasEnoughHistory ? (
           <div className="absolute inset-4">
             <Skeleton className="h-full w-full" />
           </div>
         ) : (
-          <PriceChart candles={history} liveCandle={liveCandle} markers={markers} />
+          <PriceChart
+            key={`${symbol}:${interval}`}
+            candles={history}
+            liveCandle={liveCandle}
+            markers={markers}
+            priceLines={priceLines}
+            resetKey={`${symbol}:${interval}`}
+          />
         )}
       </div>
     </div>

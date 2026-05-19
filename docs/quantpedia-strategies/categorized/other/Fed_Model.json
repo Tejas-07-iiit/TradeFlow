@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Fed Model",
+  "Category": "Asset Class Picking, Market Timing",
+  "Asset Class": "Equities, Bonds",
+  "Market Type": "ETFs, Funds, Futures",
+  "Strategy Description": "A market timing strategy that allocates between stocks and cash based on the yield gap between the equity market's earnings yield and long-term bond yields.",
+  "Core Logic": "Stocks and bonds are competing assets. When the earnings yield of stocks is significantly higher than bond yields, stocks are considered undervalued and expected to outperform.",
+  "Entry Conditions": "Conduct a monthly predictive regression of excess stock returns on the yield gap. If forecasted excess returns are positive, allocate 100% to stocks.",
+  "Exit Conditions": "If forecasted excess returns are negative, allocate 100% to the risk-free rate (cash).",
+  "Indicators Used": "Yield Gap = Earnings Yield (ln(1 + E/P)) - Log 10-year Treasury Bond Yield.",
+  "Risk Management Rules": "Binary allocation (100% stocks or 100% cash); monthly rebalancing.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (Market Timing).",
+  "Market Regime Suitability": "Partially suitable; rotates out of equities during stress based on relative valuation.",
+  "Volatility Considerations": "Estimated volatility: 10%.",
+  "Momentum/Mean Reversion Classification": "Value / Fundamental",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 11%, Sharpe Ratio: 0.7, Max Drawdown: -50.3%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/fed-model",
+  "Full Notes": "The model is controversial; critics argue it compares real yields (stocks) to nominal yields (bonds). It works best at short-term horizons.",
+  "Mathematical/Statistical Concepts": "Predictive regression, Cointegration, ICAPM, Dynamic accounting identity."
+}

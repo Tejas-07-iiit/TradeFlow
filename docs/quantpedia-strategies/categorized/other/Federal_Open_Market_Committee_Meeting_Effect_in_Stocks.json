@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Federal Open Market Committee Meeting Effect in Stocks",
+  "Category": "Equities, Market Timing, Seasonality",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "A market timing strategy that goes long on stocks only during Federal Open Market Committee (FOMC) meeting days.",
+  "Core Logic": "FOMC meetings are generally positive for the market as the Fed aims to maintain stability and growth, leading to a positive drift in stock prices.",
+  "Entry Conditions": "Go long (e.g., S&P 500 ETF) at the close one day before the FOMC meeting.",
+  "Exit Conditions": "Close the position at the end of the meeting day.",
+  "Indicators Used": "FOMC Meeting Calendar.",
+  "Risk Management Rules": "Invested in cash during all non-meeting days; low market exposure (approx. 8 days per year).",
+  "Timeframe": "Daily (Event-based)",
+  "Rebalancing Frequency": "Daily (during events)",
+  "Long/Short Logic": "Long only.",
+  "Market Regime Suitability": "Not a hedge for bear markets; exploits specific event-driven optimism.",
+  "Volatility Considerations": "Low overall portfolio volatility due to high cash allocation.",
+  "Momentum/Mean Reversion Classification": "Seasonality / Event-driven",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 6.19% (Indicative), Sharpe Ratio: -0.4, Max Drawdown: -8.74%",
+  "Win Rate (if available)": "54%",
+  "Source URL": "https://quantpedia.com/strategies/federal-open-market-committee-meeting-effect-in-stocks",
+  "Full Notes": "More than 16% of average yearly returns for equity indices are realized during these few days. The strategy can be easily leveraged.",
+  "Mathematical/Statistical Concepts": "Calendar Effect, Drift Analysis, Event Study."
+}

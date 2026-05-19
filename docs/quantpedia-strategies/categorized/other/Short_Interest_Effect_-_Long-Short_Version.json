@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Short Interest Effect - Long-Short Version",
+  "Category": "Stock Picking, Equity Long Short, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that goes long on stocks with low short interest and short on stocks with high short interest, based on the predictive power of short sellers' information.",
+  "Core Logic": "Short sellers are often informed traders. High short interest indicates overvaluation or hidden bad news, while low short interest suggests market agreement that a stock is not overvalued.",
+  "Entry Conditions": "Each month, sort stocks into deciles based on the ratio of short interest to shares outstanding. Long the lowest decile, short the highest decile.",
+  "Exit Conditions": "Monthly rebalancing.",
+  "Indicators Used": "Short Interest Ratio = Short Interest / Shares Outstanding.",
+  "Risk Management Rules": "Equal weighting; monthly rebalancing.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-Short.",
+  "Market Regime Suitability": "Unknown; low correlation to overall market suggests potential as a diversifier.",
+  "Volatility Considerations": "Estimated volatility: 17.14%.",
+  "Momentum/Mean Reversion Classification": "Fundamental / Sentiment",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 19.7%, Sharpe Ratio: 0.92, Max Drawdown: -30.23%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/short-interest-effect-long-short-version",
+  "Full Notes": "Short sellers contribute to price discovery about firm fundamentals. The strategy has a low correlation to the overall market.",
+  "Mathematical/Statistical Concepts": "Overvaluation hypothesis, Information hypothesis, Four-factor model alpha."
+}

@@ -1,7 +1,19 @@
 import type { AIDecision, DecisionSignal, MarketCondition, SignalStatus, SignalType } from "@/types/ai-decision";
 import type { Candle } from "@/types/market";
 
-import { adx, atr, ema, lastNumber, rsi } from "@/lib/indicators/calculations";
+import {
+  adx,
+  atr,
+  bollingerBands,
+  ema,
+  lastNumber,
+  lastValue,
+  macd,
+  rsi,
+  vwap,
+  vwapSlope,
+  zScore,
+} from "@/lib/indicators/calculations";
 
 export type IndicatorSnapshot = {
   ema50: number | null;
@@ -10,12 +22,33 @@ export type IndicatorSnapshot = {
   atr14: number | null;
   adx14: number | null;
   atrPct: number | null;
+  bb: { upper: number; middle: number; lower: number } | null;
+  macd: { macd: number; signalLine: number; histogram: number } | null;
+  /** Latest 20-period z-score of close vs its rolling mean. */
+  zScore20: number | null;
+  /** Latest anchored VWAP value. */
+  vwap: number | null;
+  /** Sign of the VWAP slope over the last ~10 bars. +1 rising / -1 falling / 0 flat. */
+  vwapSlope: -1 | 0 | 1;
   regime: MarketCondition;
 };
 
 export function calculateIndicators(candles: Candle[]): IndicatorSnapshot {
   if (candles.length < 20) {
-    return { ema50: null, ema200: null, rsi14: null, atr14: null, adx14: null, atrPct: null, regime: "Choppy" };
+    return {
+      ema50: null,
+      ema200: null,
+      rsi14: null,
+      atr14: null,
+      adx14: null,
+      atrPct: null,
+      bb: null,
+      macd: null,
+      zScore20: null,
+      vwap: null,
+      vwapSlope: 0,
+      regime: "Choppy",
+    };
   }
   const closes = candles.map((candle) => candle.close);
   const ema50 = lastNumber(ema(closes, 50));
@@ -25,9 +58,31 @@ export function calculateIndicators(candles: Candle[]): IndicatorSnapshot {
   const adx14 = lastNumber(adx(candles, 14));
   const lastClose = closes.at(-1) ?? null;
   const atrPct = atr14 && lastClose ? (atr14 / lastClose) * 100 : null;
+
+  const bb = lastValue(bollingerBands(closes, 20, 2));
+  const macdVal = lastValue(macd(closes, 12, 26, 9));
+
+  const zScore20 = lastNumber(zScore(closes, 20));
+  const vwapSeries = vwap(candles);
+  const vwapVal = lastNumber(vwapSeries);
+  const slope = vwapSlope(vwapSeries, 10);
+
   const regime = detectRegime({ ema50, ema200, rsi14, atrPct, adx14 });
 
-  return { ema50, ema200, rsi14, atr14, adx14, atrPct, regime };
+  return {
+    ema50,
+    ema200,
+    rsi14,
+    atr14,
+    adx14,
+    atrPct,
+    bb,
+    macd: macdVal,
+    zScore20,
+    vwap: vwapVal,
+    vwapSlope: slope,
+    regime,
+  };
 }
 
 export function generateDecision(
@@ -44,8 +99,8 @@ export function generateDecision(
   const htfCandles = htfInterval ? allCandles[`${symbol}:${htfInterval}`] ?? [] : [];
   const htfTrend = htfCandles.length > 20 ? calculateHTFTrend(htfCandles) : "neutral";
 
-  if (!lastCandle || indicators.regime === "Choppy") {
-    return holdDecision(symbol, indicators, "Market in choppy/low-liquidity state. No high-conviction setup detected.");
+  if (!lastCandle) {
+    return holdDecision(symbol, indicators, "Market in low-liquidity state or awaiting data.");
   }
 
   // Intraday Setup Logic
@@ -54,7 +109,17 @@ export function generateDecision(
   const type = setup.type;
 
   if (signal === "HOLD") {
-    return holdDecision(symbol, indicators, htfTrend !== "neutral" ? `HTF Bias is ${htfTrend}, but local timing is not yet aligned.` : "Waiting for momentum alignment.");
+    let reason: string;
+    if (indicators.regime === "High Volatility") {
+      reason = `Regime is ${indicators.regime} — entries blocked until volatility cools.`;
+    } else if (indicators.regime === "Choppy") {
+      reason = "Regime is Choppy — only mean-reversion setups allowed and none aligned.";
+    } else if (htfTrend !== "neutral") {
+      reason = `HTF Bias is ${htfTrend}, but local timing is not yet aligned.`;
+    } else {
+      reason = "Waiting for momentum alignment.";
+    }
+    return holdDecision(symbol, indicators, reason);
   }
 
   const confidence = calculateIntradayConfidence(indicators, setup, htfTrend);
@@ -131,30 +196,140 @@ function detectRegime({
   return "Sideways";
 }
 
-function detectSetup(candles: Candle[], indicators: IndicatorSnapshot, htfTrend: string): { signal: DecisionSignal, type: SignalType } {
+/**
+ * Setups are partitioned by regime so trend-following and mean-reversion
+ * strategies never collide on the same bar:
+ *
+ *   Trending  → BREAKOUT, PULLBACK, MOMENTUM, SCALP, BREAKDOWN allowed.
+ *               Mean-reversion blocked (trying to fade a real trend bleeds
+ *               equity).
+ *   Sideways  → both trend and mean-reversion allowed (regime classifier
+ *   /Compression  isn't sure either way; let the indicator-level filters
+ *                 decide).
+ *   Choppy    → ONLY mean-reversion allowed. Trend setups in choppy regimes
+ *               are the dominant source of whipsaw losses.
+ *   HighVol   → trades blocked entirely; the warning surfaces this to the
+ *               operator (we still emit HOLD with a regime-specific reason).
+ *
+ * Mean-reversion uses |z-score| > 2 (95th-percentile stretch) AND Bollinger
+ * confirmation AND RSI confirmation — three filters that all have to align,
+ * to keep this rule from firing on every Bollinger touch.
+ *
+ * VWAP is used as a *bias* filter on long-side trend entries: requiring price
+ * > rising VWAP filters out longs taken into a falling-VWAP tape.
+ */
+function detectSetup(
+  candles: Candle[],
+  indicators: IndicatorSnapshot,
+  htfTrend: string,
+): { signal: DecisionSignal; type: SignalType } {
   const last = candles.at(-1)!;
-  
-  // 1. Breakout Long (Aligned with HTF)
-  const recentHigh = Math.max(...candles.slice(-20, -1).map(c => c.high));
-  if (last.close > recentHigh && (indicators.rsi14 ?? 50) > 60 && htfTrend !== "bearish") {
-    return { signal: "BUY", type: "BREAKOUT LONG" };
+  const regime = indicators.regime;
+  const trendAllowed = regime === "Trending" || regime === "Sideways" || regime === "Compression";
+  const meanRevAllowed = regime === "Choppy" || regime === "Sideways" || regime === "Compression";
+
+  // High-volatility regimes block all entries — let risk cool off.
+  if (regime === "High Volatility") {
+    return { signal: "HOLD", type: "NONE" };
   }
 
-  // 2. Breakdown Short (Aligned with HTF)
-  const recentLow = Math.min(...candles.slice(-20, -1).map(c => c.low));
-  if (last.close < recentLow && (indicators.rsi14 ?? 50) < 40 && htfTrend !== "bullish") {
-    return { signal: "SELL", type: "BREAKDOWN SHORT" };
+  // VWAP bias: price relative to a rising/falling VWAP, used to confirm
+  // directional setups. Null/flat VWAP is permissive — don't block on
+  // missing data, only on contradiction.
+  const longVwapOk =
+    indicators.vwap == null || indicators.vwapSlope >= 0
+      ? indicators.vwap == null || last.close >= indicators.vwap
+      : false;
+  const shortVwapOk =
+    indicators.vwap == null || indicators.vwapSlope <= 0
+      ? indicators.vwap == null || last.close <= indicators.vwap
+      : false;
+
+  if (trendAllowed) {
+    // 1. Breakout Long (HTF + VWAP aligned).
+    const recentHigh = Math.max(...candles.slice(-10, -1).map((c) => c.high));
+    if (
+      last.close > recentHigh &&
+      (indicators.rsi14 ?? 50) > 55 &&
+      htfTrend !== "bearish" &&
+      longVwapOk
+    ) {
+      return { signal: "BUY", type: "BREAKOUT LONG" };
+    }
+
+    // 2. Breakdown Short.
+    const recentLow = Math.min(...candles.slice(-10, -1).map((c) => c.low));
+    if (
+      last.close < recentLow &&
+      (indicators.rsi14 ?? 50) < 45 &&
+      htfTrend !== "bullish" &&
+      shortVwapOk
+    ) {
+      return { signal: "SELL", type: "BREAKDOWN SHORT" };
+    }
+
+    // 3. Pullback Long with EMA50 > EMA200 stack.
+    const trendingUp =
+      indicators.ema50 && indicators.ema200 && indicators.ema50 > indicators.ema200;
+    if (
+      trendingUp &&
+      (indicators.rsi14 ?? 50) > 45 &&
+      (indicators.rsi14 ?? 50) < 65 &&
+      htfTrend === "bullish" &&
+      longVwapOk
+    ) {
+      return { signal: "BUY", type: "PULLBACK LONG" };
+    }
+
+    // 4. Momentum Scalp (MACD histogram flip while line still negative).
+    if (
+      indicators.macd &&
+      indicators.macd.histogram > 0 &&
+      indicators.macd.macd < 0 &&
+      htfTrend !== "bearish" &&
+      longVwapOk
+    ) {
+      return { signal: "BUY", type: "MOMENTUM LONG" };
+    }
+    if (
+      indicators.macd &&
+      indicators.macd.histogram < 0 &&
+      indicators.macd.macd > 0 &&
+      htfTrend !== "bullish" &&
+      shortVwapOk
+    ) {
+      return { signal: "SELL", type: "MOMENTUM SHORT" };
+    }
+
+    // 5. ADX-confirmed long scalp.
+    if (
+      (indicators.adx14 ?? 0) > 25 &&
+      (indicators.rsi14 ?? 50) > 60 &&
+      htfTrend !== "bearish" &&
+      longVwapOk
+    ) {
+      return { signal: "BUY", type: "SCALP LONG" };
+    }
   }
 
-  // 3. Pullback Long
-  const trendingUp = indicators.ema50 && indicators.ema200 && indicators.ema50 > indicators.ema200;
-  if (trendingUp && (indicators.rsi14 ?? 50) > 52 && (indicators.rsi14 ?? 50) < 65 && htfTrend === "bullish") {
-    return { signal: "BUY", type: "PULLBACK LONG" };
-  }
-
-  // 4. Momentum Scalp
-  if ((indicators.adx14 ?? 0) > 30 && (indicators.rsi14 ?? 50) > 68 && htfTrend === "bullish") {
-    return { signal: "BUY", type: "SCALP LONG" };
+  if (meanRevAllowed && indicators.bb && indicators.zScore20 != null) {
+    // Triple-filter mean reversion: BB touch + RSI extreme + z-score > 2.
+    // All three have to agree, which is what keeps this rule from firing
+    // on every minor band tag during a trend.
+    if (
+      last.close <= indicators.bb.lower &&
+      (indicators.rsi14 ?? 50) < 35 &&
+      indicators.zScore20 <= -2
+    ) {
+      return { signal: "BUY", type: "REVERSAL LONG" };
+    }
+    if (
+      last.close >= indicators.bb.upper &&
+      (indicators.rsi14 ?? 50) > 65 &&
+      indicators.zScore20 >= 2
+    ) {
+      return { signal: "SELL", type: "RANGE TRADE" };
+    }
   }
 
   return { signal: "HOLD", type: "NONE" };
@@ -167,14 +342,36 @@ function calculateIntradayConfidence(indicators: IndicatorSnapshot, setup: { typ
   return Math.min(95, score);
 }
 
-function buildIntradayReasons(indicators: IndicatorSnapshot, setup: { type: SignalType }, timeframe: string, htfTrend: string) {
+function buildIntradayReasons(
+  indicators: IndicatorSnapshot,
+  setup: { type: SignalType },
+  timeframe: string,
+  htfTrend: string,
+) {
   const reasons = [];
   reasons.push(`${setup.type}: setup identified on ${timeframe}.`);
+  reasons.push(`Regime: ${indicators.regime} — strategy filter passed.`);
   if (htfTrend !== "neutral") {
-    reasons.push(`HTF Bias: Higher timeframe is ${htfTrend}, providing structural tailwinds.`);
+    reasons.push(
+      `HTF Bias: Higher timeframe is ${htfTrend}, providing structural tailwinds.`,
+    );
   }
   if (indicators.adx14 && indicators.adx14 > 20) {
-    reasons.push(`Trend Strength: ADX at ${indicators.adx14.toFixed(1)} confirms directional intent.`);
+    reasons.push(
+      `Trend Strength: ADX at ${indicators.adx14.toFixed(1)} confirms directional intent.`,
+    );
+  }
+  if (indicators.zScore20 != null && Math.abs(indicators.zScore20) >= 1.5) {
+    reasons.push(
+      `Mean deviation: z-score ${indicators.zScore20.toFixed(2)} — price ${
+        indicators.zScore20 > 0 ? "stretched above" : "stretched below"
+      } the 20-bar mean.`,
+    );
+  }
+  if (indicators.vwap != null && indicators.vwapSlope !== 0) {
+    reasons.push(
+      `VWAP ${indicators.vwapSlope > 0 ? "rising" : "falling"} at ${indicators.vwap.toFixed(2)}.`,
+    );
   }
   return reasons;
 }

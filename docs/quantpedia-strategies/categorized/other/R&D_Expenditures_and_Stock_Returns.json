@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "R&D Expenditures and Stock Returns",
+  "Category": "Factor Investing, Smart Beta, Equity Long/Short",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that exploits the market's underestimation of intangible assets by going long on firms with high R&D spending relative to their market value.",
+  "Core Logic": "Accounting standards require R&D to be expensed immediately, which can depress current earnings. The market often fails to price the future growth opportunities these expenditures represent.",
+  "Entry Conditions": "Calculate the sum of the past 5 years' R&D expenditures scaled by market cap. Go long the top quintile and short the bottom quintile of NYSE, NASDAQ, and AMEX stocks.",
+  "Exit Conditions": "Rebalanced annually in April.",
+  "Indicators Used": "R&D expenditures (5-year history), Market Capitalization.",
+  "Risk Management Rules": "Equally weighted; excludes stocks with prices below $5.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long top quintile, short bottom quintile.",
+  "Market Regime Suitability": "No; the strategy tends to suffer during bear markets despite a low beta.",
+  "Volatility Considerations": "Estimated volatility is 8.2%; R&D intensity is positively associated with return volatility.",
+  "Momentum/Mean Reversion Classification": "Factor/Fundamental",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 6.15% (indicative 4.67%), Sharpe Ratio: 0.3 (indicative 0.51), Max Drawdown: 36% (indicative -41.09%)",
+  "Win Rate (if available)": "50%",
+  "Source URL": "https://quantpedia.com/strategies/rd-expenditures-and-stock-returns",
+  "Full Notes": "The effect is particularly strong within growth stocks and firms with poor past returns.",
+  "Mathematical/Statistical Concepts": "Scaling (R&D/Market Cap), Accounting standards (GAAP/IFRS), Quintile sorting."
+}

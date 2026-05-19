@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Momentum Factor Combined with Asset Growth Effect",
+  "Category": "Equities, Momentum, Stock Picking, Fundamental Analysis, Factor Investing, Smart Beta",
+  "Asset Class": "Stocks",
+  "Market Type": "United States, Equities",
+  "Strategy Description": "Combines the momentum effect with firm-level asset expansion. Momentum profits are found to be significantly stronger for stocks with high past asset growth.",
+  "Core Logic": "Firm investment (asset growth) interacts with return continuation. The relationship remains strong even after adjusting for size, value, and volatility.",
+  "Entry Conditions": "Sort stocks into deciles based on yearly asset growth. Within the highest growth decile, sort stocks into quintiles based on their past 11-month return (skipping the most recent month). Go long the top quintile.",
+  "Exit Conditions": "Go short the bottom quintile of the high-growth group. Rebalance monthly and exclude January from trading.",
+  "Indicators Used": "Asset growth (yearly change in total assets), 11-month price momentum.",
+  "Risk Management Rules": "Strategy shows positive returns during recession months, providing diversification.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Suitable as a hedge during bear markets and recessions.",
+  "Volatility Considerations": "Estimated Volatility: 13.84%.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "16.77%",
+    "Sharpe Ratio": 1.21,
+    "Max Drawdown": "-88.95%"
+  },
+  "Win Rate (if available)": "50%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-factor-combined-with-asset-growth-effect",
+  "Full Notes": "Performance excludes January, which is documented as a negative month for momentum strategies.",
+  "Mathematical/Statistical Concepts": "Fundamental analysis, factor interaction, cross-sectional sorting, asset expansion."
+}

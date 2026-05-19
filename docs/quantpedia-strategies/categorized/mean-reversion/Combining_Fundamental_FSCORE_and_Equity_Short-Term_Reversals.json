@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Combining Fundamental FSCORE and Equity Short-Term Reversals",
+  "Category": "Reversal, Fundamental Analysis",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "Enhances the traditional short-term reversal strategy by using fundamental strength (FSCORE) to filter for higher-probability reversals.",
+  "Core Logic": "Short-term reversals are driven by noise trading and investor underreaction to fundamental news. Buying losers with strong fundamentals exploits this underreaction.",
+  "Entry Conditions": "Long past 1-month losers with an FSCORE >= 7; short past 1-month winners with an FSCORE <= 3.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Past 1-month returns, FSCORE (9 signals covering profitability, leverage, and efficiency).",
+  "Risk Management Rules": "Equally weighted; focus on large stocks (top 40% of market capitalization).",
+  "Timeframe": "Short-term (1 month).",
+  "Rebalancing Frequency": "Monthly.",
+  "Long/Short Logic": "Long-short.",
+  "Market Regime Suitability": "Performs well during market crises as a 'liquidity providing' strategy; however, it is naturally 'short volatility'.",
+  "Volatility Considerations": "Estimated Volatility: 20.61%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion / Fundamental.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 12.01%, Sharpe Ratio: 0.39, Max Drawdown: -59.02%.",
+  "Win Rate (if available)": "Not stated.",
+  "Source URL": "https://quantpedia.com/strategies/combining-fundamental-fscore-and-equity-short-term-reversals",
+  "Full Notes": "FSCORE is a nonparametric metric that synthesizes information from nine financial signals. The strategy outperforms unconditional reversal.",
+  "Mathematical/Statistical Concepts": "FSCORE, Nonparametric metrics, Investor underreaction."
+}

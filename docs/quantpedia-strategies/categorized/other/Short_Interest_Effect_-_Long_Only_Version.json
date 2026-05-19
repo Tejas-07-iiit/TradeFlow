@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Short Interest Effect - Long Only Version",
+  "Category": "Stock Picking, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that holds a portfolio of stocks with the lowest levels of short interest, benefiting from the 'good news' implied by the absence of short sellers.",
+  "Core Logic": "Stocks avoided by short sellers are likely not overvalued. Positive information associated with low short interest is incorporated into prices slowly, creating an exploitable anomaly.",
+  "Entry Conditions": "Sort stocks by short interest ratio and hold the first percentile (lowest short interest).",
+  "Exit Conditions": "Monthly rebalancing.",
+  "Indicators Used": "Short Interest Ratio.",
+  "Risk Management Rules": "Equal weighting; monthly rebalancing.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Not a hedge for bear markets; high correlation to equity market premium.",
+  "Volatility Considerations": "Not stated in source paper.",
+  "Momentum/Mean Reversion Classification": "Fundamental / Sentiment",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 26.8%, Sharpe Ratio: Not stated, Max Drawdown: -33.29%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/short-interest-effect-long-only-version",
+  "Full Notes": "The strategy can be easily implemented and maintains attractive parameters like a small market beta.",
+  "Mathematical/Statistical Concepts": "Information hypothesis, Market efficiency, Short-sale constraints."
+}

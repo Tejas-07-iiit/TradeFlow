@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Pairs Trading with Stocks",
+  "Category": "Arbitrage / Relative Value",
+  "Asset Class": "Equities",
+  "Market Type": "US",
+  "Strategy Description": "A statistical arbitrage strategy that identifies pairs of stocks that move together and trades the spread when it deviates from its historical mean.",
+  "Core Logic": "Assumes that cointegrated stock prices will converge after temporary shocks move them out of their common price band.",
+  "Entry Conditions": "Open a long-short position when the normalized price series of a pair diverges by more than 2 standard deviations.",
+  "Exit Conditions": "Close the position when the prices revert to the mean.",
+  "Indicators Used": "Sum of squared deviations (Distance), Standard Deviation of the spread.",
+  "Risk Management Rules": "Pairs formed over 12 months; top 20 pairs with smallest historical distance are traded; illiquid stocks removed.",
+  "Timeframe": "Daily (monitoring), 12-month formation, 6-month trading.",
+  "Rebalancing Frequency": "Daily (for signals).",
+  "Long/Short Logic": "Long/Short (Market Neutral).",
+  "Market Regime Suitability": "Performs well during market crises and high volatility; 'liquidity providing' strategy.",
+  "Volatility Considerations": "Low estimated volatility (5.85%); low drawdown (-17%).",
+  "Momentum/Mean Reversion Classification": "Mean Reversion / Arbitrage",
+  "Performance Metrics": {
+    "CAGR": "11.16%",
+    "Sharpe Ratio": "1.22",
+    "Max Drawdown": "-17%"
+  },
+  "Win Rate": "55%",
+  "Source URL": "https://quantpedia.com/strategies/pairs-trading-with-stocks",
+  "Full Notes": "Pioneered by Nunzio Tartaglia. Profits are psychological (investor over-reaction) and fundamental (cointegration).",
+  "Mathematical/Statistical Concepts": "Cointegration, Distance Measure, Mean Reversion, Standard Deviation."
+}

@@ -1,0 +1,22 @@
+{
+  "Strategy Name": "Ramadan Effect",
+  "Category": "Market Timing, Seasonality",
+  "Asset Class": "Equities",
+  "Market Type": "Emerging Markets",
+  "Strategy Description": "A market timing strategy that holds equities in Islamic countries during the month of Ramadan to exploit positive investor sentiment.",
+  "Core Logic": "The upbeat mood and feelings of solidarity during Ramadan lead to optimistic investor behavior and significantly higher equity returns compared to the rest of the year.",
+  "Entry Conditions": "Hold an equally weighted portfolio of ETFs from countries with a Muslim population > 50% during the month of Ramadan.",
+  "Exit Conditions": "Exit to cash for the remainder of the year.",
+  "Indicators Used": "Islamic calendar (lunar phases).",
+  "Risk Management Rules": "Market timing (rotating out of equities); equal weighting.",
+  "Timeframe": "Monthly (Ramadan)",
+  "Rebalancing Frequency": "Monthly (at start/end of Ramadan)",
+  "Long/Short Logic": "Long only (Equities vs. Cash).",
+  "Market Regime Suitability": "Sentiment-driven; reduces overall equity risk by limiting exposure to a specific high-probability window.",
+  "Volatility Considerations": "Returns during Ramadan are documented to be less volatile than during the rest of the year.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 6.7% (Indicative), Sharpe Ratio: -0.6 (QC), Max Drawdown: -11.44%",
+  "Win Rate (if available)": "53%",
+  "Source URL": "https://quantpedia.com/strategies/ramadan-effect",
+  "Full Notes": "The strategy typically uses 14 Muslim countries. Ramadan is the ninth month of the Islamic lunar calendar.",
+  "Mathematical/Statistical Concepts": "Seasonality, investor sentiment, lunar calendar, market timing."
+}

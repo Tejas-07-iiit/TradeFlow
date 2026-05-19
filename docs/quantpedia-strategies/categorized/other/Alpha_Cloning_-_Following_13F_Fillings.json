@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Alpha Cloning - Following 13F Fillings",
+  "Category": "Stock Picking, Alternative Data",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that mimics the 'best ideas' or high-conviction stock picks of top-performing mutual and hedge fund managers as disclosed in their SEC 13F filings.",
+  "Core Logic": "Active managers often have skill in picking individual stocks but are forced to diversify. Their top holdings represent their highest conviction and tend to outperform the market.",
+  "Entry Conditions": "Identify 'best idea' stocks (top holdings) from 13F filings of a selected universe of active managers. Invest in stocks that appear as 'best ideas' for multiple managers.",
+  "Exit Conditions": "Rebalance quarterly following new 13F disclosures.",
+  "Indicators Used": "SEC 13F filings data.",
+  "Risk Management Rules": "Diversification across 10-100 instruments.",
+  "Timeframe": "Quarterly",
+  "Rebalancing Frequency": "Quarterly",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Not a hedge for bear markets; high correlation to broad equity market.",
+  "Volatility Considerations": "Not stated in source paper.",
+  "Momentum/Mean Reversion Classification": "Fundamental / Alpha Cloning",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 20.21%, Sharpe Ratio: 1.8, Max Drawdown: Not stated",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/alpha-cloning-following-13f-fillings",
+  "Full Notes": "Copycat funds can often outperform the original funds after accounting for expenses. Performance may have declined slightly post-2008.",
+  "Mathematical/Statistical Concepts": "Feature extraction, Deep Reinforcement Learning, Alpha generation."
+}

@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Value and Momentum Factors across Asset Classes",
+  "Category": "Tactical Asset Allocation / Multi-Factor",
+  "Asset Class": "Equities, Bonds, REITs",
+  "Market Type": "Global",
+  "Strategy Description": "A global tactical asset allocation strategy that combines value and momentum signals across multiple asset classes to enhance profitability.",
+  "Core Logic": "Value and momentum are negatively correlated within and across asset classes; combining them increases robustness.",
+  "Entry Conditions": "Rank asset classes by 12m momentum (25%), 1m momentum (25%), and valuation (50%). Go long top quartile, short bottom.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "Price Momentum, Adjusted Yield (E/P for stocks, YTM for bonds).",
+  "Risk Management Rules": "Signal weighting (25/25/50); market-neutral exposure.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Good hedging/diversification abilities in times of market stress (high VIX).",
+  "Volatility Considerations": "Estimated volatility of 10%.",
+  "Momentum/Mean Reversion Classification": "Multi-Factor (Momentum + Value)",
+  "Performance Metrics": {
+    "CAGR": "11.9%",
+    "Sharpe Ratio": "0.79",
+    "Max Drawdown": "Not available"
+  },
+  "Win Rate": "67%",
+  "Source URL": "https://quantpedia.com/strategies/value-and-momentum-factors-across-asset-classes",
+  "Full Notes": "Based on Blitz and van Vliet (2008). Returns cannot be explained by implicit beta exposures.",
+  "Mathematical/Statistical Concepts": "Multi-factor Ranking, Z-score, Tactical Asset Allocation."
+}

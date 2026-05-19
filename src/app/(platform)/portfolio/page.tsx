@@ -13,7 +13,7 @@ export default async function PortfolioPage() {
     ? await Promise.all([
         prisma.paperWallet.findUnique({ where: { userId } }),
         prisma.paperPosition.findMany({
-          where: { userId, status: "OPEN" },
+          where: { userId, status: { in: ["OPEN", "PARTIALLY_CLOSED"] } },
           orderBy: { createdAt: "desc" },
         }),
       ])
@@ -21,16 +21,36 @@ export default async function PortfolioPage() {
 
   return (
     <LivePortfolioPage
-      balance={Number(wallet?.balance ?? 10_000)}
+      walletBalance={Number(wallet?.balance ?? 60_000)}
+      usedMargin={Number(wallet?.usedMargin ?? 0)}
       positions={positions.map(
         (position): PaperPositionView => ({
           id: position.id,
           symbol: position.symbol,
           side: position.side,
           quantity: Number(position.quantity),
+          initialQuantity: Number(position.initialQuantity),
           entryPrice: Number(position.entryPrice),
-          pnl: Number(position.pnl),
+          exitPrice: position.exitPrice ? Number(position.exitPrice) : null,
+          takeProfit: position.takeProfit ? Number(position.takeProfit) : null,
+          stopLoss: position.stopLoss ? Number(position.stopLoss) : null,
+          leverage: position.leverage,
+          marginUsed: Number(position.marginUsed),
+          liquidationPrice: position.liquidationPrice
+            ? Number(position.liquidationPrice)
+            : null,
+          walletBalanceSnapshot: position.walletBalanceSnapshot
+            ? Number(position.walletBalanceSnapshot)
+            : null,
+          realizedPnl: Number(position.realizedPnl),
+          unrealizedPnl: Number(position.unrealizedPnl),
+          totalFees: Number(position.totalFees),
           status: position.status,
+          closeReason: position.closeReason,
+          decisionSource: position.decisionSource,
+          decisionMeta: position.decisionMeta,
+          createdAt: position.createdAt.toISOString(),
+          closedAt: position.closedAt ? position.closedAt.toISOString() : null,
         }),
       )}
     />

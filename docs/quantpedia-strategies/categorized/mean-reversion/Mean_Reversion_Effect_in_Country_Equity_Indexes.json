@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Mean Reversion Effect in Country Equity Indexes",
+  "Category": "Country Selection / Mean Reversion",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "A long-term contrarian strategy that buys country equity indexes that have been 'losers' over a 3-year horizon.",
+  "Core Logic": "Relative stock index prices exhibit mean reversion with a half-life of approximately 3 to 3.5 years.",
+  "Entry Conditions": "Go long the bottom 4 countries with the worst 36-month return and short the top 4 with the best.",
+  "Exit Conditions": "Rebalance every 3 years.",
+  "Indicators Used": "36-month Price Return.",
+  "Risk Management Rules": "3-year rebalancing; diversification across 16+ countries.",
+  "Timeframe": "3 Years",
+  "Rebalancing Frequency": "3 Years",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Works best after crises; not a good hedge during crises due to high equity exposure.",
+  "Volatility Considerations": "Very high drawdown potential (-80.98%).",
+  "Momentum/Mean Reversion Classification": "Mean Reversion",
+  "Performance Metrics": {
+    "CAGR": "6.4%",
+    "Sharpe Ratio": "-0.2",
+    "Max Drawdown": "-80.98%"
+  },
+  "Win Rate": "38%",
+  "Source URL": "https://quantpedia.com/strategies/mean-reversion-effect-in-country-equity-indexes",
+  "Full Notes": "Documented by Richards (1995). Reversals are stronger among smaller markets.",
+  "Mathematical/Statistical Concepts": "Mean Reversion, Half-life, Contrarian Investing."
+}

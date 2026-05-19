@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Low Volatility Factor Effect in Stocks",
+  "Category": "Factor Investing",
+  "Asset Class": "Equities",
+  "Market Type": "Global / US",
+  "Strategy Description": "A strategy that invests in stocks with the lowest historical volatility, challenging the CAPM assumption that higher risk leads to higher returns.",
+  "Core Logic": "Low-risk stocks exhibit significantly higher risk-adjusted returns than the market portfolio, while high-risk stocks underperform.",
+  "Entry Conditions": "Rank stocks by their past 3-year volatility of weekly returns and go long the top decile (lowest volatility).",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "3-year Volatility (Standard Deviation of weekly returns).",
+  "Risk Management Rules": "Focus on low-beta/low-volatility stocks; can be implemented as long-short to hedge equity risk.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (standard) or Long/Short.",
+  "Market Regime Suitability": "Defensive strategy; performs well during market turmoil and bear markets.",
+  "Volatility Considerations": "Achieves approx. 25% volatility reduction compared to the market index.",
+  "Momentum/Mean Reversion Classification": "Low Volatility / Factor",
+  "Performance Metrics": {
+    "CAGR": "11.3%",
+    "Sharpe Ratio": "0.72",
+    "Max Drawdown": "-45.92%"
+  },
+  "Win Rate": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/low-volatility-factor-effect-in-stocks",
+  "Full Notes": "Based on Blitz and van Vliet (2007). The effect is attributed to leverage restrictions and behavioral biases (lottery-seeking).",
+  "Mathematical/Statistical Concepts": "Standard Deviation, Volatility, Risk-Adjusted Returns, CAPM."
+}

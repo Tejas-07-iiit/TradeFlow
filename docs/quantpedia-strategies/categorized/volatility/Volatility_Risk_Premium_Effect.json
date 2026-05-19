@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Volatility Risk Premium Effect",
+  "Category": "Volatility / Options",
+  "Asset Class": "Equities (Options)",
+  "Market Type": "Global",
+  "Strategy Description": "A strategy that earns a systematic risk premium by selling at-the-money options, exploiting the fact that implied volatility is usually higher than realized volatility.",
+  "Core Logic": "Investors pay a premium for portfolio insurance (puts), leading to overpriced options.",
+  "Entry Conditions": "Sell at-the-money straddle (1 month maturity) and buy 15% out-of-the-money puts as insurance.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "Implied Volatility, Option Premium.",
+  "Risk Management Rules": "Buy OTM puts for crash protection; substantial margin reserves required.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Short Volatility (Net Short Options).",
+  "Market Regime Suitability": "Fat-tail strategy; loses heavily during crisis periods; not a hedge.",
+  "Volatility Considerations": "Estimated volatility of 19%; return distribution is very abnormal.",
+  "Momentum/Mean Reversion Classification": "Volatility Premium",
+  "Performance Metrics": {
+    "CAGR": "26%",
+    "Sharpe Ratio": "1.16",
+    "Max Drawdown": "-24.07%"
+  },
+  "Win Rate": "49%",
+  "Source URL": "https://quantpedia.com/strategies/volatility-risk-premium-effect",
+  "Full Notes": "Selling puts is generally more profitable than selling calls. Returns are compensation for bearing tail risk.",
+  "Mathematical/Statistical Concepts": "Implied Volatility, Variance Risk Premium, Peso Problem."
+}

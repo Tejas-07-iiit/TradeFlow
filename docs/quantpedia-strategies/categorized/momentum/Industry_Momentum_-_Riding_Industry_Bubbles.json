@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Industry Momentum - Riding Industry Bubbles",
+  "Category": "Equities, Momentum, Sector Picking",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "A strategy that identifies and rides industry bubbles, exiting when the bubble starts to pop.",
+  "Core Logic": "Bubbles are defined as structural breaks in an industry's alpha return compared to the market. Excess returns during the bubble phase often offset the risk of the subsequent crash.",
+  "Entry Conditions": "Industry alpha is statistically significant at a 97.5% threshold based on the CAPM model (or Fama/French 3-factor model) using 10 years of past data.",
+  "Exit Conditions": "Alpha is no longer statistically significant or monthly rebalancing occurs.",
+  "Indicators Used": "CAPM Alpha, t-statistic, p-value.",
+  "Risk Management Rules": "1/N rule (equal weighting) among all industries experiencing a bubble; no investment if no bubble is detected.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long only.",
+  "Market Regime Suitability": "Bull markets and bubble regimes; not suitable as a hedge for bear markets.",
+  "Volatility Considerations": "Not explicitly stated, but involves high risk due to bubble dynamics.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 18% (Indicative), Sharpe Ratio: 0.1, Max Drawdown: -26.56%",
+  "Win Rate (if available)": "62%",
+  "Source URL": "https://quantpedia.com/strategies/riding-industry-bubbles",
+  "Full Notes": "Distinct from standard industry momentum; bubbles are identified by abnormal returns that cannot be explained by standard risk factors.",
+  "Mathematical/Statistical Concepts": "CAPM, Regression Analysis, Statistical Significance, Structural Breaks."
+}

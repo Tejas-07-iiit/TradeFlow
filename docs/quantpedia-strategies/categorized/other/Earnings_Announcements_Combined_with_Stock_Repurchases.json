@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Earnings Announcements Combined with Stock Repurchases",
+  "Category": "Fundamental Analysis, Earnings Announcement",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "Uses the timing of stock repurchase announcements as a signal for positive performance during subsequent earnings announcements.",
+  "Core Logic": "Managers possess superior information and tend to announce stock repurchases when they expect positive earnings news. This timing reduces information asymmetry for investors.",
+  "Entry Conditions": "Long stocks that announced a repurchase program (>=5% of shares) between 30 and 15 days before their earnings announcement date.",
+  "Exit Conditions": "Positions are held from 10 days before to 15 days after the earnings announcement.",
+  "Indicators Used": "Stock repurchase announcement date, Earnings announcement date.",
+  "Risk Management Rules": "Equally weighted; exclude the bottom 25% of firms by market capitalization.",
+  "Timeframe": "Short-term (event-driven).",
+  "Rebalancing Frequency": "Daily.",
+  "Long/Short Logic": "Long-only (long-short version possible using SEO announcements).",
+  "Market Regime Suitability": "Not a hedge; high correlation to the broad equity market due to long-only exposure.",
+  "Volatility Considerations": "Estimated Volatility: 11.11%.",
+  "Momentum/Mean Reversion Classification": "Event-driven / Fundamental.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 25.2%, Sharpe Ratio: 2.27, Max Drawdown: 4% (OOS).",
+  "Win Rate (if available)": "58% (OOS).",
+  "Source URL": "https://quantpedia.com/strategies/earnings-announcements-combined-with-stock-repurchases",
+  "Full Notes": "Universe includes NYSE/AMEX/Nasdaq stocks, excluding ADRs, CEFs, and REITs.",
+  "Mathematical/Statistical Concepts": "Information asymmetry, Event study methodology."
+}

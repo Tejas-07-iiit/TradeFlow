@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "ESG Factor Momentum Strategy",
+  "Category": "ESG Investing, Momentum, Factor Investing",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that overweights companies with the greatest improvement in ESG ratings and underweights those with declining ratings.",
+  "Core Logic": "The market reacts to changes in ESG ratings in a relatively short period. Firms improving their ESG profile are expected to outperform as the advantages of better ratings (e.g., increased cash flows) become apparent.",
+  "Entry Conditions": "Calculate 12-month ESG momentum (change in ratings). Overweight (long) companies with the highest momentum relative to the MSCI World Index and underweight (short) those with the lowest/negative momentum.",
+  "Exit Conditions": "Rebalanced monthly to capture short-term market reactions to rating changes.",
+  "Indicators Used": "MSCI ESG Ratings, 12-month ESG momentum.",
+  "Risk Management Rules": "Uses the Barra Global Equity Model (GEM3) for portfolio construction with specific constraints.",
+  "Timeframe": "Intermediate-term",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long (overweight) high ESG momentum, short (underweight) low/negative ESG momentum.",
+  "Market Regime Suitability": "Unknown; correlation to equity market risk is not explicitly detailed in source papers.",
+  "Volatility Considerations": "Estimated active volatility is approximately 2.5%.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 12.99% (indicative 2.23% active), Sharpe Ratio: 0.7 (indicative 0.89), Max Drawdown: 26%",
+  "Win Rate (if available)": "64%",
+  "Source URL": "https://quantpedia.com/strategies/esg-factor-momentum-strategy",
+  "Full Notes": "Out-of-sample tests suggest the strategy's alpha may be deteriorating. The core idea is the change in rating rather than the absolute level.",
+  "Mathematical/Statistical Concepts": "Momentum calculation (12-month change), Risk modeling (GEM3S)."
+}

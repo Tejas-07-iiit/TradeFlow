@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Skewness Effect in Commodities",
+  "Category": "Volatility Effect, Commodities",
+  "Asset Class": "Commodities",
+  "Market Type": "Global",
+  "Strategy Description": "A strategy that buys commodities with low skewness and shorts those with high skewness based on the 'lottery-like' preference of investors.",
+  "Core Logic": "Investors are willing to pay a premium for assets with high positive skewness (lottery-like payoffs), leading to lower expected returns for those assets.",
+  "Entry Conditions": "Long the quintile of commodities with the 20% lowest total skewness and short the quintile with the 20% highest total skewness over a 12-month ranking period.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Total skewness (3rd moment of returns) calculated from daily returns over the past 12 months.",
+  "Risk Management Rules": "Equally weighted; fully-collateralized portfolio using commodity futures.",
+  "Timeframe": "Medium-term.",
+  "Rebalancing Frequency": "Monthly.",
+  "Long/Short Logic": "Long-short.",
+  "Market Regime Suitability": "Significantly negative correlation to the equity market; suitable as a hedge during bear markets.",
+  "Volatility Considerations": "Estimated Volatility: 10.2%.",
+  "Momentum/Mean Reversion Classification": "Volatility Factor (Skewness).",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 8.01%, Sharpe Ratio: 0.79, Max Drawdown: -54.25%.",
+  "Win Rate (if available)": "51% (OOS).",
+  "Source URL": "https://quantpedia.com/strategies/skewness-effect-in-commodities",
+  "Full Notes": "Investment universe consists of 27 commodity futures contracts. The effect is not merely a consequence of retail investor preferences.",
+  "Mathematical/Statistical Concepts": "Skewness (3rd moment), Quintile sorting, Lottery-like payoff theory."
+}

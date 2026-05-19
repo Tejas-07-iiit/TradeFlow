@@ -2,7 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
-export const DEFAULT_WALLET_BALANCE = 10_000;
+export const DEFAULT_WALLET_BALANCE = 60_000;
 export const DEFAULT_WALLET_CURRENCY = "USDT";
 
 /**

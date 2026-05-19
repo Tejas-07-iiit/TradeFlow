@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Dispersion Trading",
+  "Category": "Volatility Effect, Volatility Premium",
+  "Asset Class": "Options",
+  "Market Type": "United States",
+  "Strategy Description": "Exploits the difference between the implied volatility of index options and the implied volatility of individual stock options.",
+  "Core Logic": "The difference between implied and realized volatility is typically greater for index options than for individual stocks. The strategy sells index volatility and buys individual stock volatility.",
+  "Entry Conditions": "Buy puts of stocks with the highest belief disagreement (analyst forecasts) and sell index puts with Black-Scholes deltas between -0.8 and -0.2.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Implied Volatility, Realized Volatility, Analyst forecast dispersion (I/B/E/S).",
+  "Risk Management Rules": "Portfolio typically consists of 20 individual stock options and 1 index option position.",
+  "Timeframe": "Short to medium term.",
+  "Rebalancing Frequency": "Monthly.",
+  "Long/Short Logic": "Short index volatility, long individual stock volatility.",
+  "Market Regime Suitability": "Not a hedge; loses money during stress periods when stock correlations rise (fat-tail risk).",
+  "Volatility Considerations": "Estimated Volatility: 13.86%.",
+  "Momentum/Mean Reversion Classification": "Volatility Arbitrage / Correlation Trading.",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 15.39%, Sharpe Ratio: 0.82, Max Drawdown: -43.49%.",
+  "Win Rate (if available)": "Not stated.",
+  "Source URL": "https://quantpedia.com/strategies/dispersion-trading",
+  "Full Notes": "Investment universe consists of S&P 100 index constituents. Belief disagreement is used as a proxy for priced risk in individual options.",
+  "Mathematical/Statistical Concepts": "Implied vs Realized Volatility, Correlation risk premium, Black-Scholes delta."
+}

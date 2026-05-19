@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "ROA Effect within Stocks",
+  "Category": "Stock Picking, Fundamental Analysis, Factor Investing",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A strategy that goes long on firms with high Return on Assets (ROA) and short on firms with low ROA, based on the q-theory of investment.",
+  "Core Logic": "Firms with productive assets (high ROA) should yield higher average returns than firms with unproductive assets.",
+  "Entry Conditions": "Divide stocks into two halves by market cap. Within each half, divide into deciles by ROA. Long the top 3 deciles and Short the bottom 3 deciles.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Return on Assets (ROA) = Quarterly Earnings / One-quarter-lagged Total Assets.",
+  "Risk Management Rules": "Equal weighting; Sales > $10M filter; size-neutrality by sorting within market cap groups.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Unknown; long leg is equity-correlated, short leg may provide hedge during bad times.",
+  "Volatility Considerations": "Estimated Volatility: 13.36%.",
+  "Momentum/Mean Reversion Classification": "Factor (Quality/Profitability)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 12.15%, Sharpe Ratio: 0.61, Max Drawdown: -47.43%",
+  "Win Rate (if available)": "Not stated",
+  "Source URL": "https://quantpedia.com/strategies/roa-effect-within-stocks",
+  "Full Notes": "The ROA effect is a key component of the q-factor model and can explain anomalies like earnings surprises and valuation ratios.",
+  "Mathematical/Statistical Concepts": "Q-theory of investment, productivity, return on assets, decile sorting."
+}

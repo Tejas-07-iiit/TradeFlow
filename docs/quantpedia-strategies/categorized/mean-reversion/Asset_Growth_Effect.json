@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Asset Growth Effect",
+  "Category": "Stock Picking, Equity Long Short, Fundamental Analysis, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that goes long on stocks with low asset growth and short on stocks with high asset growth, exploiting the tendency of high-growth firms to underperform.",
+  "Core Logic": "Low asset growth stocks significantly outperform high asset growth stocks. This may be due to risk compensation (growth options vs. assets in place) or market mispricing (extrapolation of past gains).",
+  "Entry Conditions": "At the end of June, sort stocks into deciles based on the percentage change in total assets from the previous year. Long the lowest decile, short the highest decile.",
+  "Exit Conditions": "Yearly rebalancing.",
+  "Indicators Used": "Percentage change in total assets.",
+  "Risk Management Rules": "Equal weighting; yearly rebalancing; exclusion of financial stocks.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long-Short.",
+  "Market Regime Suitability": "Unknown; low correlation to equity market factor.",
+  "Volatility Considerations": "Estimated volatility: 14.07%.",
+  "Momentum/Mean Reversion Classification": "Fundamental (Mean Reversion)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 20.84%, Sharpe Ratio: 1.2, Max Drawdown: -31.37%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/asset-growth-effect",
+  "Full Notes": "Asset growth is as powerful as size or momentum in explaining returns. The effect is stronger in developed markets.",
+  "Mathematical/Statistical Concepts": "q-theory, Extrapolation, Representativeness heuristic, Fama-MacBeth regressions."
+}

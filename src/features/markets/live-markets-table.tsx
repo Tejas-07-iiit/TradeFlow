@@ -18,7 +18,8 @@ export function LiveMarketsTable() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SortKey>("changePct");
   const tickers = useMarketStore((state) => state.tickers);
-  const candles = useMarketStore((state) => state.candles["BTCUSDT:1m"] ?? EMPTY_ARRAY);
+  const interval = useMarketStore((state) => state.interval);
+  const candles = useMarketStore((state) => state.candles[`BTCUSDT:${interval}`] ?? EMPTY_ARRAY);
   const btcIndicators = calculateIndicators(candles);
 
   const rows = useMemo(() => {

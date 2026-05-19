@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Momentum Effect in Commodities",
+  "Category": "Commodity Strategy / Momentum",
+  "Asset Class": "Commodities",
+  "Market Type": "Global",
+  "Strategy Description": "A strategy that buys commodity futures that have outperformed in the recent past and sells those that have underperformed.",
+  "Core Logic": "Short-term price continuation exists in commodity markets, often linked to backwardation and contango states.",
+  "Entry Conditions": "Rank commodity futures by 12-month performance and go long the top quintile and short the bottom quintile.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "12-month Momentum.",
+  "Risk Management Rules": "Monthly rebalancing; trades liquid contracts with nearby maturities.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Excellent candidate for an uncorrelated strategy; often acts as a hedge to equity market factor.",
+  "Volatility Considerations": "Estimated volatility of 25.57%; high drawdown potential (-79.75%).",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics": {
+    "CAGR": "14.6%",
+    "Sharpe Ratio": "0.57",
+    "Max Drawdown": "-79.75%"
+  },
+  "Win Rate": "57%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-effect-in-commodities",
+  "Full Notes": "Based on Miffre and Rallis (2007). Momentum returns have low correlations with traditional asset classes.",
+  "Mathematical/Statistical Concepts": "Momentum, Quintile Ranking, Normal Backwardation."
+}

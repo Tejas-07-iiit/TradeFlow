@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Momentum Effect in Stocks in Small Portfolios",
+  "Category": "Momentum, Stock Picking, Equity Long/Short",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "Demonstrates that the momentum effect can be effectively captured using a concentrated portfolio of as few as 20 stocks.",
+  "Core Logic": "Momentum gains are strongest when using extreme winners and losers, allowing small investors to exploit the anomaly without needing hundreds of stocks.",
+  "Entry Conditions": "Rank stocks by past 12-month performance. Long the 10 stocks with the highest performance and Short the 10 stocks with the lowest performance.",
+  "Exit Conditions": "Rebalanced yearly.",
+  "Indicators Used": "12-month past performance.",
+  "Risk Management Rules": "Equal weighting; exclusion of the bottom 25% market cap for liquidity.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Prone to 'momentum crashes' during market rebounds after large declines.",
+  "Volatility Considerations": "Concentrated portfolios have higher idiosyncratic risk but capture extreme momentum.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 32% (Indicative), Sharpe Ratio: 0.2 (QC), Max Drawdown: -88.09% (Indicative)",
+  "Win Rate (if available)": "53%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-effect-in-stocks-in-small-portfolios",
+  "Full Notes": "Indicative performance assumes an account size of 10,000 pounds. Transaction costs (commissions, stamp duty, bid-ask spread) are significant for small portfolios.",
+  "Mathematical/Statistical Concepts": "Behavioral biases, under-reaction, momentum crashes, concentration risk."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Value Factor - CAPE Effect within Countries",
+  "Category": "Value, Country Picking",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "A rotational strategy that periodically rotates to countries with the most undervalued equity markets based on Shiller's CAPE ratio.",
+  "Core Logic": "Investors tend to overreact to news; 'winner' countries become overvalued while 'loser' countries become undervalued. The strategy exploits this by buying undervalued markets as they revert to intrinsic value.",
+  "Entry Conditions": "Invest in the cheapest 33% of countries from the investment universe if those countries have a CAPE ratio below 15.",
+  "Exit Conditions": "The portfolio is rebalanced yearly; exit positions that no longer fall within the cheapest 33% or whose CAPE exceeds 15.",
+  "Indicators Used": "Shiller's CAPE (Cyclically Adjusted PE) ratio.",
+  "Risk Management Rules": "Equally weighted portfolio; hold 0% cash instead of countries with a CAPE higher than 15.",
+  "Timeframe": "Long-term (5-10 years for valuation predictive power).",
+  "Rebalancing Frequency": "Yearly.",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Not a hedge; high correlation to the broad equity market as it holds long equity positions.",
+  "Volatility Considerations": "Estimated Volatility: 26.1%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion (Value).",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 14.7% (real return), Sharpe Ratio: 0.56, Max Drawdown: -27.17%.",
+  "Win Rate (if available)": "86% (QuantConnect OOS).",
+  "Source URL": "https://quantpedia.com/strategies/value-factor-effect-within-countries",
+  "Full Notes": "Investment universe consists of 32 countries with accessible equity markets. CAPE is the ratio of real price to the 10-year average of real earnings.",
+  "Mathematical/Statistical Concepts": "Valuation ratios, Cyclical adjustment, Percentile sorting."
+}

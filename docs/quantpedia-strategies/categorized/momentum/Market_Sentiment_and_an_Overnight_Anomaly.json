@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Market Sentiment and an Overnight Anomaly",
+  "Category": "Sentiment Trading, Market Timing, Alternative Data",
+  "Asset Class": "Equities",
+  "Market Type": "ETFs",
+  "Strategy Description": "An overnight trading strategy for SPY ETF that uses market sentiment and trend indicators to time entries.",
+  "Core Logic": "The US equity premium is largely earned overnight. High opening prices often decline in the first hour. Sentiment filters (VIX, BMS, Trend) identify high-probability overnight sessions.",
+  "Entry Conditions": "Buy SPY ETF 16 minutes before close and hold overnight if: SPY > 20-day MA, VIX < 20-day MA, and Brain Market Sentiment (BMS) > 20-day MA.",
+  "Exit Conditions": "Exit at the next day's market open.",
+  "Indicators Used": "SPY price, VIX price, Brain Market Sentiment (BMS) indicator.",
+  "Risk Management Rules": "Suggested as an overlay rather than a standalone system due to high transaction costs.",
+  "Timeframe": "Daily (Overnight)",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long only (overnight).",
+  "Market Regime Suitability": "Partially; stays out of equities during high-risk/high-volatility regimes.",
+  "Volatility Considerations": "Estimated volatility is 7.33%; the strategy aims for low-volatility times.",
+  "Momentum/Mean Reversion Classification": "Momentum/Trend-following",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 11.53% (indicative 15.58%), Sharpe Ratio: 0.3 (indicative 2.12), Max Drawdown: 81% (indicative -10.97%)",
+  "Win Rate (if available)": "33%",
+  "Source URL": "https://quantpedia.com/strategies/market-sentiment-and-an-overnight-anomaly",
+  "Full Notes": "Transaction costs are a major factor. The strategy is best used to decide when to hold existing equity positions overnight.",
+  "Mathematical/Statistical Concepts": "Moving averages, Sentiment analysis, Overnight return anomaly."
+}

@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "How to Use Lexical Density of Company Filings",
+  "Category": "Alternative Data, Machine Learning, Equity Long/Short",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that uses NLP to analyze the complexity and information density of company filings to predict stock returns.",
+  "Core Logic": "Higher lexical density (information-carrying words) and specific density (finance-related words) in 10-K/10-Q reports correlate with better future performance.",
+  "Entry Conditions": "Rank the top 500 US stocks by dollar volume based on their lexical and specific density scores from the BLMCF dataset. Long the top decile and short the bottom decile.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "Brain Language Metrics on Company Filings (BLMCF) - Lexical Density, Specific Density.",
+  "Risk Management Rules": "Decile sorting; focuses on high-volume stocks to manage liquidity.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long top decile, short bottom decile.",
+  "Market Regime Suitability": "Yes; has a negative beta (-0.029) and performs well during bear markets.",
+  "Volatility Considerations": "Estimated volatility is 10.4%.",
+  "Momentum/Mean Reversion Classification": "Factor/Alternative Data",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 8.16%, Sharpe Ratio: 0.69, Max Drawdown: Not stated (but visual inspection shows resilience in bear markets)",
+  "Win Rate (if available)": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/how-to-use-lexical-density-of-company-filings",
+  "Full Notes": "Lexical richness (unique words) is another metric, but density-based metrics provided stronger risk-adjusted returns.",
+  "Mathematical/Statistical Concepts": "Natural Language Processing (NLP), Lexical density, Specific density, TF-IDF vectorization."
+}

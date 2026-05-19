@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Earnings Quality Factor",
+  "Category": "Fundamental Analysis, Stock Picking",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A long-short strategy that targets stocks with high earnings quality, defined by multiple fundamental ratios, which tend to outperform low-quality stocks.",
+  "Core Logic": "Investors often fixate on reported earnings without scrutinizing their quality. High-quality earnings (high cash flow, low leverage, high ROE) provide a persistent return premium.",
+  "Entry Conditions": "Form a composite quality score (0-400) based on Cash Flow/Earnings, ROE, Cash Flow/Assets, and Debt/Assets. Go long the top 30% and short the bottom 30%.",
+  "Exit Conditions": "Rebalanced yearly at the end of June.",
+  "Indicators Used": "Cash flow relative to earnings, Return on Equity (ROE), Cash flow to total assets (CF/A), Debt to assets (D/A).",
+  "Risk Management Rules": "Cap-weighting individual stocks within the long and short portfolios; composite scoring to diversify signal risk.",
+  "Timeframe": "Long-term.",
+  "Rebalancing Frequency": "Yearly.",
+  "Long/Short Logic": "Long-short.",
+  "Market Regime Suitability": "Positive returns during recession months; acts as a valuable diversifier to equity market risk.",
+  "Volatility Considerations": "Estimated Volatility: 5.91%.",
+  "Momentum/Mean Reversion Classification": "Fundamental Factor (Quality).",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 7.95%, Sharpe Ratio: 0.67, Max Drawdown: -18.67%.",
+  "Win Rate (if available)": "Not explicitly stated.",
+  "Source URL": "https://quantpedia.com/strategies/earnings-quality-factor",
+  "Full Notes": "Universe includes all non-financial stocks from NYSE, Amex, and Nasdaq. The strategy has low to negative correlation with value and momentum factors.",
+  "Mathematical/Statistical Concepts": "Composite scoring, Percentile ranking, Fundamental ratio analysis."
+}

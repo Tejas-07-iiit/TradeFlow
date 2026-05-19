@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Momentum Factor Effect in Country Equity Indexes",
+  "Category": "Country Selection / Momentum",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "A trend-following strategy that buys country equity indexes (via ETFs) that have shown the best past performance.",
+  "Core Logic": "Country indices show more persistent momentum than single shares because they are less likely to be 'traded-out'.",
+  "Entry Conditions": "Pick the top 5 countries with the best 10-12 month momentum.",
+  "Exit Conditions": "Rebalance monthly.",
+  "Indicators Used": "10-12 month Momentum.",
+  "Risk Management Rules": "Monthly rebalancing; geographically diversified assets.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (standard) or Long/Short.",
+  "Market Regime Suitability": "Higher equity beta during late business cycles; falls faster than benchmark during rebounds.",
+  "Volatility Considerations": "High drawdown potential (-65.39%).",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics": {
+    "CAGR": "17.7%",
+    "Sharpe Ratio": "0.2",
+    "Max Drawdown": "-65.39%"
+  },
+  "Win Rate": "63%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-factor-effect-in-country-equity-indexes",
+  "Full Notes": "Based on Muller and Ward (2010). Extra returns are larger for emerging markets than developed markets.",
+  "Mathematical/Statistical Concepts": "Momentum, Relative Strength, Country Selection."
+}

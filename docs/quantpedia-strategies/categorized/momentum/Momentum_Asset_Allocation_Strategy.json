@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Momentum Asset Allocation Strategy",
+  "Category": "Tactical Asset Allocation",
+  "Asset Class": "Equities, Bonds, Commodities, REITs",
+  "Market Type": "Global",
+  "Strategy Description": "A rotational momentum system that compares the performance of various asset classes and holds only the top-performing ones, rotating holdings monthly.",
+  "Core Logic": "Exploits relative momentum (relative strength) by picking assets with the highest past 12-month returns.",
+  "Entry Conditions": "Pick the top 3 ETFs from a universe of 5 (SPY, EFA, BND, VNQ, GSG) based on the strongest 12-month momentum.",
+  "Exit Conditions": "Rebalance monthly; exit assets that fall out of the top 3 ranking.",
+  "Indicators Used": "12-month Rate of Change (ROC) / Momentum.",
+  "Risk Management Rules": "Equal weighting of the top 3 assets; monthly rebalancing to ensure only winners are held.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Exploits different sensitivities of asset classes to business cycles; suitable for multi-asset diversification.",
+  "Volatility Considerations": "Estimated volatility of 11%; lower drawdown than individual equity indices due to diversification.",
+  "Momentum/Mean Reversion Classification": "Momentum / Relative Strength",
+  "Performance Metrics": {
+    "CAGR": "14.49%",
+    "Sharpe Ratio": "0.78",
+    "Max Drawdown": "-47.77%"
+  },
+  "Win Rate": "88%",
+  "Source URL": "https://quantpedia.com/strategies/asset-class-momentum-rotational-system",
+  "Full Notes": "Based on Mebane Faber's rotational system. Strong evidence for momentum across asset classes is supported by Kessler and Scherer (2009).",
+  "Mathematical/Statistical Concepts": "Relative Momentum, Ranking, Cross-sectional Momentum."
+}

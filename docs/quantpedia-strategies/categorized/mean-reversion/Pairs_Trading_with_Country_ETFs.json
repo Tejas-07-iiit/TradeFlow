@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Pairs Trading with Country ETFs",
+  "Category": "Equities, Long/Short, Pairs Trading",
+  "Asset Class": "Equities",
+  "Market Type": "Global",
+  "Strategy Description": "Pairs trading on country ETFs where the trader buys and simultaneously sells two ETFs that follow each other when they diverge from their normal synchronized moves.",
+  "Core Logic": "Country ETFs are often cointegrated due to shared fundamental return correlations. Temporary shocks create statistical arbitrage opportunities when pairs diverge from their historical price band.",
+  "Entry Conditions": "Divergence between the normalized price series of a pair exceeds 0.5x the historical standard deviation.",
+  "Exit Conditions": "The pair converges or a 20-day holding period is reached.",
+  "Indicators Used": "Normalized cumulative total return index, Sum of squared deviations (Distance), Standard Deviation.",
+  "Risk Management Rules": "Top 5 pairs with the smallest distance are selected; pairs are weighted equally; daily monitoring and rebalancing.",
+  "Timeframe": "Daily",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long the undervalued ETF and short the overvalued ETF.",
+  "Market Regime Suitability": "Market neutral strategy, though it may show small positive correlation to equity markets.",
+  "Volatility Considerations": "Estimated annualized daily volatility of approximately 10%.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 20.6% (Indicative), Sharpe Ratio: 1.66, Max Drawdown: -26.67%",
+  "Win Rate (if available)": "49%",
+  "Source URL": "https://quantpedia.com/strategies/pairs-trading-with-country-etfs",
+  "Full Notes": "The strategy uses a 120-day formation period to identify the top 5 pairs with the smallest distance. It is more resilient than stock pairs trading due to the diversified nature of ETFs.",
+  "Mathematical/Statistical Concepts": "Cointegration, Statistical Arbitrage, Price Normalization, Sum of Squared Deviations."
+}

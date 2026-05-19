@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Crude Oil Predicts Equity Returns",
+  "Category": "Equities, Market Timing",
+  "Asset Class": "ETFs, Funds, Futures, CFDs",
+  "Market Type": "Global, Equities",
+  "Strategy Description": "A market timing system that uses crude oil prices as a predictor for equity returns. Higher oil prices generally predict lower future equity returns and vice versa.",
+  "Core Logic": "Based on the underreaction hypothesis; investors take time to fully assess and reflect the impact of oil price changes on stock values.",
+  "Entry Conditions": "Use monthly oil returns in a regression model to predict stock market returns. If the expected return is higher than the risk-free rate, invest fully in the market portfolio.",
+  "Exit Conditions": "If the expected stock market return is lower than the risk-free rate, exit the market and invest in cash.",
+  "Indicators Used": "Monthly oil returns (Brent, WTI, etc.), regression model, risk-free rate.",
+  "Risk Management Rules": "Rotates out of equities into cash during predicted bear markets.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only (Equities or Cash).",
+  "Market Regime Suitability": "Partially hedges during bear markets by rotating to cash.",
+  "Volatility Considerations": "Estimated Volatility: 9.8%.",
+  "Momentum/Mean Reversion Classification": "Market Timing / Predictive",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "11.9%",
+    "Sharpe Ratio": 0.81,
+    "Max Drawdown": "-2.79%"
+  },
+  "Win Rate (if available)": "55%",
+  "Source URL": "https://quantpedia.com/strategies/crude-oil-predicts-equity-returns",
+  "Full Notes": "Performance is compared to a 10.7% benchmark return. The model is re-estimated every month with new data.",
+  "Mathematical/Statistical Concepts": "Regression analysis, underreaction hypothesis, delayed information diffusion, variance risk premium."
+}

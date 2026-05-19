@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "12 Month Cycle in Cross-Section of Stocks Returns",
+  "Category": "Equities, Seasonality, Stock Picking, Factor Investing, Smart Beta",
+  "Asset Class": "Stocks",
+  "Market Type": "United States, Equities",
+  "Strategy Description": "Stocks with high historical returns in a specific calendar month tend to have high future returns in that same calendar month, creating a 12-month cycle.",
+  "Core Logic": "Seasonal patterns of liquidity, compensation for systematic risk, or behavioral theories of investing drive recurring monthly performance.",
+  "Entry Conditions": "Every month, group stocks into deciles according to their performance in the same month one year ago. Go long on the winner decile.",
+  "Exit Conditions": "Go short on the loser decile. Rebalance the portfolio monthly.",
+  "Indicators Used": "12-month lagged monthly return.",
+  "Risk Management Rules": "Long-short strategy; the short leg may potentially act as a hedge during market stress.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Unknown; requires rigorous backtesting to determine correlation to equity market risk.",
+  "Volatility Considerations": "Estimated Volatility: 12.2%.",
+  "Momentum/Mean Reversion Classification": "Seasonality / Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "8.6%",
+    "Sharpe Ratio": 0.38,
+    "Max Drawdown": "-91.68%"
+  },
+  "Win Rate (if available)": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/12-month-cycle-in-cross-section-of-stocks-returns",
+  "Full Notes": "The effect is independent of other known factors like value or momentum. Results are presented for large-cap stocks.",
+  "Mathematical/Statistical Concepts": "Cross-sectional seasonality, liquidity patterns, mood beta, systematic risk compensation."
+}

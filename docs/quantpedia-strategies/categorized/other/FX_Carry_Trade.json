@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "FX Carry Trade",
+  "Category": "FX Strategy",
+  "Asset Class": "Currencies",
+  "Market Type": "Global",
+  "Strategy Description": "A classic currency strategy that sells low-interest-rate currencies and buys high-interest-rate currencies to capture the interest rate differential.",
+  "Core Logic": "Exploits the 'forward-rate bias' or 'forward premium puzzle', where high-yield currencies do not depreciate enough to offset their interest advantage.",
+  "Entry Conditions": "Go long the 3 currencies with the highest central bank prime rates and short the 3 with the lowest.",
+  "Exit Conditions": "Rebalance monthly based on updated interest rates.",
+  "Indicators Used": "Central Bank Prime Rates / 3-Month Interbank Rates.",
+  "Risk Management Rules": "Diversification across multiple currency pairs; cash not used as margin is invested in overnight rates.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long/Short.",
+  "Market Regime Suitability": "Performs well in stable global environments; susceptible to 'carry crashes' during liquidity crises.",
+  "Volatility Considerations": "Estimated volatility of 9.6%; strongly correlated to the business cycle.",
+  "Momentum/Mean Reversion Classification": "Carry / Fundamental",
+  "Performance Metrics": {
+    "CAGR": "7.27%",
+    "Sharpe Ratio": "0.29",
+    "Max Drawdown": "-32.05%"
+  },
+  "Win Rate": "68%",
+  "Source URL": "https://quantpedia.com/strategies/fx-carry-trade",
+  "Full Notes": "One of the most well-known and profitable FX strategies. Returns are often linked to global risk appetite.",
+  "Mathematical/Statistical Concepts": "Uncovered Interest Rate Parity (UIP), Forward Premium Puzzle."
+}

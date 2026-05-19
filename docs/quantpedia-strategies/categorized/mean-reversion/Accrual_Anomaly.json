@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Accrual Anomaly",
+  "Category": "Equity Long Short, Fundamental Analysis, Accruals Effect, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A strategy that exploits the negative association between accounting accruals and subsequent stock returns by going long on low-accrual stocks and short on high-accrual stocks.",
+  "Core Logic": "Investors often fixate on earnings and fail to distinguish between the cash-flow and accrual components. High accruals often indicate lower quality earnings or accounting manipulation, leading to subsequent underperformance.",
+  "Entry Conditions": "Sort stocks into deciles based on balance sheet accruals. Go long the lowest decile and short the highest decile.",
+  "Exit Conditions": "Rebalance the portfolio yearly in May after earnings publications.",
+  "Indicators Used": "BS_ACC = (\u2206Current Assets - \u2206Cash) - (\u2206Current Liabilities - \u2206Short-term Debt - \u2206Income Taxes Payable) - Depreciation.",
+  "Risk Management Rules": "Yearly rebalancing; diversification across approximately 1000 instruments.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long-Short.",
+  "Market Regime Suitability": "Unknown; long leg is correlated to equity market, short leg may provide some diversification.",
+  "Volatility Considerations": "Estimated volatility: 10.26%.",
+  "Momentum/Mean Reversion Classification": "Fundamental (Mean Reversion)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 7.5%, Sharpe Ratio: 0.34, Max Drawdown: -35.58%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/accrual-anomaly",
+  "Full Notes": "Universe: NYSE, AMEX, NASDAQ. Recent research suggests the anomaly may be split into risk-based investment accruals and mispriced non-investment accruals.",
+  "Mathematical/Statistical Concepts": "Accruals calculation, Earnings fixation hypothesis, Intertemporal CAPM."
+}

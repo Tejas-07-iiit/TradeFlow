@@ -1,0 +1,27 @@
+{
+  "Strategy Name": "Momentum Factor and Style Rotation Effect",
+  "Category": "Equities, Momentum, Rotational System, Factor Allocation",
+  "Asset Class": "ETFs",
+  "Market Type": "United States, Equities",
+  "Strategy Description": "This strategy applies momentum to rotate between equity styles (small-cap value, large-cap growth, etc.). It leverages the fact that momentum strategies generate excess returns across various asset classes and applies this to factor portfolios.",
+  "Core Logic": "Equity styles perform differently over time. The popularity of style investing influences asset return dynamics, creating non-random behavior and exploitable momentum as prices deviate from fundamental values.",
+  "Entry Conditions": "Calculate the 12-month momentum for six Russell equity styles (small-cap value, mid-cap value, large-cap value, small-cap growth, mid-cap growth, large-cap growth). Go long on the style with the highest momentum (the winner).",
+  "Exit Conditions": "Rebalance the portfolio monthly. Go short on the style with the lowest 12-month momentum (the loser).",
+  "Indicators Used": "12-month price momentum.",
+  "Risk Management Rules": "The long-short version of the strategy has practically zero correlation to the broad equity market, serving as a portfolio diversifier.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long on the winner style, short on the loser style.",
+  "Market Regime Suitability": "Unknown correlation to equity market risk; however, the short leg may act as a hedge during market crises.",
+  "Volatility Considerations": "Estimated Volatility: 16.01%.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": {
+    "CAGR": "9.25%",
+    "Sharpe Ratio": 0.33,
+    "Max Drawdown": "-52.49%"
+  },
+  "Win Rate (if available)": "52%",
+  "Source URL": "https://quantpedia.com/strategies/momentum-factor-and-style-rotation-effect",
+  "Full Notes": "Indicative performance is for the long-short strategy. Portfolio reconstruction is required on average every six months.",
+  "Mathematical/Statistical Concepts": "Relative momentum, tactical asset allocation, risk-adjusted returns, style index momentum."
+}

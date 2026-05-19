@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Pre-Holiday Effect",
+  "Category": "Equities, Market Timing, Seasonality",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A calendar anomaly strategy that goes long on the stock market on the final trading day before a holiday.",
+  "Core Logic": "Behavioral factors such as short-sellers closing positions and general investor optimism around holidays drive positive market moves.",
+  "Entry Conditions": "Go long on the day preceding a major public holiday (e.g., New Year's, Christmas, Thanksgiving).",
+  "Exit Conditions": "Close the position at the end of the pre-holiday trading day.",
+  "Indicators Used": "Public Holiday Calendar.",
+  "Risk Management Rules": "Stay in cash during all other trading days.",
+  "Timeframe": "Daily",
+  "Rebalancing Frequency": "Daily",
+  "Long/Short Logic": "Long only.",
+  "Market Regime Suitability": "Not suitable as a hedge; timing-based long exposure.",
+  "Volatility Considerations": "Low overall portfolio volatility due to limited market exposure.",
+  "Momentum/Mean Reversion Classification": "Seasonality",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 6.39% (Indicative), Sharpe Ratio: -0.5, Max Drawdown: -13.62%",
+  "Win Rate (if available)": "57%",
+  "Source URL": "https://quantpedia.com/strategies/pre-holiday-effect",
+  "Full Notes": "The effect is documented globally. Pre-holiday returns are often ten times larger than average daily returns.",
+  "Mathematical/Statistical Concepts": "Calendar Anomaly, Behavioral Finance, Short Covering."
+}

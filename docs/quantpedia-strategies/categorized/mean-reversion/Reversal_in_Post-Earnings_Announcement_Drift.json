@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Reversal in Post-Earnings Announcement Drift",
+  "Category": "Fundamental Analysis, Earnings Announcement",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "Exploits an overreaction to the well-known Post-Earnings Announcement Drift (PEAD) anomaly in liquid stocks.",
+  "Core Logic": "Investors have started to overreact to earnings news in easy-to-arbitrage stocks. Stocks with the worst returns during the previous earnings announcement tend to outperform at the next one.",
+  "Entry Conditions": "Long the decile of stocks with the lowest abnormal performance during the previous earnings announcement; short the decile with the highest.",
+  "Exit Conditions": "Stocks are held for two days around the earnings announcement.",
+  "Indicators Used": "Abnormal performance during the previous earnings announcement.",
+  "Risk Management Rules": "Equally weighted portfolio; focus on large-cap stocks with active options markets.",
+  "Timeframe": "Very short-term (2 days).",
+  "Rebalancing Frequency": "Daily.",
+  "Long/Short Logic": "Long-short.",
+  "Market Regime Suitability": "Unknown; the long leg is correlated to the market, while the short leg may provide some hedging.",
+  "Volatility Considerations": "Not stated.",
+  "Momentum/Mean Reversion Classification": "Mean Reversion (Overreaction).",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 40.32% (indicative), Sharpe Ratio: -0.4 (OOS), Max Drawdown: -93.21%.",
+  "Win Rate (if available)": "48% (OOS).",
+  "Source URL": "https://quantpedia.com/strategies/reversal-in-post-earnings-announcement-drift",
+  "Full Notes": "The strategy targets firms where investors are now overcompensating for historical underreaction to earnings news.",
+  "Mathematical/Statistical Concepts": "Abnormal returns, Autocorrelation, Investor overreaction."
+}

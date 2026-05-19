@@ -19,6 +19,13 @@ export function LiveSignalsPage() {
   const decision = generateDecision(symbol, allCandles, interval);
   const indicators = calculateIndicators(candles);
   const signalHistory = useSignalStore((state) => state.history);
+  const autoExec = useSignalStore((s) => s.autoExec[symbol]);
+
+  const isAutoFired =
+    !!autoExec &&
+    (decision.signal === "BUY" || decision.signal === "SELL") &&
+    autoExec.signal === decision.signal &&
+    autoExec.type === decision.type;
 
   return (
     <PageShell
@@ -76,6 +83,36 @@ export function LiveSignalsPage() {
                   {decision.warnings.join(" ")}
                 </div>
               ) : null}
+
+              {decision.signal !== "HOLD" && decision.entryPrice != null && (
+                <div className="grid grid-cols-3 gap-2 rounded-md border border-[var(--color-border)] bg-white/[0.01] p-3">
+                  <SignalLevel label="Entry" value={decision.entryPrice} />
+                  <SignalLevel label="Stop Loss" value={decision.stopLoss} tone="bear" />
+                  <SignalLevel label="Take Profit" value={decision.takeProfit} tone="bull" />
+                </div>
+              )}
+
+              <div
+                className={cn(
+                  "rounded-md border px-3 py-2.5 text-center text-[13px] font-semibold tracking-wide",
+                  isAutoFired
+                    ? decision.signal === "BUY"
+                      ? "border-[var(--color-bull)]/30 bg-[var(--color-bull-soft)] text-[var(--color-bull)]"
+                      : "border-[var(--color-bear)]/30 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
+                    : "border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-muted)]",
+                )}
+              >
+                {isAutoFired
+                  ? `AI auto-executed ${decision.signal} · ${decision.type}`
+                  : decision.signal === "HOLD"
+                    ? "No actionable signal — engine waiting"
+                    : `Awaiting transition · ${decision.signal} ${decision.type}`}
+              </div>
+              <p className="mt-2 text-[10px] text-center text-[var(--color-fg-subtle)] leading-relaxed">
+                {process.env.NEXT_PUBLIC_AI_AUTONOMY === "on"
+                  ? "LLM Autonomy is ON. These rule-based signals are fed to the Groq AI, which owns the final execution."
+                  : "LLM Autonomy is OFF. The Rule Engine will auto-execute these signals once per transition."}
+              </p>
             </CardContent>
           </Card>
 
@@ -90,7 +127,7 @@ export function LiveSignalsPage() {
                   No signals generated yet. Stay tuned for live market alerts.
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
                   {signalHistory.map((s, i) => (
                     <div key={`${s.generatedAt}-${i}`} className={cn("flex items-center justify-between rounded-md border border-[var(--color-border)] bg-white/[0.01] p-3", s.status === "EXPIRED" && "opacity-50")}>
                       <div className="flex items-center gap-4">
@@ -129,7 +166,7 @@ export function LiveSignalsPage() {
               <Filter className="size-4 text-[var(--color-fg-muted)]" />
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
-              {["BTCUSDT", interval.toUpperCase(), decision.signal, decision.risk, decision.marketCondition].map((filter) => (
+              {[symbol, interval.toUpperCase(), decision.signal, decision.risk, decision.marketCondition].map((filter) => (
                 <Badge key={filter} variant="muted">{filter}</Badge>
               ))}
             </CardContent>
@@ -163,6 +200,39 @@ function SignalStat({ label, value }: { label: string; value: string }) {
     <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3">
       <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">{label}</div>
       <div className="mt-1 text-mono-tabular text-sm font-semibold text-[var(--color-fg)]">{value}</div>
+    </div>
+  );
+}
+
+function SignalLevel({
+  label,
+  value,
+  tone = "muted",
+}: {
+  label: string;
+  value?: number;
+  tone?: "bull" | "bear" | "muted";
+}) {
+  return (
+    <div className="text-center">
+      <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] mb-1">
+        {label}
+      </div>
+      <div
+        className={cn(
+          "text-mono-tabular text-sm font-semibold tabular-nums",
+          tone === "bull" && "text-[var(--color-bull)]",
+          tone === "bear" && "text-[var(--color-bear)]",
+          tone === "muted" && "text-[var(--color-fg)]",
+        )}
+      >
+        {value != null
+          ? value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          : "—"}
+      </div>
     </div>
   );
 }

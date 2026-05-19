@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "ESG, Price Momentum and Stochastic Optimization",
+  "Category": "ESG Investing, Momentum, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "Combines ESG scores and price momentum using a knapsack optimization algorithm to create a portfolio with high returns and improved risk characteristics.",
+  "Core Logic": "Price momentum contributes to returns, while ESG criteria improve risk characteristics (lower volatility and drawdowns). The knapsack algorithm finds the optimal mix of both.",
+  "Entry Conditions": "Use a scaled total ESG score and 12-month price momentum (omitting the last month). Apply a knapsack algorithm (solved via simulated annealing) to select stocks that maximize momentum while meeting a high ESG score constraint.",
+  "Exit Conditions": "Rebalanced monthly.",
+  "Indicators Used": "OWL Analytics ESG data, 12-month price momentum.",
+  "Risk Management Rules": "Knapsack optimization, weight caps based on top ESG scores, and simulated annealing to avoid overfitted portfolios.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long-only optimized portfolio.",
+  "Market Regime Suitability": "Partially; consistent performance and reduced drawdowns, but not a complete hedge.",
+  "Volatility Considerations": "ESG scores significantly influence risk measures; high ESG stocks are less volatile.",
+  "Momentum/Mean Reversion Classification": "Momentum",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 17.47%, Sharpe Ratio: 1.29, Max Drawdown: Not stated (but significantly reduced compared to pure momentum)",
+  "Win Rate (if available)": "Not available",
+  "Source URL": "https://quantpedia.com/strategies/esg-price-momentum-and-stochastic-optimization",
+  "Full Notes": "The strategy is considered 'Very Complex' due to the stochastic optimization required. It outperforms classical momentum on a risk-adjusted basis.",
+  "Mathematical/Statistical Concepts": "Knapsack problem, Simulated Annealing, Theil's regression, Stochastic optimization."
+}

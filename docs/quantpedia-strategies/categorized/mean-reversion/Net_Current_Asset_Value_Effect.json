@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "Net Current Asset Value Effect",
+  "Category": "Value, Fundamental Analysis, Factor Investing, Smart Beta",
+  "Asset Class": "Equities",
+  "Market Type": "Stocks",
+  "Strategy Description": "A deep value strategy popularized by Benjamin Graham that buys stocks trading at a significant discount to their net current asset value (liquidation value).",
+  "Core Logic": "Stocks with market capitalization lower than their net current assets (cash + inventories - all liabilities) are often in distress but statistically provide high positive returns as a portfolio.",
+  "Entry Conditions": "Select stocks with a Net Current Asset Value to Market Value (NCAV/MV) ratio higher than 1.5.",
+  "Exit Conditions": "Hold the buy-and-hold portfolio for one year.",
+  "Indicators Used": "NCAV/MV = (Current Assets - Total Liabilities) / Market Value.",
+  "Risk Management Rules": "Equal weighting; annual rebalancing; exclusion of financial sector and foreign companies.",
+  "Timeframe": "Yearly",
+  "Rebalancing Frequency": "Yearly",
+  "Long/Short Logic": "Long-only.",
+  "Market Regime Suitability": "Not a hedge for bear markets; high correlation to equity market premium.",
+  "Volatility Considerations": "Not stated in source paper.",
+  "Momentum/Mean Reversion Classification": "Value (Mean Reversion)",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 31.19%, Sharpe Ratio: Not stated, Max Drawdown: -76.86%",
+  "Win Rate (if available)": null,
+  "Source URL": "https://quantpedia.com/strategies/net-current-asset-value-effect",
+  "Full Notes": "Universe: London Exchange. Excludes companies with multiple share classes and those on lightly regulated markets.",
+  "Mathematical/Statistical Concepts": "NCAV calculation, CAPM, Fama-French three-factor model analysis."
+}

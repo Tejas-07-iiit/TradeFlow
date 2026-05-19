@@ -1,0 +1,23 @@
+{
+  "Strategy Name": "52-Weeks High Effect in Stocks",
+  "Category": "Equities, Long/Short, Factor Investing",
+  "Asset Class": "Equities",
+  "Market Type": "United States",
+  "Strategy Description": "A strategy that buys stocks close to their 52-week highs and shorts those far from them, focusing on industry-level information.",
+  "Core Logic": "Investors use the 52-week high as an anchor and under-react to positive news as prices approach this level, leading to subsequent continuation.",
+  "Entry Conditions": "Calculate the ratio of current price to 52-week high; long stocks in the 6 industries with the highest weighted average ratios and short the 6 lowest.",
+  "Exit Conditions": "3-month holding period.",
+  "Indicators Used": "Price / 52-Week High Ratio, Industry Market Capitalization.",
+  "Risk Management Rules": "Equal weighting; monthly rebalancing of 1/3 of the portfolio; avoid implementation in January.",
+  "Timeframe": "Monthly",
+  "Rebalancing Frequency": "Monthly",
+  "Long/Short Logic": "Long winners, short losers.",
+  "Market Regime Suitability": "Unknown; independent of standard momentum effect.",
+  "Volatility Considerations": "Estimated volatility of 11%.",
+  "Momentum/Mean Reversion Classification": "Momentum / Anomaly",
+  "Performance Metrics (CAGR, Sharpe Ratio, Max Drawdown)": "CAGR: 11.75% (Indicative), Sharpe Ratio: 0.7, Max Drawdown: -53.9%",
+  "Win Rate (if available)": "54%",
+  "Source URL": "https://quantpedia.com/strategies/52-weeks-high-effect-in-stocks",
+  "Full Notes": "The effect is mainly driven by under-reaction to industry information rather than firm-specific news.",
+  "Mathematical/Statistical Concepts": "Anchoring Bias, Under-reaction, Weighted Averages, Industry Momentum."
+}

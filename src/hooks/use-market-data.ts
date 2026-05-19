@@ -20,14 +20,16 @@ export function useMarketData(interval: Timeframe = "1m") {
   useEffect(() => {
     let cancelled = false;
 
-    // Fetch primary timeframe
-    fetchHistoricalCandles(symbol, interval, 500)
-      .then((candles) => {
-        if (!cancelled) setCandles(symbol, interval, candles);
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
+    // Fetch primary timeframe for ALL watchlist symbols so the AI engine can run immediately
+    WATCHLIST_SYMBOLS.forEach((sym) => {
+      fetchHistoricalCandles(sym, interval, 500)
+        .then((candles) => {
+          if (!cancelled) setCandles(sym, interval, candles);
+        })
+        .catch(() => {
+          if (!cancelled && sym === symbol) setStatus("error");
+        });
+    });
 
     // Fetch background HTF confirmation
     const htf = interval === "1m" ? "15m" : interval === "5m" ? "1h" : null;
