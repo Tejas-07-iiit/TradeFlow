@@ -12,30 +12,63 @@
  */
 
 /**
- * Per-model TPM caps on Groq's free tier — leave a small margin below
- * the published number to absorb tokenizer drift between our estimate
- * and Groq's count. Raise these if you upgrade the Groq plan.
+ * Per-model TPM caps. Configured entirely from env so model ids and
+ * limits move together when the upstream catalog changes.
+ *
+ * Lookup order, in priority:
+ *   1. `LLM_TPM_<NORMALIZED_MODEL>`        e.g. LLM_TPM_LLAMA_3_3_70B_VERSATILE=11000
+ *   2. `LLM_TPM_BUDGETS` JSON map          e.g. {"llama-3.3-70b-versatile":11000,...}
+ *   3. `LLM_TPM_DEFAULT`                    fallback cap when nothing matches
+ *   4. 11_000                                hard-coded conservative floor
+ *
+ * The per-model env var name is built by uppercasing the model id and
+ * replacing every non-alphanumeric char with `_`.
  */
-const TPM_BUDGET_BY_MODEL: Record<string, number> = {
-  // Groq free-tier per-model TPM caps.
-  "openai/gpt-oss-120b": 28_000,
-  "openai/gpt-oss-20b": 28_000,
-  "llama-3.3-70b-versatile": 11_000,
-  "llama-3.1-8b-instant": 28_000,
-  "llama-4-scout-17b-16e-instruct": 28_000,
-  "qwen/qwen3-32b": 28_000,
-  // OpenRouter free models — limits vary per model but ~20K TPM is a
-  // safe conservative cap (free tier caps RPD harder than TPM).
-  "deepseek/deepseek-chat-v3-0324:free": 20_000,
-  "deepseek/deepseek-v4-flash:free": 20_000,
-  "meta-llama/llama-3.3-70b-instruct:free": 20_000,
-  "qwen/qwen-2.5-72b-instruct:free": 20_000,
-  "qwen/qwen3-next-80b-a3b-instruct:free": 20_000,
-};
-const DEFAULT_TPM_BUDGET = 11_000;
+function normalizeModelEnvKey(model: string): string {
+  return `LLM_TPM_${model.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}`;
+}
+
+let cachedTpmMap: Record<string, number> | null = null;
+function tpmMapFromEnv(): Record<string, number> {
+  if (cachedTpmMap) return cachedTpmMap;
+  const raw = process.env.LLM_TPM_BUDGETS?.trim();
+  if (!raw) {
+    cachedTpmMap = {};
+    return cachedTpmMap;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const map: Record<string, number> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        const n = typeof v === "number" ? v : parseFloat(String(v));
+        if (Number.isFinite(n) && n > 0) map[k] = n;
+      }
+      cachedTpmMap = map;
+      return map;
+    }
+  } catch (err) {
+    console.warn(`[LLM] LLM_TPM_BUDGETS is not valid JSON: ${String(err)}`);
+  }
+  cachedTpmMap = {};
+  return cachedTpmMap;
+}
+
+function defaultTpmBudget(): number {
+  const raw = process.env.LLM_TPM_DEFAULT?.trim();
+  const n = raw ? parseFloat(raw) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : 11_000;
+}
 
 export function tpmBudgetFor(model: string): number {
-  return TPM_BUDGET_BY_MODEL[model] ?? DEFAULT_TPM_BUDGET;
+  const perModel = process.env[normalizeModelEnvKey(model)]?.trim();
+  if (perModel) {
+    const n = parseFloat(perModel);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  const fromMap = tpmMapFromEnv()[model];
+  if (fromMap) return fromMap;
+  return defaultTpmBudget();
 }
 
 interface UsageEvent {

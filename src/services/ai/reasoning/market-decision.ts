@@ -15,10 +15,12 @@ import { localFallbackDecision } from "./local-fallback";
  *                We return a synthetic HOLD decision so the UI / executor
  *                see a stable answer; the autonomous flow treats it as
  *                no-op the same way it would a real HOLD.
- *   tier:cheap → routine evaluation. Route through Groq llama-3.1-8b-instant
- *                first. The 70B is reserved for elite setups.
- *   tier:premium → snapshot endorses an elite setup. Use the 70B for the
- *                  deeper reasoning the trade deserves.
+ *   tier:cheap → routine evaluation. Route through the cheap-tier Groq
+ *                model (`GROQ_MODEL_CHEAP`) first; the configured
+ *                purpose model is reserved for elite setups.
+ *   tier:premium → snapshot endorses an elite setup. Use the configured
+ *                  purpose model (`GROQ_MODEL_DECISION`) for the deeper
+ *                  reasoning the trade deserves.
  */
 export interface DecisionPrefilter {
   skip: boolean;
@@ -257,9 +259,9 @@ export async function getMarketDecisionFor(
     try {
       // 2000 output tokens fits the worst-case JSON for the tightened
       // schema (reasoning≤4×200 + warnings≤3×200 + summaries + aligned/
-      // conflicting lists). Reasoning models like gpt-oss waste output
-      // tokens on chain-of-thought and must be avoided here — see the
-      // decision-model selection in `providers/index.ts`.
+      // conflicting lists). Use a NON-reasoning model — reasoning models
+      // burn output tokens on hidden chain-of-thought and regularly hit
+      // "max completion tokens reached" on this schema.
       const decision = await provider.chatJson(messages, MarketDecisionSchema, {
         temperature: 0.15,
         maxTokens: 2000,

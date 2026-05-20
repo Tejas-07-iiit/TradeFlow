@@ -9,7 +9,6 @@ import {
 } from "./types";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "deepseek/deepseek-chat-v3-0324:free";
 
 interface OpenRouterResponse {
   choices?: Array<{
@@ -40,7 +39,7 @@ export class OpenRouterProvider implements LlmProvider {
   readonly model: string;
   private readonly apiKey: string;
 
-  constructor(opts: { apiKey: string; model?: string }) {
+  constructor(opts: { apiKey: string; model: string }) {
     if (!opts.apiKey) {
       throw new LlmProviderError(
         "OPENROUTER_API_KEY is not set",
@@ -48,8 +47,15 @@ export class OpenRouterProvider implements LlmProvider {
         "openrouter",
       );
     }
+    if (!opts.model) {
+      throw new LlmProviderError(
+        "OpenRouter model is required — set OPENROUTER_MODEL_<PURPOSE> or OPENROUTER_MODEL in env",
+        undefined,
+        "openrouter",
+      );
+    }
     this.apiKey = opts.apiKey;
-    this.model = opts.model ?? DEFAULT_MODEL;
+    this.model = opts.model;
   }
 
   async chatJson<TSchema extends ZodTypeAny>(

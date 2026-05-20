@@ -9,7 +9,6 @@ import {
 } from "./types";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_MODEL = "llama-3.1-8b-instant";
 
 interface GroqChatResponse {
   choices?: Array<{
@@ -43,12 +42,19 @@ export class GroqProvider implements LlmProvider {
   readonly model: string;
   private readonly apiKey: string;
 
-  constructor(opts: { apiKey: string; model?: string }) {
+  constructor(opts: { apiKey: string; model: string }) {
     if (!opts.apiKey) {
       throw new LlmProviderError("GROQ_API_KEY is not set", undefined, "groq");
     }
+    if (!opts.model) {
+      throw new LlmProviderError(
+        "Groq model is required — set GROQ_MODEL_<PURPOSE> or GROQ_MODEL in env",
+        undefined,
+        "groq",
+      );
+    }
     this.apiKey = opts.apiKey;
-    this.model = opts.model ?? DEFAULT_MODEL;
+    this.model = opts.model;
   }
 
   async chatJson<TSchema extends ZodTypeAny>(
@@ -112,6 +118,27 @@ export class GroqProvider implements LlmProvider {
             throw new LlmProviderError(
               `Groq rate limit on ${this.model}`,
               { status: 429, retryAfterSec: retryAfter, body: text, tpd: isTpd },
+              this.name,
+            );
+          }
+          // Groq returns 400 with code `json_validate_failed` when the
+          // model emitted text that parses as JSON-ish but isn't strict
+          // JSON (e.g. an arithmetic expression inside a number field).
+          // Surface a typed marker so the outer retry can repair it
+          // instead of bailing out to the next provider in the chain.
+          const isJsonValidateFailed =
+            res.status === 400 && /json_validate_failed/i.test(text);
+          if (isJsonValidateFailed) {
+            const failedGen = extractFailedGeneration(text);
+            throw new LlmProviderError(
+              `Groq json_validate_failed on ${this.model}`,
+              {
+                status: 400,
+                code: "json_validate_failed",
+                model: this.model,
+                body: text,
+                failedGeneration: failedGen,
+              },
               this.name,
             );
           }
@@ -181,6 +208,34 @@ export class GroqProvider implements LlmProvider {
       return parseAndValidate(raw);
     } catch (err) {
       if (!(err instanceof LlmProviderError)) throw err;
+
+      // Groq's own JSON validator rejected the model output (e.g. it
+      // emitted an arithmetic expression instead of a finished number).
+      // We can repair this in-place by handing the broken text back to
+      // the model and asking it to fix it.
+      const cause = err.cause as
+        | { code?: string; failedGeneration?: string }
+        | undefined;
+      if (cause?.code === "json_validate_failed") {
+        const broken = cause.failedGeneration ?? "";
+        const repairMessages: ChatMessage[] = [
+          ...messages,
+          {
+            role: "user",
+            content: [
+              "Your previous reply failed strict JSON validation. The broken text was:",
+              "```",
+              broken.slice(0, 2000),
+              "```",
+              "Common causes: arithmetic expressions like `a - 0.5 * b` inside a number field, trailing comments, NaN, or unfinished values.",
+              "Fix it: recompute every number to a single finished decimal literal, then respond with ONLY the corrected JSON object. No prose, no markdown fences, no expressions.",
+            ].join("\n"),
+          },
+        ];
+        const raw = await attempt(repairMessages, 1);
+        return parseAndValidate(raw);
+      }
+
       // One retry on shape failure with an explicit JSON-only reminder.
       // Transport/auth errors aren't retried — they won't fix themselves
       // by trying again within the same request budget.
@@ -198,8 +253,23 @@ export class GroqProvider implements LlmProvider {
             "Your previous reply could not be parsed. Respond again with ONLY a single JSON object matching the schema, with no markdown fences or prose.",
         },
       ];
-      const raw = await attempt(retryMessages);
+      const raw = await attempt(retryMessages, 1);
       return parseAndValidate(raw);
     }
+  }
+}
+
+/**
+ * Pull the `failed_generation` blob out of Groq's 400 body. It's the
+ * raw model output that tripped strict JSON validation, useful to show
+ * back to the model on the repair retry.
+ */
+function extractFailedGeneration(body: string): string | undefined {
+  try {
+    const parsed = JSON.parse(body);
+    const v = parsed?.error?.failed_generation;
+    return typeof v === "string" ? v : undefined;
+  } catch {
+    return undefined;
   }
 }

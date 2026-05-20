@@ -12,32 +12,18 @@ export { LlmProviderError } from "./types";
  *
  * Adding a new purpose:
  *   1. Add a key here.
- *   2. Add a default model in `DEFAULT_MODEL_BY_PURPOSE`.
+ *   2. Set the env var for that purpose (see lookup order below).
  *   3. Caller passes the purpose into `getLlmProvider({ purpose })`.
  *
- * Env var lookup order for each purpose:
- *   1. `GROQ_MODEL_<PURPOSE>` (e.g. `GROQ_MODEL_DECISION`)
- *   2. `GROQ_MODEL` (legacy single-model override)
- *   3. `DEFAULT_MODEL_BY_PURPOSE[purpose]`
+ * Env var lookup order, per provider:
+ *   groq:       GROQ_MODEL_<PURPOSE>       → GROQ_MODEL
+ *   openrouter: OPENROUTER_MODEL_<PURPOSE> → OPENROUTER_MODEL
+ *
+ * No code-level fallbacks — every model id must come from env. If neither
+ * env is set for the resolved provider, the call site is treated as
+ * unconfigured and silently dropped from the chain.
  */
 export type LlmPurpose = "decision" | "thesis" | "news" | "sentiment" | "default";
-
-const DEFAULT_MODEL_BY_PURPOSE: Record<LlmPurpose, string> = {
-  // Decision needs a NON-reasoning model. gpt-oss-120b and -20b burn
-  // output tokens on hidden chain-of-thought before emitting JSON, so
-  // they regularly hit "max completion tokens reached" on this schema.
-  // llama-3.3-70b-versatile emits the JSON directly; its tighter 11K
-  // TPM bucket is handled by the per-model token-budget throttle.
-  decision: "llama-3.3-70b-versatile",
-  // Lighter — formats a structured market read into a short narrative.
-  // llama-3.1-8b-instant: universally available on every Groq tier,
-  // 30K TPM, sub-second latency. Plenty for advisory output.
-  thesis: "llama-3.1-8b-instant",
-  news: "llama-3.1-8b-instant",
-  sentiment: "llama-3.1-8b-instant",
-  default: "llama-3.3-70b-versatile",
-};
-
 
 /**
  * Provider lookup per purpose. Lets you put trade decisions on Groq
@@ -61,53 +47,38 @@ function providerForPurpose(purpose: LlmPurpose): string {
 /**
  * Model lookup, scoped to the resolved provider so each vendor has its
  * own env namespace and never accidentally feeds an OpenAI/Groq id to
- * the other.
- *
- * Env var lookup order, per provider:
- *   groq:       GROQ_MODEL_<PURPOSE> → GROQ_MODEL → default
- *   openrouter: OPENROUTER_MODEL_<PURPOSE> → OPENROUTER_MODEL → default
+ * the other. Returns undefined when no env var is set — the caller
+ * skips that link in the chain.
  */
-function modelForPurpose(purpose: LlmPurpose, provider: string): string {
+function modelForPurpose(purpose: LlmPurpose, provider: string): string | undefined {
   const upper = purpose.toUpperCase();
   if (provider === "openrouter") {
     return (
-      process.env[`OPENROUTER_MODEL_${upper}`] ??
-      process.env.OPENROUTER_MODEL ??
-      DEFAULT_OPENROUTER_MODEL_BY_PURPOSE[purpose]
+      process.env[`OPENROUTER_MODEL_${upper}`]?.trim() ||
+      process.env.OPENROUTER_MODEL?.trim() ||
+      undefined
     );
   }
   return (
-    process.env[`GROQ_MODEL_${upper}`] ??
-    process.env.GROQ_MODEL ??
-    DEFAULT_MODEL_BY_PURPOSE[purpose]
+    process.env[`GROQ_MODEL_${upper}`]?.trim() ||
+    process.env.GROQ_MODEL?.trim() ||
+    undefined
   );
 }
 
-// `deepseek/deepseek-chat-v3-0324:free` was the previous default but
-// OpenRouter has pulled it from the catalog — every call 404s with "no
-// endpoints found". `deepseek-v4-flash:free` is the current free-tier
-// successor and was the one model returning 200 in our probe; the rest
-// of OPENROUTER_FALLBACK_FREE_MODELS provides redundancy when it's
-// upstream-rate-limited.
-const DEFAULT_OPENROUTER_MODEL_BY_PURPOSE: Record<LlmPurpose, string> = {
-  decision: "deepseek/deepseek-v4-flash:free",
-  thesis: "deepseek/deepseek-v4-flash:free",
-  news: "deepseek/deepseek-v4-flash:free",
-  sentiment: "deepseek/deepseek-v4-flash:free",
-  default: "deepseek/deepseek-v4-flash:free",
-};
-
 /**
- * Additional OpenRouter free models we'll cycle through when the primary
- * OpenRouter pick is cooldown'd or upstream rate-limited. Verified
- * present in OpenRouter's catalog as of 2026-05; if endpoints disappear,
- * the per-model cooldown will skip them automatically.
+ * OpenRouter fallback model list from `OPENROUTER_FALLBACK_MODELS`
+ * (comma-separated). Empty when unset — chain will only contain the
+ * configured primary OpenRouter model.
  */
-const OPENROUTER_FALLBACK_FREE_MODELS = [
-  "deepseek/deepseek-v4-flash:free",
-  "meta-llama/llama-3.3-70b-instruct:free",
-  "qwen/qwen3-next-80b-a3b-instruct:free",
-];
+function openRouterFallbackModels(): string[] {
+  const raw = process.env.OPENROUTER_FALLBACK_MODELS?.trim();
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((m) => m.trim())
+    .filter((m) => m.length > 0);
+}
 
 /**
  * Round-robin API key picker. Set `GROQ_API_KEY_2` (and `_3`, etc.) in env
@@ -142,11 +113,11 @@ function collectApiKeys(): string[] {
  * Quality tier for the call. Lets the chain swap order without renaming
  * models or duplicating env config.
  *
- *   cheap   → start with the 8B (or equivalent free OpenRouter) model and
- *             only escalate to the heavyweight if it errors. Routine
- *             evaluation, position management, low-alignment scans.
- *   premium → start with the heavyweight (70B llama). Reserved for elite
- *             snapshots that earned the deeper reasoning.
+ *   cheap   → start with `GROQ_MODEL_CHEAP` (or GROQ_MODEL) and only
+ *             escalate to the configured purpose model if it errors.
+ *             Routine evaluation, position management, low-alignment scans.
+ *   premium → start with the configured purpose model (heavyweight).
+ *             Reserved for elite snapshots that earned the deeper reasoning.
  *
  * Default (undefined) preserves the legacy chain order so non-decision
  * call sites don't change behavior.
@@ -165,12 +136,22 @@ export interface ProviderOptions {
  * lightweight — it's safe (and cheap) to call this per request so each
  * call site picks up fresh env / API-key rotation state.
  *
- * Throws on missing credentials so we fail fast at the boundary.
+ * Throws on missing credentials or missing model env so we fail fast at
+ * the boundary.
  */
 export function getLlmProvider(opts: ProviderOptions = {}): LlmProvider {
   const purpose: LlmPurpose = opts.purpose ?? "default";
   const provider = providerForPurpose(purpose);
-  return buildProvider(provider, modelForPurpose(purpose, provider));
+  const model = modelForPurpose(purpose, provider);
+  if (!model) {
+    throw new LlmProviderError(
+      `No model configured for ${provider} purpose=${purpose}. ` +
+        `Set ${provider === "openrouter" ? "OPENROUTER" : "GROQ"}_MODEL_${purpose.toUpperCase()} in env.`,
+      undefined,
+      provider,
+    );
+  }
+  return buildProvider(provider, model);
 }
 
 function buildProvider(provider: string, model: string): LlmProvider {
@@ -194,26 +175,26 @@ function buildProvider(provider: string, model: string): LlmProvider {
 /**
  * Ordered fallback chain for a call site. Callers iterate until one
  * succeeds — designed for the decision call where a Groq TPD exhaustion
- * on llama-3.3-70b would otherwise leave the executor with no answer
+ * on the primary model would otherwise leave the executor with no answer
  * for ~30 minutes.
  *
  * Chain composition (best-effort, dedup'd):
  *   1. Configured primary for the purpose.
- *   2. If primary is Groq, the same purpose on `llama-3.1-8b-instant`
- *      (separate per-model bucket on the free tier, so a 70B TPD hit
- *      doesn't block it).
- *   3. OpenRouter on the purpose's configured model, when an API key is
- *      present and OpenRouter isn't already the primary.
+ *   2. If primary is Groq, the cheap-tier Groq model from `GROQ_MODEL_CHEAP`
+ *      (or `GROQ_MODEL`) — separate per-model bucket on the free tier.
+ *   3. OpenRouter on the purpose's configured model.
+ *   4. OpenRouter on each model in `OPENROUTER_FALLBACK_MODELS`.
  *
- * Providers that can't be constructed (missing creds) are silently
- * omitted — they're only valid links when properly configured.
+ * Providers that can't be constructed (missing creds or missing model env)
+ * are silently omitted — they're only valid links when properly configured.
  */
 export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
   const purpose: LlmPurpose = opts.purpose ?? "default";
   const primary = providerForPurpose(purpose);
   const chain: LlmProvider[] = [];
   const seen = new Set<string>();
-  const push = (provider: string, model: string) => {
+  const push = (provider: string, model: string | undefined) => {
+    if (!model) return;
     const key = `${provider}:${model}`;
     if (seen.has(key)) return;
     try {
@@ -224,30 +205,34 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
     }
   };
 
+  const cheapModel =
+    process.env.GROQ_MODEL_CHEAP?.trim() ||
+    process.env.GROQ_MODEL?.trim() ||
+    undefined;
+
   // Decision purpose with explicit tier overrides the default model order.
   // The configured `GROQ_MODEL_DECISION` env still wins as the "premium"
-  // entry if set, so users can swap heavyweights without touching code.
+  // entry, so users can swap heavyweights without touching code.
   const decisionWithTier =
     purpose === "decision" && opts.tier != null && primary === "groq";
   if (decisionWithTier) {
     const configuredPremium = modelForPurpose(purpose, "groq");
-    const CHEAP_MODEL = "llama-3.1-8b-instant";
     if (opts.tier === "cheap") {
-      push("groq", CHEAP_MODEL);
+      push("groq", cheapModel);
       push("groq", configuredPremium);
     } else {
       push("groq", configuredPremium);
-      push("groq", CHEAP_MODEL);
+      push("groq", cheapModel);
     }
   } else {
     push(primary, modelForPurpose(purpose, primary));
     if (primary === "groq") {
-      push("groq", "llama-3.1-8b-instant");
+      push("groq", cheapModel);
     }
   }
 
   // OpenRouter expansion: try the user-configured model first, then sweep
-  // the known-good free-model list. Any model that has been cooldown'd
+  // the env-supplied fallback list. Any model that has been cooldown'd
   // (e.g. 404 "no endpoints found" or 429) is skipped on the next call
   // by TokenBudget.reserve, so the chain stays effective even when half
   // the free pool is upstream-throttled.
@@ -255,7 +240,7 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
     if (primary !== "openrouter") {
       push("openrouter", modelForPurpose(purpose, "openrouter"));
     }
-    for (const model of OPENROUTER_FALLBACK_FREE_MODELS) {
+    for (const model of openRouterFallbackModels()) {
       push("openrouter", model);
     }
   }
