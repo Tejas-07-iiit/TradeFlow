@@ -171,8 +171,8 @@ export function GroqPage() {
                         </div>
                       )}
                     </>
-                  )
-                })}
+                  );
+                })()}
               </CardContent>
             </Card>
           );

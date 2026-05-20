@@ -91,7 +91,7 @@ export function useMatchingEngine(
       const symbolCandles = state.candles[`${pos.symbol}:${state.interval}`];
       
       if (symbolCandles) {
-        const openedTime = Math.floor(new Date(pos.openedAt).getTime() / 1000);
+        const openedTime = Math.floor(new Date(pos.createdAt).getTime() / 1000);
         for (const c of symbolCandles) {
           if (c.time < openedTime) continue; // Candle happened before trade opened
           

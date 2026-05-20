@@ -8,6 +8,7 @@ import {
   type TradeAssessment,
   type TradeProposal,
 } from "@/lib/trade-quality";
+import { calculateIndicators } from "@/lib/signals/signal-engine";
 import { closePaperPosition, createPaperOrder } from "@/server/trading";
 import { decisionSide } from "@/services/ai/schemas";
 import { useAiDecisionStore, type DecisionEntry } from "@/store/ai-decision-store";
@@ -150,9 +151,9 @@ export function AiExecutionEngine() {
 
       // Approved. Fire the order (if autonomy is live).
       if (autonomyOn) {
-        fireEntry(symbol, side, entry, assessment, livePrice, avail);
+        fireEntry(symbol, side, entry, assessment, livePrice, avail, proposal.marketRegime);
       } else {
-        logExecution(entry, symbol, assessment, undefined, "shadow");
+        logExecution(entry, symbol, assessment, undefined, "shadow", proposal.marketRegime);
       }
     }
 
@@ -187,13 +188,16 @@ export function AiExecutionEngine() {
           ? (last as { atrPct?: number }).atrPct ?? null
           : null;
 
+      const indicators = calculateIndicators(candles ?? []);
+      const marketRegime = indicators.regime ?? "Sideways";
+
       return {
         symbol,
         side,
         decision: entry.decision,
         livePrice,
         atrPct,
-        marketRegime: useMarketStore.getState().regime ?? "Sideways",
+        marketRegime,
         book: {
           openPositionsCount: openCount,
           hasDuplicateSide: hasDupSide,
@@ -210,6 +214,7 @@ export function AiExecutionEngine() {
       assessment: TradeAssessment,
       livePrice: number,
       bal: number,
+      marketRegime: string
     ) {
       const d = entry.decision;
       const capPct =
@@ -243,7 +248,7 @@ export function AiExecutionEngine() {
           expectedProfitPct: assessment.metrics.expectedProfitPercent,
           expectedLossPct: assessment.metrics.expectedLossPercent,
           rr: assessment.metrics.riskRewardRatio,
-          regime: useMarketStore.getState().regime,
+          regime: marketRegime,
         },
       });
 
@@ -342,7 +347,7 @@ export function AiExecutionEngine() {
           expectedLossPercent: assessment.metrics.expectedLossPercent,
           riskRewardRatio: assessment.metrics.riskRewardRatio,
           volatilityScore: assessment.metrics.volatilityScore,
-          marketRegime: useMarketStore.getState().regime ?? "Sideways",
+          marketRegime: calculateIndicators(useMarketStore.getState().candles[`${symbol}:${useMarketStore.getState().interval}`] ?? []).regime ?? "Sideways",
         },
       });
     }
@@ -376,7 +381,7 @@ export function AiExecutionEngine() {
           expectedLossPercent: assessment.metrics.expectedLossPercent,
           riskRewardRatio: assessment.metrics.riskRewardRatio,
           volatilityScore: assessment.metrics.volatilityScore,
-          marketRegime: useMarketStore.getState().regime ?? "Sideways",
+          marketRegime: calculateIndicators(useMarketStore.getState().candles[`${symbol}:${useMarketStore.getState().interval}`] ?? []).regime ?? "Sideways",
         },
       });
     }
