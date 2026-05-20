@@ -8,44 +8,45 @@ import {
   type LlmProvider,
 } from "./types";
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const DEFAULT_MODEL = "llama-3.1-8b-instant";
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const DEFAULT_MODEL = "deepseek/deepseek-chat-v3-0324:free";
 
-interface GroqChatResponse {
+interface OpenRouterResponse {
   choices?: Array<{
     message?: { content?: string };
     finish_reason?: string;
   }>;
-  /** Groq mirrors OpenAI's `usage` block — total_tokens lets the budget
-   *  rate-limiter calibrate against actuals instead of our estimate. */
   usage?: {
     prompt_tokens?: number;
     completion_tokens?: number;
     total_tokens?: number;
   };
-  error?: { message?: string; type?: string };
+  error?: { message?: string; type?: string; code?: number };
 }
 
 /**
- * Groq's OpenAI-compatible chat completions adapter.
+ * OpenRouter chat-completions adapter.
  *
- * Uses `response_format: { type: "json_object" }` so the model is constrained
- * to emit a single JSON object — Groq enforces this server-side. We still
- * validate against the caller's Zod schema because providers' JSON mode does
- * not guarantee the *shape* of the JSON, only that it parses.
+ * OpenRouter speaks the OpenAI wire format, so this is structurally
+ * identical to GroqProvider — same JSON-mode request, same response
+ * shape, same token-budget gating, same fail-fast 429 behaviour.
  *
- * One retry on validation failure with a stricter "JSON only" reminder
- * appended — this catches the common case where a small model wraps its
- * answer in prose.
+ * The two recommended headers (`HTTP-Referer` and `X-Title`) are
+ * optional but they help OpenRouter attribute usage; we send a stable
+ * placeholder so the requests are identifiable in dashboards.
  */
-export class GroqProvider implements LlmProvider {
-  readonly name = "groq";
+export class OpenRouterProvider implements LlmProvider {
+  readonly name = "openrouter";
   readonly model: string;
   private readonly apiKey: string;
 
   constructor(opts: { apiKey: string; model?: string }) {
     if (!opts.apiKey) {
-      throw new LlmProviderError("GROQ_API_KEY is not set", undefined, "groq");
+      throw new LlmProviderError(
+        "OPENROUTER_API_KEY is not set",
+        undefined,
+        "openrouter",
+      );
     }
     this.apiKey = opts.apiKey;
     this.model = opts.model ?? DEFAULT_MODEL;
@@ -56,12 +57,12 @@ export class GroqProvider implements LlmProvider {
     schema: TSchema,
     options: ChatJsonOptions = {},
   ): Promise<z.infer<TSchema>> {
-    const timeoutMs = options.timeoutMs ?? 20_000;
+    const timeoutMs = options.timeoutMs ?? 25_000;
     const maxTokens = options.maxTokens ?? 600;
 
-    // Reserve against the per-model sliding-60s token bucket BEFORE we
-    // open the HTTP socket. If the budget is exhausted, throw without
-    // contacting Groq — saves the round trip and the 429 log noise.
+    // Same token-budget throttle as Groq, keyed by model. OpenRouter
+    // free-tier limits vary per model; the conservative default cap
+    // ensures we never burst.
     const budget = budgetFor(this.model);
     const promptTokens = estimatePromptTokens(messages);
     const estimatedTotal = promptTokens + maxTokens;
@@ -71,17 +72,19 @@ export class GroqProvider implements LlmProvider {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const res = await fetch(GROQ_URL, {
+        const res = await fetch(OPENROUTER_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${this.apiKey}`,
+            "HTTP-Referer": "https://tradeflow.local",
+            "X-Title": "TradeFlow",
           },
           body: JSON.stringify({
             model: this.model,
             messages: msgs,
             temperature: options.temperature ?? 0.2,
-            max_tokens: options.maxTokens ?? 600,
+            max_tokens: maxTokens,
             response_format: { type: "json_object" },
           }),
           signal: controller.signal,
@@ -90,45 +93,42 @@ export class GroqProvider implements LlmProvider {
         if (!res.ok) {
           const text = await res.text().catch(() => "");
           if (res.status === 429) {
-            // Fail fast on rate limit. We used to retry up to 3× with
-            // ~30s sleeps each, which blocked the whole engine for
-            // 90+ seconds. Better to drop this call, let the round-robin
-            // cycle move on, and try the next symbol — by the time we
-            // revisit this one the bucket has refilled.
             const retryAfter = parseFloat(
               res.headers.get("retry-after") ?? "",
             );
-            // Persist a cooldown for the model so subsequent reservations
-            // fail fast instead of round-tripping a guaranteed-429. Groq
-            // returns retry-after even for the daily (TPD) cap, which the
-            // sliding-60s TPM throttle alone cannot see.
             if (Number.isFinite(retryAfter) && retryAfter > 0) {
               markModelCooldown(this.model, retryAfter);
             }
-            const isTpd = /tokens per day|TPD/i.test(text);
             console.warn(
-              `[LLM] groq 429 on ${this.model} — ${isTpd ? "daily quota" : "rate limit"}; cooldown ${Number.isFinite(retryAfter) ? `${retryAfter.toFixed(0)}s` : "unknown"}`,
+              `[LLM] openrouter 429 on ${this.model} — cooldown ${Number.isFinite(retryAfter) ? `${retryAfter.toFixed(0)}s` : "unknown"}`,
             );
             throw new LlmProviderError(
-              `Groq rate limit on ${this.model}`,
-              { status: 429, retryAfterSec: retryAfter, body: text, tpd: isTpd },
+              `OpenRouter rate limit on ${this.model}`,
+              { status: 429, retryAfterSec: retryAfter, body: text },
               this.name,
             );
           }
+          // 404 "no endpoints found" means OpenRouter has no free-tier
+          // provider routing this model right now. It's not coming back in
+          // the next few seconds — cool it down for 30 min so the chain
+          // moves to the next link instead of round-tripping a dead route.
+          if (res.status === 404 && /no endpoints found/i.test(text)) {
+            markModelCooldown(this.model, 30 * 60);
+          }
           console.error(
-            `[LLM] groq HTTP ${res.status} on ${this.model} — ${(text || res.statusText).slice(0, 400)}`,
+            `[LLM] openrouter HTTP ${res.status} on ${this.model} — ${(text || res.statusText).slice(0, 400)}`,
           );
           throw new LlmProviderError(
-            `Groq HTTP ${res.status} on ${this.model}: ${(text || res.statusText).slice(0, 200)}`,
+            `OpenRouter HTTP ${res.status} on ${this.model}: ${(text || res.statusText).slice(0, 200)}`,
             { status: res.status, model: this.model, body: text },
             this.name,
           );
         }
 
-        const json = (await res.json()) as GroqChatResponse;
+        const json = (await res.json()) as OpenRouterResponse;
         if (json.error) {
           throw new LlmProviderError(
-            `Groq error: ${json.error.message ?? json.error.type ?? "unknown"}`,
+            `OpenRouter error: ${json.error.message ?? "unknown"}`,
             json.error,
             this.name,
           );
@@ -136,14 +136,11 @@ export class GroqProvider implements LlmProvider {
         const content = json.choices?.[0]?.message?.content;
         if (!content) {
           throw new LlmProviderError(
-            "Groq returned an empty completion",
+            "OpenRouter returned an empty completion",
             json,
             this.name,
           );
         }
-        // Calibrate the budget against actual token usage so future calls
-        // don't over-reserve on conservative estimates. Only on the first
-        // attempt — retries reuse the same reservation.
         const actual = json.usage?.total_tokens;
         if (actual && retryCount === 0) {
           budget.recordActual(estimatedTotal, actual);
@@ -157,10 +154,17 @@ export class GroqProvider implements LlmProvider {
     const parseAndValidate = (raw: string) => {
       let parsed: unknown;
       try {
-        parsed = JSON.parse(raw);
+        // Some OpenRouter free models wrap JSON in ```json fences. Strip
+        // them defensively — the response_format flag is best-effort and
+        // not enforced as strictly as Groq's.
+        const cleaned = raw
+          .replace(/^\s*```(?:json)?\s*/i, "")
+          .replace(/\s*```\s*$/i, "")
+          .trim();
+        parsed = JSON.parse(cleaned);
       } catch (err) {
         throw new LlmProviderError(
-          "Groq returned non-JSON despite response_format=json_object",
+          "OpenRouter returned non-JSON",
           err,
           this.name,
         );
@@ -168,7 +172,7 @@ export class GroqProvider implements LlmProvider {
       const result = schema.safeParse(parsed);
       if (!result.success) {
         throw new LlmProviderError(
-          `Groq response failed schema validation: ${result.error.message}`,
+          `OpenRouter response failed schema validation: ${result.error.message}`,
           result.error,
           this.name,
         );
@@ -181,12 +185,10 @@ export class GroqProvider implements LlmProvider {
       return parseAndValidate(raw);
     } catch (err) {
       if (!(err instanceof LlmProviderError)) throw err;
-      // One retry on shape failure with an explicit JSON-only reminder.
-      // Transport/auth errors aren't retried — they won't fix themselves
-      // by trying again within the same request budget.
       if (
-        err.message.startsWith("Groq HTTP") ||
-        err.message.startsWith("Groq error")
+        err.message.startsWith("OpenRouter HTTP") ||
+        err.message.startsWith("OpenRouter error") ||
+        err.message.startsWith("OpenRouter rate")
       ) {
         throw err;
       }
@@ -195,7 +197,7 @@ export class GroqProvider implements LlmProvider {
         {
           role: "user",
           content:
-            "Your previous reply could not be parsed. Respond again with ONLY a single JSON object matching the schema, with no markdown fences or prose.",
+            "Your previous reply could not be parsed. Respond again with ONLY a single JSON object matching the schema, no prose, no markdown fences.",
         },
       ];
       const raw = await attempt(retryMessages);

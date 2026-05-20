@@ -88,13 +88,48 @@ export async function createPaperOrder(data: {
   decisionSource?: DecisionSource;
   /** Free-form audit text (e.g. LLM model + confidence + setup quality). */
   decisionMeta?: string;
+  /**
+   * When true (the autonomous engines pass this), the server hard-rejects
+   * any new order if the symbol already has an OPEN/PARTIALLY_CLOSED
+   * position or another PENDING order. Manual entries bypass the check —
+   * users can still pyramid by hand if they want to.
+   */
+  blockIfAlreadyOpen?: boolean;
 }) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
+  const userId = session.user.id;
+
+  if (data.blockIfAlreadyOpen) {
+    const [openPos, pendingOrder] = await Promise.all([
+      prisma.paperPosition.findFirst({
+        where: {
+          userId,
+          symbol: data.symbol,
+          status: { in: ["OPEN", "PARTIALLY_CLOSED"] },
+        },
+        select: { id: true, side: true, decisionSource: true },
+      }),
+      prisma.paperOrder.findFirst({
+        where: { userId, symbol: data.symbol, status: "PENDING" },
+        select: { id: true },
+      }),
+    ]);
+    if (openPos) {
+      throw new Error(
+        `[trading] duplicate blocked: ${data.symbol} already has open ${openPos.side} (${openPos.decisionSource})`,
+      );
+    }
+    if (pendingOrder) {
+      throw new Error(
+        `[trading] duplicate blocked: ${data.symbol} already has a pending order`,
+      );
+    }
+  }
 
   const order = await prisma.paperOrder.create({
     data: {
-      userId: session.user.id,
+      userId,
       symbol: data.symbol,
       side: data.side,
       orderType: data.type,

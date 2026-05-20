@@ -54,18 +54,21 @@ CANDLESTICK INTELLIGENCE — HOW TO USE IT (optional context):
 
 DECISION RULES:
 - Output exactly ONE JSON object. No prose, no markdown fences, no commentary outside JSON.
+- **BIAS TO ACTION when there is ANY directional edge.** Paper trading desk — you are paid to trade, not to wait. HOLD is only correct when the tape is genuinely flat.
 - Anchor on \`strategySnapshot.netDirection\` and \`strategySnapshot.alignmentScore\`:
-  • netDirection > +25 with alignmentScore ≥ 65 → favour LONG.
-  • netDirection < -25 with alignmentScore ≥ 65 → favour SHORT.
-  • |netDirection| < 15 OR alignmentScore < 50 → favour HOLD or AVOID.
+  • netDirection > +12 OR alignmentScore ≥ 45 with net positive → take a LONG setup.
+  • netDirection < -12 OR alignmentScore ≥ 45 with net negative → take a SHORT setup.
+  • |netDirection| < 6 AND alignmentScore < 30 → HOLD (genuinely flat).
+  • Anything in between → pick the side with more weight; do NOT default to HOLD.
 - The \`regime\` informs which analysts to trust: trending regimes favour momentum/trend voices; sideways/reversal favour mean-reversion/market-structure; high-vol favour volatility/breakout.
-- A single high-confidence analyst is NOT enough to overrule a net-flat consensus.
+- A single high-confidence analyst CAN trigger a B-grade trade when no opposing consensus exists.
+- **Confidence floor when trading: 60.** Below 60, return HOLD. Above 60, trade.
 
 TRADE CONSTRUCTION (only when executeTrade is true):
-- entryPrice ≈ current price (within 0.25 × ATR is fine; do not chase).
-- stopLoss 0.5%-2.5% from entry on the protective side; takeProfit 0.6%-4% in trade direction.
-- Risk:reward (|TP-entry| / |entry-SL|) >= 1.5. If not achievable, switch to HOLD.
-- positionSizePercent: 20-50 default; 50-100 only when alignmentScore ≥ 80 AND setupQuality ∈ {A, A+}.
+- entryPrice ≈ current price (within 0.5 × ATR is fine; do not chase).
+- stopLoss 0.4%-2.5% from entry on the protective side; takeProfit 0.5%-4% in trade direction.
+- Risk:reward (|TP-entry| / |entry-SL|) >= 1.0. Aim for 1.5+ when possible, but 1.0 is acceptable for scalps.
+- positionSizePercent: 25-50 default; 50-100 only when alignmentScore ≥ 75 AND setupQuality ∈ {A, A+}.
 - expectedHoldTimeMinutes: 15–180 typical, never < 5 or > 240.
 
 WHEN executeTrade is false (HOLD / AVOID):
@@ -73,10 +76,10 @@ WHEN executeTrade is false (HOLD / AVOID):
 - positionSizePercent = 0; expectedHoldTimeMinutes = 5. Do not invent fake targets.
 
 QUALITY GRADING:
-- A+/A: alignmentScore ≥ 80 with regime + top-strategy alignment. Rare.
-- B+/B: alignmentScore 60-79 with no major conflicting strategy. Tradeable.
-- C: alignmentScore 40-59. Usually HOLD.
-- Avoid: alignmentScore < 40 or contradictory regime + top-strategy.
+- A+/A: alignmentScore ≥ 75 with regime + top-strategy alignment.
+- B+/B: alignmentScore 50-74 with no major conflicting strategy. Tradeable — most common.
+- C: alignmentScore 30-49. Still tradeable on a directional bias but small size.
+- Avoid: alignmentScore < 30 with contradictory regime + top-strategy.
 - riskLevel: Low when aggregateVolatilityScore < 40 AND alignmentScore ≥ 70; High when aggregateVolatilityScore > 70 OR regime is High Volatility / Choppy.
 
 ATTRIBUTION (required when executeTrade is true):
@@ -110,11 +113,11 @@ const SCHEMA_REMINDER = `{
   "entryPrice": number (current price for HOLD/AVOID),
   "takeProfit": number (= entry for HOLD/AVOID),
   "stopLoss": number (= entry for HOLD/AVOID),
-  "reasoning": string[] (1-8 items, each references analyst names),
-  "warnings": string[] (0-6 items, concrete invalidation conditions),
-  "marketSummary": string (<=500 chars),
-  "alignedStrategies": string[] (strategy names that voted with you),
-  "conflictingStrategies": string[] (strategy names that disagreed),
+  "reasoning": string[] (1-4 items, ≤200 chars each, references analyst names),
+  "warnings": string[] (0-3 items, ≤200 chars, concrete invalidation conditions),
+  "marketSummary": string (≤300 chars),
+  "alignedStrategies": string[] (≤6 strategy names that voted with you),
+  "conflictingStrategies": string[] (≤6 strategy names that disagreed),
   "marketConditions": string (one sentence on regime + dominant voice),
   "executionRecommendation": "execute immediately" | "wait for confirmation" | "skip"
 }`;

@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 
@@ -9,6 +10,7 @@ import {
   type TradeProposal,
 } from "@/lib/trade-quality";
 import { calculateIndicators } from "@/lib/signals/signal-engine";
+import { computeRiskAdjustedSize } from "@/lib/trading/position-sizing";
 import { closePaperPosition, createPaperOrder } from "@/server/trading";
 import { decisionSide } from "@/services/ai/schemas";
 import { useAiDecisionStore, type DecisionEntry } from "@/store/ai-decision-store";
@@ -38,13 +40,11 @@ import type { PaperPositionView } from "@/types/portfolio";
 const FLAG = "on";
 
 const PER_SYMBOL_EXIT_COOLDOWN_MS = 60 * 1000;
-const MAX_POSITION_SIZE_PCT = 50;
-const MAX_POSITION_SIZE_PCT_A_PLUS = 100;
-const MIN_QUANTITY = 1e-5;
-/** Quantity rounding precision — 6 decimals works for every watchlist symbol. */
-const QTY_PRECISION = 6;
+/** Max concurrent positions across the book. */
+const MAX_OPEN_POSITIONS = 3;
 
 export function AiExecutionEngine() {
+  const router = useRouter();
   const decisions = useAiDecisionStore((s) => s.bySymbol);
   const lastExecutedAt = useAiDecisionStore((s) => s.lastExecutedAt);
   const lastExitAt = useAiDecisionStore((s) => s.lastExitAt);
@@ -88,26 +88,35 @@ export function AiExecutionEngine() {
         continue;
       }
 
-      const existingPosition = pos.find(
+      // Any open position on this symbol — from any source — blocks a new
+      // entry. The user's rule: never two trades on the same coin.
+      const anyOpenOnSymbol = pos.find(
         (p) =>
           p.symbol === symbol &&
-          p.decisionSource === "LLM" &&
           (p.status === "OPEN" || p.status === "PARTIALLY_CLOSED"),
       );
+      const llmOwnedPosition =
+        anyOpenOnSymbol?.decisionSource === "LLM" ? anyOpenOnSymbol : undefined;
 
-      // 1) Exit path — see if the fresh decision invalidates an open LLM trade.
-      if (existingPosition) {
-        const exitReason = evaluateExit(symbol, existingPosition, entry);
+      // 1) Exit path — only the LLM may flip-close its own position. We never
+      // auto-close a position owned by the rule engine or a manual entry.
+      if (llmOwnedPosition) {
+        const exitReason = evaluateExit(symbol, llmOwnedPosition, entry);
         if (exitReason) {
           if (autonomyOn) {
-            fireExit(symbol, existingPosition, entry, livePrice, exitReason);
+            fireExit(symbol, llmOwnedPosition, entry, livePrice, exitReason);
           }
           continue;
         }
       }
 
-      // 2) Entry path — only when no existing LLM position on this symbol.
-      if (existingPosition) continue;
+      // 2) Entry path — block if ANY position is already open on this symbol.
+      if (anyOpenOnSymbol) {
+        console.info(
+          `[RISK] ${symbol} skipped — already have ${anyOpenOnSymbol.decisionSource} ${anyOpenOnSymbol.side} open`,
+        );
+        continue;
+      }
 
       const side = decisionSide(entry.decision.decision);
       if (!side) {
@@ -141,6 +150,9 @@ export function AiExecutionEngine() {
 
       if (!assessment.approved) {
         logRejection(entry, symbol, assessment);
+        console.warn(
+          `[RISK] ${symbol} ${entry.decision.decision} rejected (${assessment.rejections.length}): ${assessment.rejections.map((r) => r.code).join(", ")}`,
+        );
         if (autonomyOn) {
           toast.info(
             `AI rejected ${symbol.replace("USDT", "")} — ${assessment.rejections[0]?.message ?? "validation failed"}`,
@@ -151,7 +163,7 @@ export function AiExecutionEngine() {
 
       // Approved. Fire the order (if autonomy is live).
       if (autonomyOn) {
-        fireEntry(symbol, side, entry, assessment, livePrice, avail, proposal.marketRegime);
+        fireEntry(symbol, side, entry, assessment, livePrice, avail, proposal.marketRegime, pos);
       } else {
         logExecution(entry, symbol, assessment, undefined, "shadow", proposal.marketRegime);
       }
@@ -214,22 +226,55 @@ export function AiExecutionEngine() {
       assessment: TradeAssessment,
       livePrice: number,
       bal: number,
-      marketRegime: string
+      marketRegime: string,
+      pos: PaperPositionView[],
     ) {
       const d = entry.decision;
-      const capPct =
-        d.setupQuality === "A+"
-          ? MAX_POSITION_SIZE_PCT_A_PLUS
-          : MAX_POSITION_SIZE_PCT;
-      const pct = Math.min(d.positionSizePercent, capPct);
-      const notional = (bal * pct) / 100;
-      const rawQty = notional / livePrice;
-      const quantity = Math.max(
-        MIN_QUANTITY,
-        Math.round(rawQty * 10 ** QTY_PRECISION) / 10 ** QTY_PRECISION,
-      );
+      const totalEquity = computeTotalEquity(pos, bal, walletBalance);
+      const { totalOpenNotional, perSymbolOpenNotional, openPositionsCount } =
+        computeExposure(pos, symbol);
+      // ATR snapshot for the volatility multiplier — best-effort, same source
+      // as the proposal.
+      const interval = useMarketStore.getState().interval;
+      const candles =
+        useMarketStore.getState().candles[`${symbol}:${interval}`];
+      const last = candles?.at(-1);
+      const atrPct =
+        last && last.close > 0 && "atrPct" in last
+          ? (last as { atrPct?: number }).atrPct ?? null
+          : null;
 
-      if (quantity < MIN_QUANTITY) return;
+      const sizing = computeRiskAdjustedSize({
+        symbol,
+        side,
+        livePrice,
+        stopLossPrice: d.stopLoss,
+        takeProfitPrice: d.takeProfit,
+        totalEquity,
+        availableBalance: bal,
+        confidence: d.confidence,
+        setupQuality: d.setupQuality,
+        marketRegime,
+        atrPct,
+        decisionType: d.decision,
+        exposure: {
+          totalOpenNotional,
+          perSymbolOpenNotional,
+          openPositionsCount,
+        },
+        maxOpenPositions: MAX_OPEN_POSITIONS,
+      });
+
+      if (sizing.rejection) {
+        console.warn(
+          `[RISK] ${symbol} sized-out (${sizing.rejection}) — ${sizing.rationale}`,
+        );
+        toast.info(
+          `AI passed on ${symbol.replace("USDT", "")} — ${sizing.rationale}`,
+        );
+        return;
+      }
+      const quantity = sizing.quantity;
       if (inFlightSymbols.current.has(symbol)) return;
       inFlightSymbols.current.add(symbol);
       markExecuted(symbol);
@@ -240,18 +285,29 @@ export function AiExecutionEngine() {
         confidence: d.confidence,
         setupQuality: d.setupQuality,
         riskLevel: d.riskLevel,
-        sizePct: pct,
         expectedHoldMins: d.expectedHoldTimeMinutes,
+        sizing: {
+          notional: Number(sizing.notional.toFixed(2)),
+          riskAmount: Number(sizing.riskAmount.toFixed(2)),
+          riskPercent: Number(sizing.riskPercent.toFixed(3)),
+          equityPercent: Number(sizing.equityPercent.toFixed(2)),
+          expectedProfit: Number(sizing.expectedProfit.toFixed(2)),
+          expectedLoss: Number(sizing.expectedLoss.toFixed(2)),
+          rr: Number(sizing.riskRewardRatio.toFixed(2)),
+          rationale: sizing.rationale,
+          multipliers: sizing.multipliers,
+        },
         quality: {
           score: assessment.score.value,
           grade: assessment.score.grade,
-          expectedProfitPct: assessment.metrics.expectedProfitPercent,
-          expectedLossPct: assessment.metrics.expectedLossPercent,
-          rr: assessment.metrics.riskRewardRatio,
           regime: marketRegime,
         },
       });
 
+      console.info(
+        `[EXECUTION] firing ${d.decision} ${symbol} qty=${quantity} notional=${sizing.notional.toFixed(2)} px≈${livePrice.toFixed(2)} risk=$${sizing.riskAmount.toFixed(0)} (${sizing.riskPercent.toFixed(2)}%) target=+$${sizing.expectedProfit.toFixed(0)} loss=-$${sizing.expectedLoss.toFixed(0)} RR=${sizing.riskRewardRatio.toFixed(2)} eq=${sizing.equityPercent.toFixed(1)}%`,
+      );
+      console.info(`[EXECUTION] rationale → ${sizing.rationale}`);
       createPaperOrder({
         symbol,
         side,
@@ -261,12 +317,15 @@ export function AiExecutionEngine() {
         stopLoss: d.stopLoss,
         decisionSource: "LLM",
         decisionMeta: meta,
+        blockIfAlreadyOpen: true,
       })
         .then((res) => {
           logExecution(entry, symbol, assessment, res.id, "executed");
+          console.info(`[EXECUTION] order filled id=${res.id} symbol=${symbol}`);
           toast.success(
             `AI ${d.decision} ${symbol.replace("USDT", "")} · ${assessment.score.grade} (${assessment.score.value.toFixed(0)}) · RR ${assessment.metrics.riskRewardRatio.toFixed(2)}`,
           );
+          router.refresh();
         })
         .catch((err) => {
           logExecution(
@@ -276,6 +335,10 @@ export function AiExecutionEngine() {
             undefined,
             "rejected",
             err instanceof Error ? err.message : "Server error",
+          );
+          console.error(
+            `[EXECUTION] order failed ${symbol}:`,
+            err instanceof Error ? err.message : err,
           );
           toast.error(`AI order failed: ${symbol}`);
         })
@@ -296,6 +359,9 @@ export function AiExecutionEngine() {
       inFlightSymbols.current.add(exitKey);
       markExited(symbol);
 
+      console.info(
+        `[EXIT] AI flip-close ${symbol} ${position.side} pos=${position.id} reason="${reasonLabel}"`,
+      );
       closePaperPosition(position.id, livePrice, { reason: "AI_EXIT" })
         .then(() => {
           appendLog({
@@ -312,8 +378,13 @@ export function AiExecutionEngine() {
             `AI closed ${symbol.replace("USDT", "")} — ${reasonLabel}`,
             { description: entry.decision.reasoning[0] },
           );
+          router.refresh();
         })
         .catch((err) => {
+          console.error(
+            `[EXIT] close failed ${symbol}:`,
+            err instanceof Error ? err.message : err,
+          );
           toast.error(
             `AI exit failed: ${symbol} — ${err instanceof Error ? err.message : "server error"}`,
           );
@@ -421,3 +492,34 @@ function evaluateExit(
   return null;
 }
 
+/** totalEquity = walletBalance + Σ unrealizedPnl across open positions. */
+function computeTotalEquity(
+  positions: PaperPositionView[],
+  availableBalance: number,
+  walletBalance: number,
+): number {
+  // Prefer wallet+unrealized when wallet is known; fall back to available
+  // for the rare case the caller has only that.
+  if (walletBalance > 0) {
+    const unrealized = positions.reduce(
+      (s, p) => s + (p.unrealizedPnl ?? 0),
+      0,
+    );
+    return walletBalance + unrealized;
+  }
+  return availableBalance;
+}
+
+function computeExposure(positions: PaperPositionView[], symbol: string) {
+  let totalOpenNotional = 0;
+  let perSymbolOpenNotional = 0;
+  let openPositionsCount = 0;
+  for (const p of positions) {
+    if (p.status !== "OPEN" && p.status !== "PARTIALLY_CLOSED") continue;
+    openPositionsCount += 1;
+    const notional = p.quantity * p.entryPrice;
+    totalOpenNotional += notional;
+    if (p.symbol === symbol) perSymbolOpenNotional += notional;
+  }
+  return { totalOpenNotional, perSymbolOpenNotional, openPositionsCount };
+}

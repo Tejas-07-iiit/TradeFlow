@@ -1,10 +1,100 @@
-import { getLlmProvider } from "../providers";
+import { getLlmProviderChain, type LlmTier } from "../providers";
 import { buildMarketDecisionPrompt } from "../prompts/market-decision";
 import {
   MarketDecisionSchema,
   type DecisionInput,
   type MarketDecision,
 } from "../schemas";
+import { localFallbackDecision } from "./local-fallback";
+
+/**
+ * Local prefilter result. Built from the strategy snapshot the server
+ * already computed, so it costs no LLM tokens. Three outcomes:
+ *
+ *   skip:true  → snapshot is flat enough that the LLM has nothing to add.
+ *                We return a synthetic HOLD decision so the UI / executor
+ *                see a stable answer; the autonomous flow treats it as
+ *                no-op the same way it would a real HOLD.
+ *   tier:cheap → routine evaluation. Route through Groq llama-3.1-8b-instant
+ *                first. The 70B is reserved for elite setups.
+ *   tier:premium → snapshot endorses an elite setup. Use the 70B for the
+ *                  deeper reasoning the trade deserves.
+ */
+export interface DecisionPrefilter {
+  skip: boolean;
+  tier?: LlmTier;
+  reason: string;
+  syntheticDecision?: MarketDecision;
+}
+
+const FLAT_ALIGNMENT_MAX = 30;
+const FLAT_DIRECTION_MAX = 8;
+const ELITE_ALIGNMENT_MIN = 70;
+
+export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
+  const snap = input.strategySnapshot;
+  const hasOpenPosition = !!input.portfolio?.hasOpenPositionThisSymbol;
+
+  // Skip path. An open position always deserves a fresh look (SL/TP could
+  // change), so we only skip when there's no position AND no directional
+  // edge to evaluate.
+  if (snap && !hasOpenPosition) {
+    const flatAlignment = snap.alignmentScore < FLAT_ALIGNMENT_MAX;
+    const flatDirection = Math.abs(snap.netDirection) < FLAT_DIRECTION_MAX;
+    if (flatAlignment && flatDirection) {
+      return {
+        skip: true,
+        reason: `flat snapshot (align=${snap.alignmentScore.toFixed(0)} netDir=${snap.netDirection.toFixed(0)} regime=${snap.regime})`,
+        syntheticDecision: buildSyntheticHold(input),
+      };
+    }
+  }
+
+  // Premium path. Elite alignment earns the deeper reasoning of the 70B.
+  // Open-position management stays on the cheap tier because it's about
+  // fast SL/TP adjustments, not constructing a new thesis.
+  if (snap && snap.alignmentScore >= ELITE_ALIGNMENT_MIN) {
+    return {
+      skip: false,
+      tier: "premium",
+      reason: `elite alignment=${snap.alignmentScore.toFixed(0)}`,
+    };
+  }
+
+  return {
+    skip: false,
+    tier: "cheap",
+    reason: snap
+      ? `routine (align=${snap.alignmentScore.toFixed(0)}${hasOpenPosition ? " openPos" : ""})`
+      : "no snapshot",
+  };
+}
+
+function buildSyntheticHold(input: DecisionInput): MarketDecision {
+  const price = input.price;
+  const regime = input.marketRegime;
+  return {
+    decision: "HOLD",
+    confidence: 30,
+    setupQuality: "C",
+    riskLevel: "Low",
+    executeTrade: false,
+    positionSizePercent: 0,
+    expectedHoldTimeMinutes: 5,
+    entryPrice: price,
+    takeProfit: price,
+    stopLoss: price,
+    reasoning: [
+      `Local prefilter: strategy alignment below ${FLAT_ALIGNMENT_MAX} with no directional edge — no LLM coordination needed.`,
+    ],
+    warnings: [],
+    marketSummary: `Skipped LLM coordinator in ${regime} regime — snapshot offered no actionable edge.`,
+    alignedStrategies: [],
+    conflictingStrategies: [],
+    marketConditions: `${regime} regime, alignment below threshold`,
+    executionRecommendation: "skip",
+  };
+}
 
 export interface CachedDecision {
   decision: MarketDecision;
@@ -13,6 +103,15 @@ export interface CachedDecision {
   model: string;
   /** Fingerprint key the cache hit on, for observability. */
   key: string;
+  /**
+   * Where the decision came from.
+   *   llm            — normal path through the provider chain.
+   *   prefilter      — local rule engine short-circuited a flat snapshot.
+   *   local-fallback — every LLM provider failed; deterministic engine
+   *                    constructed the decision so trading continues in
+   *                    degraded mode.
+   */
+  source: "llm" | "prefilter" | "local-fallback";
 }
 
 /**
@@ -29,6 +128,13 @@ export interface CachedDecision {
  */
 const cache = new Map<string, { value: CachedDecision; expiresAt: number }>();
 const TTL_MS = 90 * 1000;
+/**
+ * Fallback decisions get a shorter TTL than LLM decisions so the chain
+ * gets re-tried sooner once provider cooldowns elapse. A 20s window is
+ * enough to dedupe within a single round-robin tick without locking the
+ * symbol into degraded mode while Groq's daily window is recovering.
+ */
+const FALLBACK_TTL_MS = 20 * 1000;
 const MAX_ENTRIES = 64;
 
 function fingerprint(input: DecisionInput): string {
@@ -95,7 +201,9 @@ function writeCache(key: string, value: CachedDecision) {
     const oldest = cache.keys().next().value;
     if (oldest !== undefined) cache.delete(oldest);
   }
-  cache.set(key, { value, expiresAt: Date.now() + TTL_MS });
+  const ttl =
+    value.source === "local-fallback" ? FALLBACK_TTL_MS : TTL_MS;
+  cache.set(key, { value, expiresAt: Date.now() + ttl });
 }
 
 /**
@@ -112,25 +220,94 @@ export async function getMarketDecisionFor(
   const cached = readCache(key);
   if (cached) return cached;
 
-  try {
-    const provider = getLlmProvider();
-    const messages = buildMarketDecisionPrompt(input);
-    const decision = await provider.chatJson(messages, MarketDecisionSchema, {
-      temperature: 0.15,
-      maxTokens: 900,
-      timeoutMs: 25_000,
-    });
+  // Local prefilter — gate the LLM with the cheap strategy snapshot first.
+  // Flat snapshots short-circuit with a synthetic HOLD so we don't burn
+  // tokens on guaranteed no-action cycles. Non-skip outcomes carry a tier
+  // that routes the chain cheap-first vs premium-first.
+  const prefilter = prefilterDecision(input);
+  if (prefilter.skip && prefilter.syntheticDecision) {
+    console.info(
+      `[ai/market-decision] ${input.symbol} skipped LLM: ${prefilter.reason}`,
+    );
     const entry: CachedDecision = {
-      decision,
+      decision: prefilter.syntheticDecision,
       generatedAt: new Date().toISOString(),
-      provider: provider.name,
-      model: provider.model,
+      provider: "local",
+      model: "prefilter",
       key,
+      source: "prefilter",
     };
     writeCache(key, entry);
     return entry;
-  } catch (err) {
-    console.error("[ai/market-decision] generation failed:", err);
+  }
+
+  const messages = buildMarketDecisionPrompt(input);
+  const chain = getLlmProviderChain({ purpose: "decision", tier: prefilter.tier });
+  if (chain.length === 0) {
+    console.error("[ai/market-decision] no provider configured for decision");
     return null;
   }
+  console.info(
+    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} chain=${chain.map((p) => `${p.name}/${p.model}`).join(" → ")}`,
+  );
+
+  let lastErr: unknown = null;
+  for (let i = 0; i < chain.length; i++) {
+    const provider = chain[i];
+    try {
+      // 2000 output tokens fits the worst-case JSON for the tightened
+      // schema (reasoning≤4×200 + warnings≤3×200 + summaries + aligned/
+      // conflicting lists). Reasoning models like gpt-oss waste output
+      // tokens on chain-of-thought and must be avoided here — see the
+      // decision-model selection in `providers/index.ts`.
+      const decision = await provider.chatJson(messages, MarketDecisionSchema, {
+        temperature: 0.15,
+        maxTokens: 2000,
+        timeoutMs: 30_000,
+      });
+      const entry: CachedDecision = {
+        decision,
+        generatedAt: new Date().toISOString(),
+        provider: provider.name,
+        model: provider.model,
+        key,
+        source: "llm",
+      };
+      writeCache(key, entry);
+      if (i > 0) {
+        console.warn(
+          `[ai/market-decision] served via fallback #${i}: ${provider.name}/${provider.model}`,
+        );
+      }
+      return entry;
+    } catch (err) {
+      lastErr = err;
+      const more = i < chain.length - 1;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[ai/market-decision] ${provider.name}/${provider.model} failed${more ? " — trying next fallback" : ""}: ${msg}`,
+      );
+    }
+  }
+
+  // Every LLM provider exhausted. Instead of returning null and freezing
+  // the executor for hours, hand control to the local deterministic engine.
+  // It reads the same snapshot the LLM would have read and produces a
+  // defensively-sized decision. Trading continues in degraded mode.
+  console.warn(
+    `[ai/market-decision] ${input.symbol} all providers failed — using local fallback engine. lastErr=${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+  );
+  const fallbackDecision = localFallbackDecision(input);
+  const fallbackEntry: CachedDecision = {
+    decision: fallbackDecision,
+    generatedAt: new Date().toISOString(),
+    provider: "local",
+    model: "fallback-engine",
+    key,
+    source: "local-fallback",
+  };
+  // Shorter TTL than LLM cache (30s vs 90s) so we retry the LLM chain
+  // sooner once cooldowns elapse.
+  writeCache(key, fallbackEntry);
+  return fallbackEntry;
 }

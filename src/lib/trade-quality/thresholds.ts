@@ -18,12 +18,12 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
   minExpectedProfitPercent: 0,
   minRiskRewardRatio: 1.0,
   preferredRiskRewardRatio: 2.0,
-  minConfidence: 72,
+  minConfidence: 58,
   maxRiskPerTradePercent: 1,
-  maxVolatilityThreshold: 8,
+  maxVolatilityThreshold: 10,
   maxOpenPositions: 4,
   perSymbolEntryCooldownMs: 5 * 60 * 1000,
-  maxEntryDriftBps: 100, // 1.00%
+  maxEntryDriftBps: 200, // 2.00% — accommodates LLM rounding + 0.5×ATR drift
   minAvailableBalance: 50,
 };
 
@@ -36,24 +36,24 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
 export const REGIME_OVERRIDES: Record<string, Partial<Thresholds>> = {
   Trending: {
     minRiskRewardRatio: 1.0,
-    minConfidence: 68,
+    minConfidence: 55,
   },
   Sideways: {
-    minRiskRewardRatio: 1.2,
-    minConfidence: 72,
+    minRiskRewardRatio: 1.0,
+    minConfidence: 58,
   },
   Compression: {
-    minRiskRewardRatio: 1.2,
-    minConfidence: 74,
+    minRiskRewardRatio: 1.0,
+    minConfidence: 60,
   },
   Choppy: {
-    minRiskRewardRatio: 1.5,
-    minConfidence: 78,
+    minRiskRewardRatio: 1.1,
+    minConfidence: 62,
   },
   "High Volatility": {
-    minRiskRewardRatio: 1.5,
-    minConfidence: 80,
-    maxVolatilityThreshold: 6,
+    minRiskRewardRatio: 1.1,
+    minConfidence: 65,
+    maxVolatilityThreshold: 9,
   },
 };
 

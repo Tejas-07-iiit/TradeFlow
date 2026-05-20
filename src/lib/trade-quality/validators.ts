@@ -101,32 +101,21 @@ export const QUALITY_VALIDATORS: Validator[] = [
     evaluate: (p) => {
       const sq = p.decision.setupQuality;
       if (sq === "Avoid") return fail("setup_quality_floor", "LLM graded setup as Avoid");
-      if (sq === "C") return fail("setup_quality_floor", "LLM graded setup as C");
       return null;
     },
   },
   {
     id: "regime_high_vol",
     name: "Regime blocks entries",
-    evaluate: (p) =>
-      p.marketRegime === "High Volatility" && p.decision.setupQuality !== "A+"
-        ? fail("regime_high_vol", "High-volatility regime requires A+ setup quality")
-        : null,
-  },
-  {
-    id: "regime_choppy_trend",
-    name: "Choppy regime blocks trend setups",
     evaluate: (p) => {
-      if (p.marketRegime !== "Choppy") return null;
-      const d = p.decision.decision;
-      // Trend-following setups should not fire in choppy regimes; the
-      // mean-reversion REVERSAL family is allowed.
-      if (
-        d === "BREAKOUT LONG" ||
-        d === "BREAKDOWN SHORT" ||
-        d === "PULLBACK LONG"
-      ) {
-        return fail("regime_choppy_trend", `${d} not allowed in Choppy regime`);
+      // Allow B/B+/A/A+ in High Vol; only block C and Avoid.
+      if (p.marketRegime !== "High Volatility") return null;
+      const sq = p.decision.setupQuality;
+      if (sq === "C") {
+        return fail(
+          "regime_high_vol",
+          "High-volatility regime requires B grade or better",
+        );
       }
       return null;
     },

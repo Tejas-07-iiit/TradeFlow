@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { cancelPaperOrder, closePaperPosition, fillPaperOrder } from "@/server/trading";
 import { useMarketStore } from "@/store/market-store";
@@ -25,6 +26,7 @@ export function useMatchingEngine(
   pendingOrders: PaperOrderView[],
   openPositions: PaperPositionView[],
 ) {
+  const router = useRouter();
   const tickers = useMarketStore((state) => state.tickers);
   const processingRef = useRef<Set<string>>(new Set());
 
@@ -65,9 +67,19 @@ export function useMatchingEngine(
 
       if (shouldFill) {
         processingRef.current.add(order.id);
+        console.info(
+          `[EXECUTION] filling ${order.orderType} ${order.side} ${order.symbol} @ ${fillPrice} (order ${order.id})`,
+        );
         fillPaperOrder(order.id, fillPrice)
-          .catch(() => {
+          .then(() => {
+            router.refresh();
+          })
+          .catch((err) => {
             processingRef.current.delete(order.id);
+            console.error(
+              `[EXECUTION] fill failed for ${order.id}:`,
+              err instanceof Error ? err.message : err,
+            );
           });
       }
     }
@@ -143,17 +155,20 @@ export function useMatchingEngine(
       if (reason) {
         processingRef.current.add(key);
         console.info(
-          `[matching-engine] ${reason} hit on ${pos.symbol} ${pos.side} @ ${exitPrice} (pos ${pos.id})`,
+          `[EXIT] ${reason} hit on ${pos.symbol} ${pos.side} @ ${exitPrice} (pos ${pos.id})`,
         );
         closePaperPosition(pos.id, exitPrice, { reason, closedAt })
+          .then(() => {
+            router.refresh();
+          })
           .catch((err) => {
             processingRef.current.delete(key);
             console.error(
-              `[matching-engine] close failed for ${pos.id}:`,
+              `[EXIT] close failed for ${pos.id}:`,
               err instanceof Error ? err.message : err,
             );
           });
       }
     }
-  }, [tickers, pendingOrders, openPositions]);
+  }, [tickers, pendingOrders, openPositions, router]);
 }

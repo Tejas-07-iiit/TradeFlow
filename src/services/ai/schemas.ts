@@ -293,19 +293,22 @@ export const MarketDecisionSchema = z.object({
   entryPrice: z.number().positive(),
   takeProfit: z.number().positive(),
   stopLoss: z.number().positive(),
-  reasoning: z.array(z.string().min(5).max(280)).min(1).max(8),
-  warnings: z.array(z.string().min(3).max(280)).max(6),
-  marketSummary: z.string().min(20).max(500),
+  // Reasoning kept tight on purpose — see the model's response-size
+  // budget in `getMarketDecisionFor`. Looser bounds blew past the
+  // completion limit on gpt-oss-120b; 4×200 char items is plenty for the
+  // UI panel and stays well inside the 1800-token output cap.
+  reasoning: z.array(z.string().min(5).max(200)).min(1).max(4),
+  warnings: z.array(z.string().min(3).max(200)).max(3),
+  marketSummary: z.string().min(20).max(300),
   /**
    * Strategy IDs from the snapshot that the LLM endorsed. The UI uses this
-   * to highlight which analysts voted with the final call. Optional so the
-   * schema remains backward-compatible while the prompt is rolled out.
+   * to highlight which analysts voted with the final call.
    */
-  alignedStrategies: z.array(z.string().min(1).max(120)).max(12).optional(),
-  conflictingStrategies: z.array(z.string().min(1).max(120)).max(12).optional(),
+  alignedStrategies: z.array(z.string().min(1).max(80)).max(6).optional(),
+  conflictingStrategies: z.array(z.string().min(1).max(80)).max(6).optional(),
   /** Free-form market regime + condition commentary (institutional voice). */
-  marketConditions: z.string().min(10).max(400).optional(),
+  marketConditions: z.string().min(10).max(240).optional(),
   /** "execute immediately", "wait for confirmation candle", "skip", etc. */
-  executionRecommendation: z.string().min(5).max(280).optional(),
+  executionRecommendation: z.string().min(5).max(160).optional(),
 });
 export type MarketDecision = z.infer<typeof MarketDecisionSchema>;

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { getMarketDecisionFor } from "@/services/ai/reasoning/market-decision";
+import { submitDecisionJob } from "@/services/ai/orchestrator";
 import {
   type CandlestickIntelligenceInput,
   DecisionInputSchema,
@@ -28,6 +28,15 @@ export interface DecisionResponse {
   error?: string;
   /** Optional snapshot returned to the client so the UI can render alignment. */
   strategySnapshot?: StrategySnapshotInput;
+  /**
+   * Where the decision came from.
+   *   llm            — normal provider-chain answer.
+   *   prefilter      — local rule short-circuited a flat snapshot.
+   *   local-fallback — every LLM provider failed; deterministic engine
+   *                    kept trading alive.
+   * Lets the UI surface a badge and lets ops measure each path's hit rate.
+   */
+  source?: "llm" | "prefilter" | "local-fallback";
 }
 
 /**
@@ -50,11 +59,16 @@ export async function getMarketDecision(
     return { ok: false, error: `Invalid input: ${parsed.error.message}` };
   }
 
-  const result = await getMarketDecisionFor(parsed.data);
-  if (!result) {
-    return { ok: false, error: "LLM decision generation failed (see server logs)" };
+  const jobResult = await submitDecisionJob(parsed.data);
+  if (!jobResult.ok || !jobResult.decision) {
+    return {
+      ok: false,
+      error:
+        jobResult.error ?? "Orchestrator returned no decision (see server logs)",
+    };
   }
 
+  const result = jobResult.decision;
   return {
     ok: true,
     generatedAt: result.generatedAt,
@@ -62,6 +76,7 @@ export async function getMarketDecision(
     model: result.model,
     key: result.key,
     decision: result.decision,
+    source: result.source,
   };
 }
 
@@ -149,15 +164,20 @@ export async function getStrategyDecision(
     portfolio,
   };
 
-  const llmResult = await getMarketDecisionFor(decisionInput);
-  if (!llmResult) {
+  // Route through the orchestrator — single point of LLM concurrency
+  // control, priority queue, dedup, abort. Pipeline handles prefilter +
+  // tier routing + local fallback identically to the direct call site.
+  const jobResult = await submitDecisionJob(decisionInput);
+  if (!jobResult.ok || !jobResult.decision) {
     return {
       ok: false,
-      error: "LLM coordinator failed (see server logs)",
+      error:
+        jobResult.error ?? "Orchestrator returned no decision (see server logs)",
       strategySnapshot: decisionInput.strategySnapshot,
     };
   }
 
+  const llmResult = jobResult.decision;
   return {
     ok: true,
     generatedAt: llmResult.generatedAt,
@@ -166,6 +186,7 @@ export async function getStrategyDecision(
     key: llmResult.key,
     decision: llmResult.decision,
     strategySnapshot: decisionInput.strategySnapshot,
+    source: llmResult.source,
   };
 }
 
@@ -191,8 +212,8 @@ function projectCandlestickForPrompt(
   return {
     primaryTimeframe: intel.primaryTimeframe,
     detections: intel.detections
-      .filter((d) => d.confidenceScore >= 60)
-      .slice(0, 4)
+      .filter((d) => d.confidenceScore >= 65)
+      .slice(0, 2)
       .map((d) => ({
       patternId: d.patternId,
       patternName: d.patternName,
@@ -217,6 +238,16 @@ function projectCandlestickForPrompt(
   };
 }
 
+/**
+ * Compact projection sent to the LLM. Token-budget aware: every field
+ * here costs tokens on every call and we hit Groq's TPM ceiling when the
+ * payload bloats. Rules:
+ *   - top 5 strategies (was 10), 1 reasoning line each (was 3)
+ *   - top 3 conflicting strategies (was 5), 1 reasoning line each (was 2)
+ *   - drop Quantpedia related-principles (saves ~600-1200 tokens per call)
+ *   - drop momentum/trend/volatility per-strategy scores (the aggregate
+ *     scores in the snapshot header already convey direction)
+ */
 function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotInput {
   return {
     regime: snapshot.regime,
@@ -227,7 +258,7 @@ function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotI
     aggregateVolatilityScore: snapshot.aggregateVolatilityScore,
     alignedCount: snapshot.aligned.length,
     conflictingCount: snapshot.conflicting.length,
-    topStrategies: snapshot.topStrategies.map((r) => ({
+    topStrategies: snapshot.topStrategies.slice(0, 5).map((r) => ({
       strategyId: r.output.strategyId,
       strategyName: r.output.strategyName,
       category: r.output.category,
@@ -235,13 +266,13 @@ function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotI
       confidence: r.output.confidence,
       weightedScore: Math.round(r.weightedScore),
       regimeWeight: Math.round(r.regimeWeight * 100) / 100,
-      reasoning: r.output.reasoning.slice(0, 3),
+      reasoning: r.output.reasoning.slice(0, 1),
       momentumScore: Math.round(r.output.momentumScore),
       trendScore: Math.round(r.output.trendScore),
       volatilityScore: Math.round(r.output.volatilityScore),
       riskLevel: r.output.riskLevel,
     })),
-    conflictingStrategies: snapshot.conflicting.slice(0, 5).map((o) => {
+    conflictingStrategies: snapshot.conflicting.slice(0, 3).map((o) => {
       const ranked = snapshot.ranked.find((r) => r.output.strategyId === o.strategyId);
       return {
         strategyId: o.strategyId,
@@ -251,18 +282,13 @@ function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotI
         confidence: o.confidence,
         weightedScore: Math.round(ranked?.weightedScore ?? o.confidence),
         regimeWeight: Math.round((ranked?.regimeWeight ?? 1) * 100) / 100,
-        reasoning: o.reasoning.slice(0, 2),
+        reasoning: o.reasoning.slice(0, 1),
         momentumScore: Math.round(o.momentumScore),
         trendScore: Math.round(o.trendScore),
         volatilityScore: Math.round(o.volatilityScore),
         riskLevel: o.riskLevel,
       };
     }),
-    relatedPrinciples: snapshot.relatedPrinciples.map((m) => ({
-      name: m.name,
-      classification: m.classification,
-      coreLogic: m.coreLogic.slice(0, 280),
-      sharpe: m.performance.sharpe,
-    })),
+    relatedPrinciples: [],
   };
 }

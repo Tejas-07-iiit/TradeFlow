@@ -29,7 +29,10 @@ const CANDLE_WINDOW = 300;
  * The reasoning layer already deduplicates via fingerprint + 90s TTL, so this
  * subscriber is the soft rate-limit and the reasoning layer is the hard one.
  */
-const FULL_CYCLE_MS = 60 * 1000 * 5; // 5 minutes across N symbols = ~60s/symbol
+/** 8 minutes across N symbols ≈ 96s per symbol on a 5-symbol watchlist.
+ *  Slower cadence keeps us inside Groq's 12K TPM ceiling once the
+ *  payload-shrinking changes are factored in. */
+const FULL_CYCLE_MS = 8 * 60 * 1000;
 
 export function AiDecisionSubscriber() {
   const symbol = useMarketStore((s) => s.symbol);
@@ -90,6 +93,15 @@ export function AiDecisionSubscriber() {
         },
       });
       if (res.ok && res.decision && res.generatedAt && res.key) {
+        const srcTag =
+          res.source === "prefilter"
+            ? "[prefilter]"
+            : res.source === "local-fallback"
+              ? "[fallback]"
+              : "[LLM]";
+        console.info(
+          `${srcTag} ${target} → ${res.decision.decision} conf=${res.decision.confidence} setup=${res.decision.setupQuality} exec=${res.decision.executeTrade} (${res.provider ?? "groq"}:${res.model ?? "?"})`,
+        );
         setDecision(target, {
           decision: res.decision,
           generatedAt: res.generatedAt,
@@ -98,9 +110,14 @@ export function AiDecisionSubscriber() {
           key: res.key,
         });
       } else {
+        console.warn(`[LLM] ${target} decision failed: ${res.error ?? "unknown"}`);
         setError(target, res.error ?? "Unknown error");
       }
     } catch (err) {
+      console.error(
+        `[LLM] ${target} request error:`,
+        err instanceof Error ? err.message : err,
+      );
       setError(target, err instanceof Error ? err.message : "Request failed");
     } finally {
       inFlightRef.current[target] = false;
@@ -108,9 +125,11 @@ export function AiDecisionSubscriber() {
     }
   };
 
-  // Initial fan-out — lightly staggered to spread provider load.
+  // Initial fan-out — staggered hard so we don't blow the TPM bucket on
+  // startup. With 5 symbols × ~3K tokens each, we need ≥15s between calls
+  // to stay inside Groq's 12K-token-per-60s window on the decision model.
   useEffect(() => {
-    const STAGGER_MS = 3000;
+    const STAGGER_MS = 15_000;
     const timers: ReturnType<typeof setTimeout>[] = [];
     WATCHLIST_SYMBOLS.forEach((sym, i) => {
       timers.push(setTimeout(() => void refresh(sym), i * STAGGER_MS));

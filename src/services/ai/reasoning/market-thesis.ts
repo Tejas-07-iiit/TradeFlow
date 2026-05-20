@@ -81,7 +81,7 @@ export async function getMarketThesisFor(
   if (cached) return cached;
 
   try {
-    const provider = getLlmProvider();
+    const provider = getLlmProvider({ purpose: "thesis" });
     const messages = buildMarketThesisPrompt(input);
     const thesis = await provider.chatJson(messages, MarketThesisSchema, {
       temperature: 0.2,

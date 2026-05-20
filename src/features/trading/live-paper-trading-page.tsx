@@ -360,6 +360,49 @@ export function LivePaperTradingPage() {
                           value={riskReward != null ? `${riskReward.toFixed(2)}:1` : "—"}
                         />
                       </div>
+                      {(() => {
+                        const sizing = parseSizingMeta(position.decisionMeta);
+                        if (!sizing) return null;
+                        return (
+                          <div className="rounded border border-[var(--color-border)] bg-white/[0.015] px-2.5 py-1.5 text-[10px] leading-tight text-[var(--color-fg-subtle)]">
+                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono tabular-nums">
+                              <span>
+                                <span className="text-[var(--color-fg-subtle)]">EQUITY </span>
+                                <span className="text-[var(--color-fg)]">
+                                  {sizing.equityPercent.toFixed(1)}%
+                                </span>
+                              </span>
+                              <span>
+                                <span className="text-[var(--color-fg-subtle)]">RISK </span>
+                                <span className="text-[var(--color-bear)]">
+                                  {formatCurrency(sizing.riskAmount)}
+                                </span>
+                                <span className="text-[var(--color-fg-subtle)]">
+                                  {" "}
+                                  ({sizing.riskPercent.toFixed(2)}%)
+                                </span>
+                              </span>
+                              <span>
+                                <span className="text-[var(--color-fg-subtle)]">TARGET </span>
+                                <span className="text-[var(--color-bull)]">
+                                  +{formatCurrency(sizing.expectedProfit)}
+                                </span>
+                              </span>
+                              <span>
+                                <span className="text-[var(--color-fg-subtle)]">MAX LOSS </span>
+                                <span className="text-[var(--color-bear)]">
+                                  -{formatCurrency(sizing.expectedLoss)}
+                                </span>
+                              </span>
+                            </div>
+                            {sizing.rationale ? (
+                              <div className="mt-1 text-[var(--color-fg)]">
+                                {sizing.rationale}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })()}
                     </div>
                   ),
                 )
@@ -503,6 +546,57 @@ export function LivePaperTradingPage() {
       </p>
     </PageShell>
   );
+}
+
+interface ParsedSizing {
+  equityPercent: number;
+  riskAmount: number;
+  riskPercent: number;
+  expectedProfit: number;
+  expectedLoss: number;
+  rationale?: string;
+}
+
+/**
+ * decisionMeta is opaque audit text — both engines emit JSON when the new
+ * sizing helper produces a result, but older positions / manual entries
+ * may be free-form strings. Parse defensively.
+ */
+function parseSizingMeta(meta?: string | null): ParsedSizing | null {
+  if (!meta) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(meta);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null) return null;
+  const sizing = (parsed as { sizing?: unknown }).sizing;
+  if (typeof sizing !== "object" || sizing === null) return null;
+  const s = sizing as Record<string, unknown>;
+  const num = (k: string) => (typeof s[k] === "number" ? (s[k] as number) : null);
+  const equityPercent = num("equityPercent");
+  const riskAmount = num("riskAmount");
+  const riskPercent = num("riskPercent");
+  const expectedProfit = num("expectedProfit");
+  const expectedLoss = num("expectedLoss");
+  if (
+    equityPercent == null ||
+    riskAmount == null ||
+    riskPercent == null ||
+    expectedProfit == null ||
+    expectedLoss == null
+  ) {
+    return null;
+  }
+  return {
+    equityPercent,
+    riskAmount,
+    riskPercent,
+    expectedProfit,
+    expectedLoss,
+    rationale: typeof s.rationale === "string" ? s.rationale : undefined,
+  };
 }
 
 function Cell({

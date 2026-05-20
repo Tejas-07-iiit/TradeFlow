@@ -11,10 +11,16 @@ import { useMarketStore } from "@/store/market-store";
 import { useSignalStore } from "@/store/signal-store";
 
 /**
- * Refresh interval per symbol. With 5 symbols, the round-robin tick fires
- * every (CYCLE / N) = 36s, so each symbol gets a fresh thesis every ~3 min.
+ * Refresh interval per symbol. Slower than the decision subscriber because
+ * theses are advisory — UI commentary, not trade decisions — and we'd
+ * rather spend the TPM budget on decisions when autonomy is on.
+ *
+ * Active symbol still gets an on-demand fresh fetch on user interaction.
  */
-const FULL_CYCLE_MS = 3 * 60 * 1000;
+const FULL_CYCLE_MS = 10 * 60 * 1000;
+
+/** When autonomy is on, the decision subscriber owns the LLM budget. */
+const AUTONOMY_FLAG = "on";
 
 /**
  * Global multi-symbol thesis refresher. Mounted at the platform layout.
@@ -103,8 +109,12 @@ export function AiThesisSubscriber() {
 
   // Initial fan-out across watchlist symbols, lightly staggered so the
   // provider sees them as discrete requests rather than a thundering herd.
+  // When autonomy is on we skip the bulk warm-up entirely — the only thesis
+  // we still want is for the currently-active symbol (handled by the
+  // on-demand effect below).
   useEffect(() => {
-    const STAGGER_MS = 3000;
+    if (process.env.NEXT_PUBLIC_AI_AUTONOMY === AUTONOMY_FLAG) return;
+    const STAGGER_MS = 5000;
     const timers: ReturnType<typeof setTimeout>[] = [];
     WATCHLIST_SYMBOLS.forEach((sym, i) => {
       timers.push(setTimeout(() => void refresh(sym), i * STAGGER_MS));
@@ -115,10 +125,12 @@ export function AiThesisSubscriber() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Round-robin: one symbol refreshed every (cycle / N) ms.
+  // Round-robin: one symbol refreshed every (cycle / N) ms. Skipped under
+  // autonomy — same reason as the warm-up.
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_AI_AUTONOMY === AUTONOMY_FLAG) return;
     let cursor = 0;
-    const tickMs = Math.max(15_000, Math.floor(FULL_CYCLE_MS / WATCHLIST_SYMBOLS.length));
+    const tickMs = Math.max(20_000, Math.floor(FULL_CYCLE_MS / WATCHLIST_SYMBOLS.length));
     const timer = setInterval(() => {
       const target = WATCHLIST_SYMBOLS[cursor];
       cursor = (cursor + 1) % WATCHLIST_SYMBOLS.length;
