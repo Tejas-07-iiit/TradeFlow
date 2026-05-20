@@ -50,7 +50,7 @@ export class GroqProvider implements LlmProvider {
   ): Promise<z.infer<TSchema>> {
     const timeoutMs = options.timeoutMs ?? 20_000;
 
-    const attempt = async (msgs: ChatMessage[]) => {
+    const attempt = async (msgs: ChatMessage[], retryCount = 0): Promise<string> => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
@@ -72,6 +72,12 @@ export class GroqProvider implements LlmProvider {
 
         if (!res.ok) {
           const text = await res.text().catch(() => "");
+          if (res.status === 429 && retryCount < 3) {
+            // Rate limit exceeded. Sleep and retry.
+            const delayMs = Math.min(2000 * Math.pow(2, retryCount), 10000);
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            return attempt(msgs, retryCount + 1);
+          }
           throw new LlmProviderError(
             `Groq HTTP ${res.status}: ${text || res.statusText}`,
             undefined,

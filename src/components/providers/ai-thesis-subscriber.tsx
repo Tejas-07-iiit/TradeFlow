@@ -104,7 +104,7 @@ export function AiThesisSubscriber() {
   // Initial fan-out across watchlist symbols, lightly staggered so the
   // provider sees them as discrete requests rather than a thundering herd.
   useEffect(() => {
-    const STAGGER_MS = 800;
+    const STAGGER_MS = 3000;
     const timers: ReturnType<typeof setTimeout>[] = [];
     WATCHLIST_SYMBOLS.forEach((sym, i) => {
       timers.push(setTimeout(() => void refresh(sym), i * STAGGER_MS));

@@ -110,7 +110,7 @@ export function AiDecisionSubscriber() {
 
   // Initial fan-out — lightly staggered to spread provider load.
   useEffect(() => {
-    const STAGGER_MS = 600;
+    const STAGGER_MS = 3000;
     const timers: ReturnType<typeof setTimeout>[] = [];
     WATCHLIST_SYMBOLS.forEach((sym, i) => {
       timers.push(setTimeout(() => void refresh(sym), i * STAGGER_MS));

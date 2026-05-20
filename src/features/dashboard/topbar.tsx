@@ -188,7 +188,7 @@ export function Topbar() {
               <DropdownMenuItem
                 onSelect={(e) => {
                   e.preventDefault();
-                  void signOut({ callbackUrl: "/login" });
+                  void signOut({ callbackUrl: `${window.location.origin}/login` });
                 }}
                 className="text-[var(--color-bear)]"
               >
