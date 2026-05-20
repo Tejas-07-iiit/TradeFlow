@@ -9,7 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SYMBOL_NAMES, WATCHLIST_SYMBOLS } from "@/lib/market/symbols";
 import { cn, formatPrice } from "@/lib/utils";
-import type { MarketBias, SetupQuality } from "@/services/ai/schemas";
+import type {
+  MarketBias,
+  MarketDecision,
+  MarketThesis,
+  SetupQuality,
+} from "@/services/ai/schemas";
+import { LONG_DECISIONS, SHORT_DECISIONS } from "@/services/ai/schemas";
 import { useAiThesisStore } from "@/store/ai-thesis-store";
 import { useMarketStore } from "@/store/market-store";
 import { useSignalStore } from "@/store/signal-store";
@@ -35,17 +41,25 @@ export function GroqPage() {
 
   const sorted = useMemo(() => {
     const order: SetupQuality[] = ["A+", "A", "B+", "B", "C", "Avoid"];
+    const qualityFor = (s: string): SetupQuality | undefined =>
+      decisions[s]?.decision.setupQuality ?? theses[s]?.thesis.setupQuality;
     return [...WATCHLIST_SYMBOLS].sort((a, b) => {
-      const qa = theses[a]?.thesis.setupQuality;
-      const qb = theses[b]?.thesis.setupQuality;
+      const qa = qualityFor(a);
+      const qb = qualityFor(b);
       if (!qa && !qb) return 0;
       if (!qa) return 1;
       if (!qb) return -1;
       return order.indexOf(qa) - order.indexOf(qb);
     });
-  }, [theses]);
+  }, [theses, decisions]);
 
-  const generatedCount = Object.values(theses).filter(Boolean).length;
+  // Count cards we can render. Under autonomy mode the decision subscriber
+  // populates well before the thesis fan-out finishes, so we treat a
+  // decision-only card as "ready" too — otherwise the dashboard sits at
+  // 0/N for the first minute of every cold start.
+  const generatedCount = WATCHLIST_SYMBOLS.filter(
+    (s) => theses[s] != null || decisions[s] != null,
+  ).length;
 
   return (
     <PageShell
@@ -95,17 +109,30 @@ export function GroqPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                {!entry && loading && <Skeleton />}
-                {!entry && !loading && error && <ErrorView error={error} />}
-                {!entry && !loading && !error && (
-                  <p className="text-xs text-[var(--color-fg-subtle)]">
-                    Awaiting first thesis fetch for this symbol.
-                  </p>
-                )}
-                {entry && (() => {
+                {(() => {
                   const decisionEntry = decisions[sym];
-                  const displayConfidence = decisionEntry?.decision.confidence ?? entry.thesis.confidence;
-                  const displayQuality = decisionEntry?.decision.setupQuality ?? entry.thesis.setupQuality;
+                  // Synthesize a thesis-shaped view from the decision so the
+                  // card renders under autonomy before the thesis fan-out
+                  // has caught up.
+                  const view = entry
+                    ? thesisToView(entry.thesis)
+                    : decisionEntry
+                      ? decisionToView(decisionEntry.decision)
+                      : null;
+                  const displayConfidence =
+                    decisionEntry?.decision.confidence ?? view?.confidence ?? 0;
+                  const displayQuality =
+                    decisionEntry?.decision.setupQuality ?? view?.setupQuality ?? "C";
+
+                  if (!view) {
+                    if (loading) return <Skeleton />;
+                    if (error) return <ErrorView error={error} />;
+                    return (
+                      <p className="text-xs text-[var(--color-fg-subtle)]">
+                        Awaiting first thesis fetch for this symbol.
+                      </p>
+                    );
+                  }
 
                   return (
                     <>
@@ -117,10 +144,10 @@ export function GroqPage() {
                           <div
                             className={cn(
                               "text-base font-semibold capitalize",
-                              BIAS_TONE[entry.thesis.marketBias],
+                              BIAS_TONE[view.marketBias],
                             )}
                           >
-                            {entry.thesis.marketBias}
+                            {view.marketBias}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -151,23 +178,28 @@ export function GroqPage() {
                       ) : null}
 
                       <Section icon={BookOpen} title="Summary">
-                        {entry.thesis.summary}
+                        {view.summary}
                       </Section>
                       <Section icon={ShieldAlert} title="Risk" tone="warn">
-                        {entry.thesis.riskCommentary}
+                        {view.riskCommentary}
                       </Section>
                       <div className="rounded-md border border-[var(--color-accent)]/20 bg-[var(--color-accent-soft)] px-3 py-2.5">
                         <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] mb-1 font-bold">
                           Trade Thesis
                         </div>
                         <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">
-                          {entry.thesis.tradeThesis}
+                          {view.tradeThesis}
                         </p>
                       </div>
+                      {!entry && decisionEntry ? (
+                        <p className="text-[10px] text-[var(--color-fg-subtle)] italic">
+                          Showing live decision while the narrative thesis loads.
+                        </p>
+                      ) : null}
                       {error && (
                         <div className="flex items-center gap-2 text-[10px] text-[var(--color-warn)]">
                           <AlertTriangle className="size-3" />
-                          <span>Last refresh failed; showing prior thesis.</span>
+                          <span>Last refresh failed; showing prior result.</span>
                         </div>
                       )}
                     </>
@@ -180,6 +212,64 @@ export function GroqPage() {
       </div>
     </PageShell>
   );
+}
+
+/**
+ * Shape the card actually renders from. Thesis is the natural shape;
+ * decisions get mapped onto it when no thesis exists yet.
+ */
+interface CardView {
+  marketBias: MarketBias;
+  confidence: number;
+  setupQuality: SetupQuality;
+  summary: string;
+  riskCommentary: string;
+  tradeThesis: string;
+}
+
+function thesisToView(t: MarketThesis): CardView {
+  return {
+    marketBias: t.marketBias,
+    confidence: t.confidence,
+    setupQuality: t.setupQuality,
+    summary: t.summary,
+    riskCommentary: t.riskCommentary,
+    tradeThesis: t.tradeThesis,
+  };
+}
+
+function decisionToView(d: MarketDecision): CardView {
+  const bias: MarketBias = LONG_DECISIONS.has(d.decision)
+    ? d.confidence >= 75
+      ? "strongly bullish"
+      : "moderately bullish"
+    : SHORT_DECISIONS.has(d.decision)
+      ? d.confidence >= 75
+        ? "strongly bearish"
+        : "moderately bearish"
+      : "neutral";
+  const riskCommentary = d.warnings.length
+    ? d.warnings.join(" ")
+    : "No invalidation flagged by the engine for this snapshot.";
+  const tradeThesisParts: string[] = [];
+  if (d.executionRecommendation) tradeThesisParts.push(d.executionRecommendation);
+  if (d.reasoning[0]) tradeThesisParts.push(d.reasoning[0]);
+  if (d.executeTrade) {
+    tradeThesisParts.push(
+      `Entry ${formatPrice(d.entryPrice, d.entryPrice < 10 ? 4 : 2)} · TP ${formatPrice(d.takeProfit, d.takeProfit < 10 ? 4 : 2)} · SL ${formatPrice(d.stopLoss, d.stopLoss < 10 ? 4 : 2)} · size ${d.positionSizePercent}%`,
+    );
+  }
+  const tradeThesis =
+    tradeThesisParts.join(" — ").slice(0, 500) ||
+    `Engine returned ${d.decision} with no actionable trade.`;
+  return {
+    marketBias: bias,
+    confidence: d.confidence,
+    setupQuality: d.setupQuality,
+    summary: d.marketSummary,
+    riskCommentary: riskCommentary.slice(0, 400),
+    tradeThesis,
+  };
 }
 
 const BIAS_TONE: Record<MarketBias, string> = {

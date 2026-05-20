@@ -19,9 +19,6 @@ import { useSignalStore } from "@/store/signal-store";
  */
 const FULL_CYCLE_MS = 10 * 60 * 1000;
 
-/** When autonomy is on, the decision subscriber owns the LLM budget. */
-const AUTONOMY_FLAG = "on";
-
 /**
  * Global multi-symbol thesis refresher. Mounted at the platform layout.
  *
@@ -53,11 +50,19 @@ export function AiThesisSubscriber() {
   const activeSignal = useSignalStore((s) => s.activeSignals[symbol]);
   const lastTriggerRef = useRef<string>("");
 
-  const refresh = async (target: string) => {
+  const refresh = async (target: string, retry = 0) => {
     if (inFlightRef.current[target]) return;
     const tf = intervalRef.current;
     const bars = useMarketStore.getState().candles[`${target}:${tf}`];
-    if (!bars || bars.length < 30) return;
+    if (!bars || bars.length < 30) {
+      // Cold-start race: the warm-up can fire before WebSocket candles
+      // land. Retry a few times so the user doesn't have to wait the full
+      // round-robin window (~2 min) for the first card to populate.
+      if (retry < 5) {
+        setTimeout(() => void refresh(target, retry + 1), 3000);
+      }
+      return;
+    }
 
     const indicators = calculateIndicators(bars);
     const lastClose = bars.at(-1)?.close;
@@ -109,11 +114,11 @@ export function AiThesisSubscriber() {
 
   // Initial fan-out across watchlist symbols, lightly staggered so the
   // provider sees them as discrete requests rather than a thundering herd.
-  // When autonomy is on we skip the bulk warm-up entirely — the only thesis
-  // we still want is for the currently-active symbol (handled by the
-  // on-demand effect below).
+  // Runs regardless of autonomy: theses are served by a different provider
+  // (OpenRouter by default — see `AI_PROVIDER_THESIS`) so they don't share
+  // a token budget with the Groq decision call. Without this fan-out the
+  // /groq dashboard sits at "0/5 theses ready" forever under autonomy.
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_AI_AUTONOMY === AUTONOMY_FLAG) return;
     const STAGGER_MS = 5000;
     const timers: ReturnType<typeof setTimeout>[] = [];
     WATCHLIST_SYMBOLS.forEach((sym, i) => {
@@ -125,10 +130,8 @@ export function AiThesisSubscriber() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Round-robin: one symbol refreshed every (cycle / N) ms. Skipped under
-  // autonomy — same reason as the warm-up.
+  // Round-robin: one symbol refreshed every (cycle / N) ms.
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_AI_AUTONOMY === AUTONOMY_FLAG) return;
     let cursor = 0;
     const tickMs = Math.max(20_000, Math.floor(FULL_CYCLE_MS / WATCHLIST_SYMBOLS.length));
     const timer = setInterval(() => {

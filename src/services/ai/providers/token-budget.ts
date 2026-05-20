@@ -72,10 +72,23 @@ export function tpmBudgetFor(model: string): number {
 }
 
 interface UsageEvent {
+  /** Monotonic id so concurrent callers can update their own event. */
+  id: number;
   /** ms-since-epoch when the call was sent. */
   at: number;
   /** total tokens (input + output estimate) attributed to this call. */
   tokens: number;
+}
+
+/**
+ * Opaque handle returned by `reserve()` so the caller can update the
+ * actual token count on its specific event — important when multiple
+ * calls overlap (the orchestrator caps at 2 concurrent), because
+ * `events.at(-1)` no longer identifies the right one.
+ */
+export interface ReservationHandle {
+  readonly id: number;
+  readonly estimated: number;
 }
 
 /** Window over which we sum usage. Matches Groq's 60s TPM window. */
@@ -116,17 +129,19 @@ export function modelCooldownRemainingMs(model: string): number {
 
 class TokenBudget {
   private events: UsageEvent[] = [];
+  private nextId = 1;
   constructor(
     private readonly model: string,
     private readonly tpmCap: number,
   ) {}
 
   /**
-   * Reserve `tokens` against the budget. Resolves when we have headroom
-   * to send. Rejects with `BudgetExhaustedError` if waiting would take
-   * longer than `MAX_WAIT_MS` — caller treats that as "skip this cycle".
+   * Reserve `tokens` against the budget. Resolves with a handle the
+   * caller passes back to `recordActual` once the API response lands.
+   * Rejects with `BudgetExhaustedError` if waiting would take longer
+   * than `MAX_WAIT_MS` — caller treats that as "skip this cycle".
    */
-  async reserve(tokens: number): Promise<void> {
+  async reserve(tokens: number): Promise<ReservationHandle> {
     const cooldownLeft = modelCooldownRemainingMs(this.model);
     if (cooldownLeft > 0) {
       throw new BudgetExhaustedError(
@@ -141,8 +156,9 @@ class TokenBudget {
       this.events = this.events.filter((e) => now - e.at < WINDOW_MS);
       const used = this.events.reduce((s, e) => s + e.tokens, 0);
       if (used + tokens <= this.tpmCap) {
-        this.events.push({ at: now, tokens });
-        return;
+        const id = this.nextId++;
+        this.events.push({ id, at: now, tokens });
+        return { id, estimated: tokens };
       }
       const oldest = this.events[0];
       const waitMs = oldest
@@ -159,14 +175,21 @@ class TokenBudget {
   }
 
   /**
-   * Update the most-recent reservation with the actual token count from
-   * the provider response. Replaces the estimate so future calls bill
-   * against truth, not our worst-case guess.
+   * Update the reservation identified by `handle` with the real token
+   * count from the provider response. Lets future calls bill against
+   * truth instead of the worst-case estimate. Resilient under overlap
+   * (multiple in-flight calls update their own event by id).
    */
-  recordActual(estimatedTokens: number, actualTokens: number): void {
-    const last = this.events.at(-1);
-    if (!last || last.tokens !== estimatedTokens) return;
-    last.tokens = actualTokens;
+  recordActual(handle: ReservationHandle, actualTokens: number): void {
+    const event = this.events.find((e) => e.id === handle.id);
+    if (!event) return;
+    event.tokens = actualTokens;
+  }
+
+  /** Release a reservation entirely — used when the request errored
+   *  before reaching Groq (so we didn't actually consume the budget). */
+  release(handle: ReservationHandle): void {
+    this.events = this.events.filter((e) => e.id !== handle.id);
   }
 }
 

@@ -1,8 +1,8 @@
 import { WATCHLIST_SYMBOLS, type WatchlistSymbol } from "@/lib/market/symbols";
 
 import { getFearGreed, type FearGreed } from "../sentiment/fear-greed";
-import { getCryptoCompareNews, type CCNewsItem } from "./cryptocompare";
-import { getRedditHot, type RedditPost } from "./reddit";
+import { getCryptoCompareNewsDetailed, type CCNewsItem } from "./cryptocompare";
+import { getRedditHotDetailed, type RedditPost } from "./reddit";
 
 export type NewsSource = "cryptocompare" | "reddit";
 export type Mood = "very bearish" | "bearish" | "neutral" | "bullish" | "very bullish";
@@ -41,12 +41,25 @@ export interface MarketPulse {
   newsMood: Mood;
 }
 
+export interface SourceStatus {
+  /** Human-readable source name for the UI. */
+  source: NewsSource;
+  /** ok = items returned, stale = served previous cache, failed = empty. */
+  status: "ok" | "stale" | "failed";
+  /** Number of items returned this fetch. */
+  count: number;
+  /** Diagnostic from upstream when status != ok. */
+  error?: string;
+}
+
 export interface NewsFeed {
   items: FeedItem[];
   trending: TrendingTicker[];
   pulse: MarketPulse;
   /** Unix seconds when this feed was assembled. */
   fetchedAt: number;
+  /** Per-source health so the UI can show why a source might be empty. */
+  sources: SourceStatus[];
 }
 
 /**
@@ -192,15 +205,45 @@ function buildTrending(items: FeedItem[]): TrendingTicker[] {
  * items lead; clients can re-sort by score for "trending" views.
  */
 export async function getNewsFeed(): Promise<NewsFeed> {
-  const [cc, reddit, fng] = await Promise.all([
-    getCryptoCompareNews().catch(() => [] as CCNewsItem[]),
-    getRedditHot().catch(() => [] as RedditPost[]),
+  const [ccRes, redditRes, fng] = await Promise.all([
+    getCryptoCompareNewsDetailed().catch(
+      (err) =>
+        ({
+          items: [] as CCNewsItem[],
+          error: err instanceof Error ? err.message : String(err),
+        }) as Awaited<ReturnType<typeof getCryptoCompareNewsDetailed>>,
+    ),
+    getRedditHotDetailed().catch(
+      (err) =>
+        ({
+          posts: [] as RedditPost[],
+          error: err instanceof Error ? err.message : String(err),
+        }) as Awaited<ReturnType<typeof getRedditHotDetailed>>,
+    ),
     getFearGreed().catch(() => null),
   ]);
+
+  const cc = ccRes.items;
+  const reddit = redditRes.posts;
 
   const items = [...ccToFeed(cc), ...redditToFeed(reddit)].sort(
     (a, b) => b.publishedAt - a.publishedAt,
   );
+
+  const sources: SourceStatus[] = [
+    {
+      source: "cryptocompare",
+      status: ccRes.error ? (ccRes.stale ? "stale" : "failed") : "ok",
+      count: cc.length,
+      error: ccRes.error,
+    },
+    {
+      source: "reddit",
+      status: redditRes.error ? (redditRes.stale ? "stale" : "failed") : "ok",
+      count: reddit.length,
+      error: redditRes.error,
+    },
+  ];
 
   return {
     items,
@@ -211,5 +254,6 @@ export async function getNewsFeed(): Promise<NewsFeed> {
       newsMood: newsMoodFrom(cc),
     },
     fetchedAt: Math.floor(Date.now() / 1000),
+    sources,
   };
 }

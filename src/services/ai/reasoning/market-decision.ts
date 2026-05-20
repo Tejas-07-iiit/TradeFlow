@@ -257,14 +257,18 @@ export async function getMarketDecisionFor(
   for (let i = 0; i < chain.length; i++) {
     const provider = chain[i];
     try {
-      // 2000 output tokens fits the worst-case JSON for the tightened
-      // schema (reasoning≤4×200 + warnings≤3×200 + summaries + aligned/
-      // conflicting lists). Use a NON-reasoning model — reasoning models
-      // burn output tokens on hidden chain-of-thought and regularly hit
-      // "max completion tokens reached" on this schema.
+      // 1200 output tokens comfortably fits the schema (reasoning≤4×200
+      // + warnings≤3×200 + summaries ≈ ~1.6K chars ≈ ~500 tokens). The
+      // previous 2000 cap meant every reservation locked out a 2K slice
+      // of TPM budget that almost never materialized — at 2 concurrent
+      // calls the local tracker exhausted the 12K cap on llama-3.3-70b
+      // while Groq itself reported only ~5K actual usage.
+      // Use a NON-reasoning model — reasoning models burn output tokens
+      // on hidden chain-of-thought and regularly hit "max completion
+      // tokens reached" on this schema.
       const decision = await provider.chatJson(messages, MarketDecisionSchema, {
         temperature: 0.15,
-        maxTokens: 2000,
+        maxTokens: 1200,
         timeoutMs: 30_000,
       });
       const entry: CachedDecision = {

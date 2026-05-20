@@ -39,25 +39,54 @@ interface CCResponse {
   Message?: string;
 }
 
-const ENDPOINT = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN";
+const BASE = "https://min-api.cryptocompare.com/data/v2/news/?lang=EN";
 const TTL_MS = 5 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 5_000;
+const FETCH_TIMEOUT_MS = 7_000;
+
+export interface CCFetchResult {
+  items: CCNewsItem[];
+  /** Populated when the upstream failed and we returned cached/empty. */
+  error?: string;
+  /** True when we served from a stale cache because upstream failed. */
+  stale?: boolean;
+}
 
 let cache: { value: CCNewsItem[]; expiresAt: number } | null = null;
 
-export async function getCryptoCompareNews(): Promise<CCNewsItem[]> {
-  if (cache && cache.expiresAt > Date.now()) return cache.value;
+function buildEndpoint(): string {
+  const key = process.env.CRYPTOCOMPARE_API_KEY?.trim();
+  return key ? `${BASE}&api_key=${encodeURIComponent(key)}` : BASE;
+}
+
+/**
+ * Detailed fetch — returns items plus a diagnostic so the aggregator can
+ * surface "CryptoCompare unavailable" in the UI instead of silently
+ * pretending the feed is empty.
+ */
+export async function getCryptoCompareNewsDetailed(): Promise<CCFetchResult> {
+  if (cache && cache.expiresAt > Date.now()) return { items: cache.value };
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(ENDPOINT, {
+    const res = await fetch(buildEndpoint(), {
+      headers: { Accept: "application/json" },
       signal: controller.signal,
       next: { revalidate: 300 },
     });
-    if (!res.ok) return cache?.value ?? [];
+    if (!res.ok) {
+      const err = `HTTP ${res.status}`;
+      console.warn(`[news/cryptocompare] ${err}`);
+      if (cache) return { items: cache.value, error: err, stale: true };
+      return { items: [], error: err };
+    }
     const json = (await res.json()) as CCResponse;
-    if (!json.Data) return cache?.value ?? [];
+    if (!json.Data) {
+      const err = json.Message ?? "empty payload";
+      console.warn(`[news/cryptocompare] ${err}`);
+      if (cache) return { items: cache.value, error: err, stale: true };
+      return { items: [], error: err };
+    }
 
     const items: CCNewsItem[] = json.Data.map((row) => {
       const up = Number(row.upvotes ?? 0);
@@ -80,12 +109,18 @@ export async function getCryptoCompareNews(): Promise<CCNewsItem[]> {
     });
 
     cache = { value: items, expiresAt: Date.now() + TTL_MS };
-    return items;
-  } catch {
-    // Soft-fail to the previous cache (if any) — we'd rather show stale news
-    // than an error state on a transient network blip.
-    return cache?.value ?? [];
+    return { items };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "fetch error";
+    console.warn(`[news/cryptocompare] ${msg}`);
+    if (cache) return { items: cache.value, error: msg, stale: true };
+    return { items: [], error: msg };
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Backwards-compatible shim — drop when no callers reference it. */
+export async function getCryptoCompareNews(): Promise<CCNewsItem[]> {
+  return (await getCryptoCompareNewsDetailed()).items;
 }

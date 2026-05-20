@@ -68,10 +68,16 @@ export class GroqProvider implements LlmProvider {
     // Reserve against the per-model sliding-60s token bucket BEFORE we
     // open the HTTP socket. If the budget is exhausted, throw without
     // contacting Groq — saves the round trip and the 429 log noise.
+    // We reserve a realistic output budget (~40% of maxTokens, capped at
+    // 800) rather than the full maxTokens cap; otherwise 2 concurrent
+    // decision calls reserve 4K of output tokens and exhaust the local
+    // budget while Groq sees only ~1.5K actual usage. After the response
+    // lands, recordActual replaces the estimate with truth.
     const budget = budgetFor(this.model);
     const promptTokens = estimatePromptTokens(messages);
-    const estimatedTotal = promptTokens + maxTokens;
-    await budget.reserve(estimatedTotal);
+    const reservedOutput = Math.min(maxTokens, Math.max(400, Math.ceil(maxTokens * 0.4)));
+    const estimatedTotal = promptTokens + reservedOutput;
+    const reservation = await budget.reserve(estimatedTotal);
 
     const attempt = async (msgs: ChatMessage[], retryCount = 0): Promise<string> => {
       const controller = new AbortController();
@@ -173,7 +179,7 @@ export class GroqProvider implements LlmProvider {
         // attempt — retries reuse the same reservation.
         const actual = json.usage?.total_tokens;
         if (actual && retryCount === 0) {
-          budget.recordActual(estimatedTotal, actual);
+          budget.recordActual(reservation, actual);
         }
         return content;
       } finally {
@@ -207,15 +213,24 @@ export class GroqProvider implements LlmProvider {
       const raw = await attempt(messages);
       return parseAndValidate(raw);
     } catch (err) {
-      if (!(err instanceof LlmProviderError)) throw err;
+      // 429s / network errors meant the call never produced billable
+      // usage — release the reservation so the next attempt in the chain
+      // doesn't see an inflated window.
+      const isLlmErr = err instanceof LlmProviderError;
+      const cause = isLlmErr
+        ? (err.cause as
+            | { status?: number; code?: string; failedGeneration?: string }
+            | undefined)
+        : undefined;
+      if (cause?.status === 429 || (isLlmErr && err.message.includes("Groq error"))) {
+        budget.release(reservation);
+      }
+      if (!isLlmErr) throw err;
 
       // Groq's own JSON validator rejected the model output (e.g. it
       // emitted an arithmetic expression instead of a finished number).
       // We can repair this in-place by handing the broken text back to
       // the model and asking it to fix it.
-      const cause = err.cause as
-        | { code?: string; failedGeneration?: string }
-        | undefined;
       if (cause?.code === "json_validate_failed") {
         const broken = cause.failedGeneration ?? "";
         const repairMessages: ChatMessage[] = [

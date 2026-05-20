@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   Activity,
+  AlertTriangle,
   Gauge,
   MessageSquare,
   Newspaper,
@@ -20,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SYMBOL_NAMES, WATCHLIST_SYMBOLS } from "@/lib/market/symbols";
 import { cn } from "@/lib/utils";
-import type { FeedItem, Mood } from "@/services/news";
+import type { FeedItem, Mood, SourceStatus } from "@/services/news";
 import { useNewsStore } from "@/store/news-store";
 
 const MOOD_TONE: Record<Mood, "bull" | "bear" | "warn" | "muted"> = {
@@ -213,11 +214,14 @@ export function NewsPage() {
             <SkeletonRows />
           )
         ) : filteredItems.length === 0 ? (
-          <div className="col-span-full">
+          <div className="col-span-full space-y-3">
             <EmptyState
               title="No items found"
               description="Try removing the symbol filter or check back in a few minutes."
             />
+            {feed.sources?.some((s) => s.status !== "ok") && (
+              <SourceFailures sources={feed.sources} />
+            )}
           </div>
         ) : (
           filteredItems.slice(0, 40).map((it) => 
@@ -237,6 +241,42 @@ export function NewsPage() {
 
 function labelMood(mood: Mood): string {
   return mood.replace(/^./, (c) => c.toUpperCase());
+}
+
+const SOURCE_LABEL: Record<SourceStatus["source"], string> = {
+  cryptocompare: "CryptoCompare",
+  reddit: "r/CryptoCurrency",
+};
+
+function SourceFailures({ sources }: { sources: SourceStatus[] }) {
+  const bad = sources.filter((s) => s.status !== "ok");
+  if (bad.length === 0) return null;
+  return (
+    <div className="rounded-md border border-[var(--color-warn)]/30 bg-[var(--color-warn-soft)] p-3 space-y-2">
+      <div className="flex items-center gap-2 text-[var(--color-warn)] text-xs font-semibold">
+        <AlertTriangle className="size-3.5" /> Some news sources are unavailable
+      </div>
+      <ul className="space-y-1">
+        {bad.map((s) => (
+          <li
+            key={s.source}
+            className="text-[11px] leading-5 text-[var(--color-fg-muted)] break-words"
+          >
+            <span className="font-medium text-[var(--color-fg)]">
+              {SOURCE_LABEL[s.source]}
+            </span>{" "}
+            — {s.status === "stale" ? "showing cached items, " : ""}
+            {s.error ?? "no items returned"}
+          </li>
+        ))}
+      </ul>
+      <p className="text-[10px] text-[var(--color-fg-subtle)]">
+        Reddit often rate-limits data-center IPs (AWS, GCP). CryptoCompare
+        usually works; set <code>CRYPTOCOMPARE_API_KEY</code> in env if you
+        see persistent 429s.
+      </p>
+    </div>
+  );
 }
 
 function RedditRow({ item }: { item: FeedItem }) {

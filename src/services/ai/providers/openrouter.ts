@@ -68,11 +68,14 @@ export class OpenRouterProvider implements LlmProvider {
 
     // Same token-budget throttle as Groq, keyed by model. OpenRouter
     // free-tier limits vary per model; the conservative default cap
-    // ensures we never burst.
+    // ensures we never burst. Reserve realistic output (~40% of cap)
+    // so concurrent calls don't lock out the budget — recordActual
+    // replaces the estimate with truth after the call returns.
     const budget = budgetFor(this.model);
     const promptTokens = estimatePromptTokens(messages);
-    const estimatedTotal = promptTokens + maxTokens;
-    await budget.reserve(estimatedTotal);
+    const reservedOutput = Math.min(maxTokens, Math.max(400, Math.ceil(maxTokens * 0.4)));
+    const estimatedTotal = promptTokens + reservedOutput;
+    const reservation = await budget.reserve(estimatedTotal);
 
     const attempt = async (msgs: ChatMessage[], retryCount = 0): Promise<string> => {
       const controller = new AbortController();
@@ -149,7 +152,7 @@ export class OpenRouterProvider implements LlmProvider {
         }
         const actual = json.usage?.total_tokens;
         if (actual && retryCount === 0) {
-          budget.recordActual(estimatedTotal, actual);
+          budget.recordActual(reservation, actual);
         }
         return content;
       } finally {
@@ -190,7 +193,14 @@ export class OpenRouterProvider implements LlmProvider {
       const raw = await attempt(messages);
       return parseAndValidate(raw);
     } catch (err) {
-      if (!(err instanceof LlmProviderError)) throw err;
+      // The call never produced billable usage — release the reservation
+      // so the next chain link doesn't see an inflated window.
+      const isLlmErr = err instanceof LlmProviderError;
+      const cause = isLlmErr ? (err.cause as { status?: number } | undefined) : undefined;
+      if (cause?.status === 429 || cause?.status === 404 || (isLlmErr && err.message.includes("OpenRouter error"))) {
+        budget.release(reservation);
+      }
+      if (!isLlmErr) throw err;
       if (
         err.message.startsWith("OpenRouter HTTP") ||
         err.message.startsWith("OpenRouter error") ||

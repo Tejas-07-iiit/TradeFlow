@@ -51,11 +51,19 @@ export function AiDecisionSubscriber() {
     intervalRef.current = interval;
   }, [interval]);
 
-  const refresh = async (target: string) => {
+  const refresh = async (target: string, retry = 0) => {
     if (inFlightRef.current[target]) return;
     const tf = intervalRef.current;
     const bars = useMarketStore.getState().candles[`${target}:${tf}`];
-    if (!bars || bars.length < 30) return;
+    if (!bars || bars.length < 30) {
+      // Cold-start race: warm-up can fire before WebSocket candles
+      // arrive. Retry a handful of times so the first decision lands
+      // promptly instead of waiting the full round-robin window.
+      if (retry < 5) {
+        setTimeout(() => void refresh(target, retry + 1), 3000);
+      }
+      return;
+    }
 
     const lastClose = bars.at(-1)?.close;
     if (lastClose == null || !Number.isFinite(lastClose) || lastClose <= 0) return;

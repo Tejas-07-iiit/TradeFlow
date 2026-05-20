@@ -47,50 +47,92 @@ interface RedditListing {
   };
 }
 
-const ENDPOINT = "https://www.reddit.com/r/CryptoCurrency/hot.json?limit=30";
-const USER_AGENT = "tradeflow:news-widget:1.0 (paper-trading simulator)";
+/**
+ * `www.reddit.com/.json` aggressively rate-limits data-center IPs (AWS,
+ * GCP, etc.) — production deployments often see 403/429 even with a sane
+ * User-Agent. `old.reddit.com` is served from a different edge config and
+ * is far more tolerant in practice. We try the friendly host first and
+ * fall back to www, then surface the failure so the UI can show why a
+ * source is empty.
+ */
+const ENDPOINTS = [
+  "https://old.reddit.com/r/CryptoCurrency/hot.json?limit=30",
+  "https://www.reddit.com/r/CryptoCurrency/hot.json?limit=30",
+];
+const USER_AGENT =
+  process.env.REDDIT_USER_AGENT?.trim() ||
+  "tradeflow:news-widget:1.0 (paper-trading simulator)";
 const TTL_MS = 5 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 5_000;
+const FETCH_TIMEOUT_MS = 6_000;
+
+export interface RedditFetchResult {
+  posts: RedditPost[];
+  /** Populated when every endpoint failed and we returned cached/empty. */
+  error?: string;
+  /** True when we served from a stale cache because every endpoint failed. */
+  stale?: boolean;
+}
 
 let cache: { value: RedditPost[]; expiresAt: number } | null = null;
 
-export async function getRedditHot(): Promise<RedditPost[]> {
-  if (cache && cache.expiresAt > Date.now()) return cache.value;
+/**
+ * Detailed fetch — returns posts plus a diagnostic flag set so the
+ * aggregator can show "Reddit blocked by upstream" in the UI.
+ */
+export async function getRedditHotDetailed(): Promise<RedditFetchResult> {
+  if (cache && cache.expiresAt > Date.now()) return { posts: cache.value };
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(ENDPOINT, {
-      headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
-      signal: controller.signal,
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return cache?.value ?? [];
-    const json = (await res.json()) as RedditListing;
-    const rows = json.data?.children ?? [];
-    const posts: RedditPost[] = rows
-      .map((r) => r.data)
-      .filter((d): d is NonNullable<typeof d> => !!d && !d.over_18)
-      // Drop the pinned/moderator posts that always sit at the top of /hot.
-      .filter((d) => !d.stickied)
-      .map((d) => ({
-        id: d.id,
-        title: d.title,
-        score: d.score,
-        numComments: d.num_comments,
-        createdAt: d.created_utc,
-        flair: d.link_flair_text,
-        selftext: (d.selftext ?? "").slice(0, 400),
-        permalink: `https://reddit.com${d.permalink}`,
-        url: d.url,
-        isStickied: !!d.stickied,
-      }));
+  const errors: string[] = [];
+  for (const endpoint of ENDPOINTS) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(endpoint, {
+        headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+        signal: controller.signal,
+        next: { revalidate: 300 },
+      });
+      if (!res.ok) {
+        errors.push(`${new URL(endpoint).host} HTTP ${res.status}`);
+        continue;
+      }
+      const json = (await res.json()) as RedditListing;
+      const rows = json.data?.children ?? [];
+      const posts: RedditPost[] = rows
+        .map((r) => r.data)
+        .filter((d): d is NonNullable<typeof d> => !!d && !d.over_18)
+        .filter((d) => !d.stickied)
+        .map((d) => ({
+          id: d.id,
+          title: d.title,
+          score: d.score,
+          numComments: d.num_comments,
+          createdAt: d.created_utc,
+          flair: d.link_flair_text,
+          selftext: (d.selftext ?? "").slice(0, 400),
+          permalink: `https://reddit.com${d.permalink}`,
+          url: d.url,
+          isStickied: !!d.stickied,
+        }));
 
-    cache = { value: posts, expiresAt: Date.now() + TTL_MS };
-    return posts;
-  } catch {
-    return cache?.value ?? [];
-  } finally {
-    clearTimeout(timer);
+      cache = { value: posts, expiresAt: Date.now() + TTL_MS };
+      return { posts };
+    } catch (err) {
+      errors.push(
+        `${new URL(endpoint).host} ${err instanceof Error ? err.message : "fetch error"}`,
+      );
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  const combined = errors.join("; ");
+  console.warn(`[news/reddit] all endpoints failed: ${combined}`);
+  if (cache) return { posts: cache.value, error: combined, stale: true };
+  return { posts: [], error: combined };
+}
+
+/** Backwards-compatible shim — drop when no callers reference it. */
+export async function getRedditHot(): Promise<RedditPost[]> {
+  return (await getRedditHotDetailed()).posts;
 }
