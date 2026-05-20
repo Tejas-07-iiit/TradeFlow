@@ -106,72 +106,73 @@ export function GroqPage() {
                   const decisionEntry = decisions[sym];
                   const displayConfidence = decisionEntry?.decision.confidence ?? entry.thesis.confidence;
                   const displayQuality = decisionEntry?.decision.setupQuality ?? entry.thesis.setupQuality;
-                  
+
                   return (
-                  <>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
-                          Bias
-                        </div>
-                        <div
-                          className={cn(
-                            "text-base font-semibold capitalize",
-                            BIAS_TONE[entry.thesis.marketBias],
-                          )}
-                        >
-                          {entry.thesis.marketBias}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
+                    <>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
                           <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
-                            Setup
+                            Bias
                           </div>
                           <div
                             className={cn(
-                              "text-lg font-bold leading-none mt-0.5",
-                              QUALITY_TONE[displayQuality],
+                              "text-base font-semibold capitalize",
+                              BIAS_TONE[entry.thesis.marketBias],
                             )}
                           >
-                            {displayQuality}
+                            {entry.thesis.marketBias}
                           </div>
                         </div>
-                        <ConfidenceRing value={displayConfidence} />
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                              Setup
+                            </div>
+                            <div
+                              className={cn(
+                                "text-lg font-bold leading-none mt-0.5",
+                                QUALITY_TONE[displayQuality],
+                              )}
+                            >
+                              {displayQuality}
+                            </div>
+                          </div>
+                          <ConfidenceRing value={displayConfidence} />
+                        </div>
                       </div>
-                    </div>
 
-                    {exec ? (
-                      <Badge
-                        variant={exec.signal === "BUY" ? "bull" : "bear"}
-                        className="text-[10px]"
-                      >
-                        AI auto-fired {exec.signal} · {exec.type}
-                      </Badge>
-                    ) : null}
+                      {exec ? (
+                        <Badge
+                          variant={exec.signal === "BUY" ? "bull" : "bear"}
+                          className="text-[10px]"
+                        >
+                          AI auto-fired {exec.signal} · {exec.type}
+                        </Badge>
+                      ) : null}
 
-                    <Section icon={BookOpen} title="Summary">
-                      {entry.thesis.summary}
-                    </Section>
-                    <Section icon={ShieldAlert} title="Risk" tone="warn">
-                      {entry.thesis.riskCommentary}
-                    </Section>
-                    <div className="rounded-md border border-[var(--color-accent)]/20 bg-[var(--color-accent-soft)] px-3 py-2.5">
-                      <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] mb-1 font-bold">
-                        Trade Thesis
+                      <Section icon={BookOpen} title="Summary">
+                        {entry.thesis.summary}
+                      </Section>
+                      <Section icon={ShieldAlert} title="Risk" tone="warn">
+                        {entry.thesis.riskCommentary}
+                      </Section>
+                      <div className="rounded-md border border-[var(--color-accent)]/20 bg-[var(--color-accent-soft)] px-3 py-2.5">
+                        <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] mb-1 font-bold">
+                          Trade Thesis
+                        </div>
+                        <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">
+                          {entry.thesis.tradeThesis}
+                        </p>
                       </div>
-                      <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">
-                        {entry.thesis.tradeThesis}
-                      </p>
-                    </div>
-                    {error && (
-                      <div className="flex items-center gap-2 text-[10px] text-[var(--color-warn)]">
-                        <AlertTriangle className="size-3" />
-                        <span>Last refresh failed; showing prior thesis.</span>
-                      </div>
-                    )}
-                  </>
-                )})}
+                      {error && (
+                        <div className="flex items-center gap-2 text-[10px] text-[var(--color-warn)]">
+                          <AlertTriangle className="size-3" />
+                          <span>Last refresh failed; showing prior thesis.</span>
+                        </div>
+                      )}
+                    </>
+                  )
+                })}
               </CardContent>
             </Card>
           );

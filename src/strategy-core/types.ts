@@ -1,3 +1,4 @@
+import type { CandlestickIntelligence } from "@/lib/candlestick/types";
 import type { Candle } from "@/types/market";
 
 /**
@@ -91,6 +92,13 @@ export interface StrategyContext {
   indicators: IndicatorContext;
   regime: MarketRegime;
   sentiment?: SentimentContext;
+  /**
+   * Structured TA-Lib candlestick intelligence for the current bar. Built by
+   * the evaluator once per tick and shared with every strategy so the
+   * Candlestick Intelligence strategy + any pattern-aware strategy reads
+   * the same source. Patterns are *context*, never a sole trigger.
+   */
+  candlestickIntel?: CandlestickIntelligence;
 }
 
 /**
@@ -217,6 +225,8 @@ export interface StrategySnapshot {
   skipped: { strategyId: string; reason: string }[];
   /** Quantpedia principles that match the live consensus, for the LLM. */
   relatedPrinciples: StrategyMetadata[];
+  /** Structured candlestick intelligence used by the LLM and chart overlay. */
+  candlestickIntel?: CandlestickIntelligence;
 }
 
 export interface RankedStrategyOutput {

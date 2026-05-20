@@ -1,3 +1,10 @@
+import { lastNumber, vwap as vwapSeries } from "@/lib/indicators/calculations";
+import {
+  runMultiTimeframeCandlestick,
+  type CandlestickIntelligence,
+} from "@/lib/candlestick";
+import type { Timeframe } from "@/types/market";
+
 import { StrategyRegistry } from "../registry";
 import { buildIndicatorContext } from "../regime/indicator-context";
 import { classifyRegime } from "../regime/classifier";
@@ -23,6 +30,7 @@ export interface EvaluatorResult {
   skipped: { strategyId: string; reason: string }[];
   regime: MarketRegime;
   indicators: IndicatorContext;
+  candlestickIntel?: CandlestickIntelligence;
 }
 
 /**
@@ -39,6 +47,12 @@ export function evaluateAllStrategies(input: EvaluatorInput): EvaluatorResult {
   const regime = classifyRegime(indicators);
   const lastClose = input.candles.at(-1)?.close ?? 0;
 
+  // Run the candlestick intelligence engine ONCE per tick, with HTF candles
+  // routed in so the confidence engine can read same-direction confirmations
+  // on higher timeframes. The result is shared with every strategy via
+  // StrategyContext.candlestickIntel — strategies must NOT recompute.
+  const candlestickIntel = computeCandlestickIntel(input, regime, indicators);
+
   const ctx: StrategyContext = {
     symbol: input.symbol,
     timeframe: input.timeframe,
@@ -48,6 +62,7 @@ export function evaluateAllStrategies(input: EvaluatorInput): EvaluatorResult {
     indicators,
     regime,
     sentiment: input.sentiment,
+    candlestickIntel,
   };
 
   const outputs: StrategyOutput[] = [];
@@ -77,5 +92,37 @@ export function evaluateAllStrategies(input: EvaluatorInput): EvaluatorResult {
     }
   }
 
-  return { outputs, skipped, regime, indicators };
+  return { outputs, skipped, regime, indicators, candlestickIntel };
+}
+
+function computeCandlestickIntel(
+  input: EvaluatorInput,
+  regime: MarketRegime,
+  indicators: IndicatorContext,
+): CandlestickIntelligence | undefined {
+  if (input.candles.length < 14) return undefined;
+  const vwap = lastNumber(vwapSeries(input.candles));
+  try {
+    const result = runMultiTimeframeCandlestick({
+      symbol: input.symbol,
+      primary: {
+        timeframe: input.timeframe as Timeframe,
+        candles: input.candles,
+      },
+      others: (input.htfCandles ?? {}) as Partial<Record<Timeframe, import("@/types/market").Candle[]>>,
+      context: {
+        ema50: indicators.ema50,
+        ema200: indicators.ema200,
+        rsi14: indicators.rsi14,
+        adx14: indicators.adx14,
+        atrPct: indicators.atrPct,
+        vwap,
+        regime,
+      },
+    });
+    return result.primary;
+  } catch (err) {
+    console.error("[evaluator] candlestick engine failed:", err);
+    return undefined;
+  }
 }

@@ -51,6 +51,14 @@ function fingerprint(input: DecisionInput): string {
     input.strategySnapshot != null
       ? Math.round(input.strategySnapshot.alignmentScore / 10) * 10
       : "n/a";
+  // Candlestick intelligence shouldn't cache through a regime flip in pattern
+  // bias. Bucket netBias by 20 + dominant category — fine-grained enough
+  // that a real pattern shift busts, coarse enough not to thrash.
+  const cdlBias =
+    input.candlestickIntelligence != null
+      ? Math.round(input.candlestickIntelligence.netBias / 20) * 20
+      : "n/a";
+  const cdlCat = input.candlestickIntelligence?.dominantCategory ?? "n/a";
 
   return [
     input.symbol,
@@ -67,6 +75,8 @@ function fingerprint(input: DecisionInput): string {
       : "n/a",
     snapDir,
     snapAlign,
+    cdlBias,
+    cdlCat,
   ].join("|");
 }
 

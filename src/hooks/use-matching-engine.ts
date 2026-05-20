@@ -81,22 +81,71 @@ export function useMatchingEngine(
 
       const currentPrice = ticker.last;
       let reason: "TAKE_PROFIT" | "STOP_LOSS" | null = null;
+      let exitPrice = currentPrice;
+      let closedAt: number | undefined = undefined;
 
-      if (pos.takeProfit != null) {
-        if (pos.side === "LONG" && currentPrice >= pos.takeProfit) reason = "TAKE_PROFIT";
-        if (pos.side === "SHORT" && currentPrice <= pos.takeProfit) reason = "TAKE_PROFIT";
+      // 1. Backfill check: Did we hit SL/TP while the system was offline?
+      // We scan candles from the open time onwards. We prioritize SL over TP
+      // to be conservative if a single massive candle engulfed both.
+      const state = useMarketStore.getState();
+      const symbolCandles = state.candles[`${pos.symbol}:${state.interval}`];
+      
+      if (symbolCandles) {
+        const openedTime = Math.floor(new Date(pos.openedAt).getTime() / 1000);
+        for (const c of symbolCandles) {
+          if (c.time < openedTime) continue; // Candle happened before trade opened
+          
+          if (pos.stopLoss != null) {
+            if (pos.side === "LONG" && c.low <= pos.stopLoss) {
+              reason = "STOP_LOSS";
+              exitPrice = pos.stopLoss;
+              closedAt = c.time * 1000;
+              break;
+            }
+            if (pos.side === "SHORT" && c.high >= pos.stopLoss) {
+              reason = "STOP_LOSS";
+              exitPrice = pos.stopLoss;
+              closedAt = c.time * 1000;
+              break;
+            }
+          }
+          if (pos.takeProfit != null) {
+            if (pos.side === "LONG" && c.high >= pos.takeProfit) {
+              reason = "TAKE_PROFIT";
+              exitPrice = pos.takeProfit;
+              closedAt = c.time * 1000;
+              break;
+            }
+            if (pos.side === "SHORT" && c.low <= pos.takeProfit) {
+              reason = "TAKE_PROFIT";
+              exitPrice = pos.takeProfit;
+              closedAt = c.time * 1000;
+              break;
+            }
+          }
+        }
       }
-      if (!reason && pos.stopLoss != null) {
-        if (pos.side === "LONG" && currentPrice <= pos.stopLoss) reason = "STOP_LOSS";
-        if (pos.side === "SHORT" && currentPrice >= pos.stopLoss) reason = "STOP_LOSS";
+
+      // 2. Live Check: If history didn't trigger it, check the current live price
+      if (!reason) {
+        if (pos.stopLoss != null) {
+          if (pos.side === "LONG" && currentPrice <= pos.stopLoss) reason = "STOP_LOSS";
+          if (pos.side === "SHORT" && currentPrice >= pos.stopLoss) reason = "STOP_LOSS";
+          if (reason) exitPrice = pos.stopLoss;
+        }
+        if (!reason && pos.takeProfit != null) {
+          if (pos.side === "LONG" && currentPrice >= pos.takeProfit) reason = "TAKE_PROFIT";
+          if (pos.side === "SHORT" && currentPrice <= pos.takeProfit) reason = "TAKE_PROFIT";
+          if (reason) exitPrice = pos.takeProfit;
+        }
       }
 
       if (reason) {
         processingRef.current.add(key);
         console.info(
-          `[matching-engine] ${reason} hit on ${pos.symbol} ${pos.side} @ ${currentPrice} (pos ${pos.id})`,
+          `[matching-engine] ${reason} hit on ${pos.symbol} ${pos.side} @ ${exitPrice} (pos ${pos.id})`,
         );
-        closePaperPosition(pos.id, currentPrice, { reason })
+        closePaperPosition(pos.id, exitPrice, { reason, closedAt })
           .catch((err) => {
             processingRef.current.delete(key);
             console.error(

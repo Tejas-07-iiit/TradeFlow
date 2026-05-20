@@ -5,20 +5,19 @@ import type { Thresholds } from "./types";
  * overrides loosen or tighten individual fields in `resolveThresholds()`.
  *
  * Why these numbers:
- *   - minExpectedProfitPercent 2  — fees + slippage + frustration tax. Trades
- *     targeting <2% rarely pay for themselves on retail-grade infra.
- *   - minRiskRewardRatio 1.8      — even a 50% win-rate strategy is unprofitable
- *     below ~1.5 RR after costs. 1.8 leaves headroom.
- *   - preferredRiskRewardRatio 2.5 — used by the scorer (not the rejector).
+ *   - minExpectedProfitPercent 0   — Removed. The AI is free to take any +EV trade regardless of target size.
+ *   - minRiskRewardRatio 1.0       — Scalping strategies often target 1:1 risk-reward profiles.
+ *     1.0 allows parity trades to clear validation.
+ *   - preferredRiskRewardRatio 2.0 — used by the scorer (not the rejector).
  *   - minConfidence 72            — LLM confidence is noisy under 70; 72 is the
  *     empirical inflection where the win-rate distribution stops being flat.
  *   - maxVolatilityThreshold 8    — ATR% > 8 in crypto is "running spot" — risk
  *     ratios become unstable and stops trigger on noise.
  */
 export const DEFAULT_THRESHOLDS: Thresholds = {
-  minExpectedProfitPercent: 2,
-  minRiskRewardRatio: 1.8,
-  preferredRiskRewardRatio: 2.5,
+  minExpectedProfitPercent: 0,
+  minRiskRewardRatio: 1.0,
+  preferredRiskRewardRatio: 2.0,
   minConfidence: 72,
   maxRiskPerTradePercent: 1,
   maxVolatilityThreshold: 8,
@@ -36,27 +35,25 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
  */
 export const REGIME_OVERRIDES: Record<string, Partial<Thresholds>> = {
   Trending: {
-    minRiskRewardRatio: 1.5,
+    minRiskRewardRatio: 1.0,
     minConfidence: 68,
   },
   Sideways: {
-    minRiskRewardRatio: 2.0,
+    minRiskRewardRatio: 1.2,
     minConfidence: 72,
   },
   Compression: {
-    minRiskRewardRatio: 2.0,
+    minRiskRewardRatio: 1.2,
     minConfidence: 74,
   },
   Choppy: {
-    minRiskRewardRatio: 2.5,
+    minRiskRewardRatio: 1.5,
     minConfidence: 78,
-    minExpectedProfitPercent: 2.5,
   },
   "High Volatility": {
-    minRiskRewardRatio: 2.5,
+    minRiskRewardRatio: 1.5,
     minConfidence: 80,
     maxVolatilityThreshold: 6,
-    minExpectedProfitPercent: 3,
   },
 };
 

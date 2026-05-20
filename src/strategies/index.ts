@@ -1,6 +1,7 @@
 import { registerStrategy } from "@/strategy-core/registry";
 
 import { DonchianBreakout } from "./breakout/donchian-breakout";
+import { CandlestickIntelligence } from "./candlestick/pattern-intelligence";
 import { SupportResistanceSweep } from "./market-structure/support-resistance";
 import { BollingerReversion } from "./mean-reversion/bollinger-reversion";
 import { ShortTermReversal } from "./mean-reversion/short-term-reversal";
@@ -36,6 +37,7 @@ const BUILT_IN = [
   VolatilityRegime,
   NewsFearGreed,
   SupportResistanceSweep,
+  CandlestickIntelligence,
 ];
 
 let bootstrapped = false;

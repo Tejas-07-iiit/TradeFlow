@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ArrowDown, ArrowUp, CircleDot, Clock4 } from "lucide-react";
+import { ArrowDown, ArrowUp, CircleDot, Clock4, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,10 @@ import { useAiDecisionStore } from "@/store/ai-decision-store";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
 import { decisionSide } from "@/services/ai/schemas";
+import {
+  useCandlestickChartMarkers,
+  useCandlestickPatterns,
+} from "@/hooks/use-candlestick-patterns";
 import type { Timeframe } from "@/types/market";
 import { cn, formatPct, formatPrice } from "@/lib/utils";
 
@@ -37,6 +41,10 @@ export function ChartPanel() {
   const orders = usePortfolioStore((s) => s.orders);
   const positions = usePortfolioStore((s) => s.positions);
   const llmDecision = useAiDecisionStore((s) => s.bySymbol[symbol]);
+
+  // 61-pattern TA-Lib candlestick intelligence — live, throttled per bar.
+  const candlestickIntel = useCandlestickPatterns(symbol, interval, history);
+  const candlestickMarkers = useCandlestickChartMarkers(candlestickIntel);
 
   const priceLines = useMemo<ChartPriceLine[]>(() => {
     const lines: ChartPriceLine[] = [];
@@ -161,8 +169,13 @@ export function ChartPanel() {
       });
     });
 
+    // Append candlestick pattern markers — these come from the local TA-Lib
+    // engine and are independent of order/trade markers. Cap is enforced by
+    // the hook (top 6 by confidence).
+    for (const m of candlestickMarkers) list.push(m);
+
     return list.sort((a, b) => a.time - b.time);
-  }, [orders, tradeHistory, symbol]);
+  }, [orders, tradeHistory, symbol, candlestickMarkers]);
 
   const isUp = (ticker?.changePct ?? 0) >= 0;
   const lastPrice = liveCandle?.close ?? ticker?.last ?? null;
@@ -252,6 +265,24 @@ export function ChartPanel() {
         </div>
 
         <div className="flex items-center gap-3">
+          {candlestickIntel && candlestickIntel.detections.length > 0 && (
+            <Badge
+              variant={
+                candlestickIntel.netBias > 15
+                  ? "bull"
+                  : candlestickIntel.netBias < -15
+                    ? "bear"
+                    : "muted"
+              }
+              className="text-[10px] gap-1"
+              title={candlestickIntel.narrative}
+            >
+              <Sparkles className="size-3" />
+              {candlestickIntel.detections.length} patterns ·{" "}
+              {candlestickIntel.netBias > 0 ? "+" : ""}
+              {candlestickIntel.netBias}
+            </Badge>
+          )}
           <Tabs
             value={interval}
             onValueChange={(v) => setInterval(v as Timeframe)}

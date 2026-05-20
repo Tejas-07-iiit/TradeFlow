@@ -18,7 +18,8 @@ import type { StrategySnapshot } from "./types";
 export async function runStrategyPipeline(
   input: EvaluatorInput,
 ): Promise<StrategySnapshot> {
-  const { outputs, skipped, regime, indicators } = evaluateAllStrategies(input);
+  const { outputs, skipped, regime, indicators, candlestickIntel } =
+    evaluateAllStrategies(input);
   const ranked = rankOutputs(outputs, regime);
   const price = input.candles.at(-1)?.close ?? 0;
 
@@ -43,7 +44,7 @@ export async function runStrategyPipeline(
     console.error("[strategy-core] principle enrichment failed:", err);
   }
 
-  return { ...prelim, relatedPrinciples };
+  return { ...prelim, relatedPrinciples, candlestickIntel };
 }
 
 export type { EvaluatorInput } from "./evaluator";

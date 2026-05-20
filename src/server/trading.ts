@@ -249,13 +249,13 @@ export async function fillPaperOrder(orderId: string, fillPrice: number) {
 export async function closePaperPosition(
   positionId: string,
   exitPrice: number,
-  options: { quantity?: number; reason?: CloseReason } = {},
+  options: { quantity?: number; reason?: CloseReason; closedAt?: number } = {},
 ) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
   const userId = session.user.id;
   const reason: CloseReason = options.reason ?? "MANUAL";
-  const nowMs = Date.now();
+  const nowMs = options.closedAt ?? Date.now();
 
   return prisma.$transaction(async (tx) => {
     // Read inside the transaction so we see the latest committed quantity.

@@ -141,6 +141,63 @@ export const StrategySignalEntrySchema = z.object({
 });
 export type StrategySignalEntry = z.infer<typeof StrategySignalEntrySchema>;
 
+/**
+ * Structured candlestick intelligence projection.
+ *
+ * The Claude/Groq coordinator reads this block alongside `strategySnapshot`.
+ * Patterns are *context* — the schema deliberately surfaces direction,
+ * category, confidence, and key confirmation flags so the LLM can reason
+ * about WHY a pattern fired (trend agree, HTF aligned, volume confirm) and
+ * weight it accordingly. The LLM must NOT trade on patterns alone; the
+ * coordinator prompt enforces that rule.
+ */
+export const CandlestickDetectionSchema = z.object({
+  patternId: z.string().max(40),
+  patternName: z.string().max(80),
+  category: z.enum([
+    "Bullish Reversal",
+    "Bearish Reversal",
+    "Continuation",
+    "Indecision",
+    "Momentum",
+    "Exhaustion",
+    "Breakout Confirmation",
+  ]),
+  direction: z.enum(["bullish", "bearish", "neutral"]),
+  timeframe: z.string().max(8),
+  confidenceScore: z.number().min(0).max(100),
+  patternStrength: z.number().min(0).max(100),
+  trendAlignment: z.enum(["with", "against", "neutral"]),
+  volumeConfirmation: z.enum(["confirmed", "weak", "absent"]),
+  higherTimeframeAlignment: z.boolean(),
+  marketRegimeCompatibility: z.enum(["strong", "moderate", "weak"]),
+  reasoning: z.string().min(3).max(280),
+});
+export type CandlestickDetectionInput = z.infer<typeof CandlestickDetectionSchema>;
+
+export const CandlestickIntelligenceSchema = z.object({
+  primaryTimeframe: z.string().max(8),
+  detections: z.array(CandlestickDetectionSchema).max(8),
+  bullishCount: z.number().int().nonnegative(),
+  bearishCount: z.number().int().nonnegative(),
+  neutralCount: z.number().int().nonnegative(),
+  netBias: z.number().min(-100).max(100),
+  topConfidence: z.number().min(0).max(100),
+  dominantCategory: z
+    .enum([
+      "Bullish Reversal",
+      "Bearish Reversal",
+      "Continuation",
+      "Indecision",
+      "Momentum",
+      "Exhaustion",
+      "Breakout Confirmation",
+    ])
+    .nullable(),
+  narrative: z.string().min(3).max(400),
+});
+export type CandlestickIntelligenceInput = z.infer<typeof CandlestickIntelligenceSchema>;
+
 export const StrategySnapshotInputSchema = z.object({
   regime: z.string(),
   netDirection: z.number().min(-100).max(100),
@@ -200,6 +257,7 @@ export const DecisionInputSchema = z.object({
     .optional(),
   sentiment: SentimentInputSchema.optional(),
   strategySnapshot: StrategySnapshotInputSchema.optional(),
+  candlestickIntelligence: CandlestickIntelligenceSchema.optional(),
   portfolio: z
     .object({
       accountBalance: z.number().nonnegative(),

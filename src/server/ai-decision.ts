@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { getMarketDecisionFor } from "@/services/ai/reasoning/market-decision";
 import {
+  type CandlestickIntelligenceInput,
   DecisionInputSchema,
   type DecisionInput,
   type MarketDecision,
@@ -11,6 +12,7 @@ import {
   TradeDecisionSchema,
   type StrategySnapshotInput,
 } from "@/services/ai/schemas";
+import type { CandlestickIntelligence } from "@/lib/candlestick";
 import { runStrategyPipeline } from "@/strategy-core";
 import type { StrategySnapshot } from "@/strategy-core/types";
 
@@ -137,6 +139,13 @@ export async function getStrategyDecision(
     htfTrend,
     sentiment,
     strategySnapshot: projectSnapshotForPrompt(snapshot),
+    // Only ship candlestick intel when at least one detection clears the
+    // strong-signal floor. Empty / indecision-only intel on choppy intraday
+    // bars was distracting the small 8B coordinator into HOLD/AVOID; the
+    // optional field stays absent unless it can genuinely help the decision.
+    candlestickIntelligence: shouldShipCandlestick(snapshot.candlestickIntel)
+      ? projectCandlestickForPrompt(snapshot.candlestickIntel!)
+      : undefined,
     portfolio,
   };
 
@@ -157,6 +166,54 @@ export async function getStrategyDecision(
     key: llmResult.key,
     decision: llmResult.decision,
     strategySnapshot: decisionInput.strategySnapshot,
+  };
+}
+
+/**
+ * Strong-signal gate. Patterns are only worth the LLM's attention when at
+ * least one detection scored >= 65 AND the dominant category is not pure
+ * indecision. Otherwise the prompt's "patterns are context" framing was
+ * making the coordinator over-rotate to HOLD on noisy intraday bars.
+ */
+function shouldShipCandlestick(
+  intel: CandlestickIntelligence | undefined,
+): intel is CandlestickIntelligence {
+  if (!intel) return false;
+  if (intel.detections.length === 0) return false;
+  if (intel.topConfidence < 65) return false;
+  if (intel.dominantCategory === "Indecision") return false;
+  return true;
+}
+
+function projectCandlestickForPrompt(
+  intel: CandlestickIntelligence,
+): CandlestickIntelligenceInput {
+  return {
+    primaryTimeframe: intel.primaryTimeframe,
+    detections: intel.detections
+      .filter((d) => d.confidenceScore >= 60)
+      .slice(0, 4)
+      .map((d) => ({
+      patternId: d.patternId,
+      patternName: d.patternName,
+      category: d.category,
+      direction: d.direction,
+      timeframe: d.timeframe,
+      confidenceScore: Math.round(d.confidenceScore),
+      patternStrength: Math.round(d.patternStrength),
+      trendAlignment: d.trendAlignment,
+      volumeConfirmation: d.volumeConfirmation,
+      higherTimeframeAlignment: d.higherTimeframeAlignment,
+      marketRegimeCompatibility: d.marketRegimeCompatibility,
+      reasoning: d.reasoning,
+    })),
+    bullishCount: intel.bullishCount,
+    bearishCount: intel.bearishCount,
+    neutralCount: intel.neutralCount,
+    netBias: Math.round(intel.netBias),
+    topConfidence: Math.round(intel.topConfidence),
+    dominantCategory: intel.dominantCategory,
+    narrative: intel.narrative,
   };
 }
 
