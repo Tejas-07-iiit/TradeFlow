@@ -1,4 +1,5 @@
 import { getLlmProviderChain, type LlmTier } from "../providers";
+import type { LlmProvider } from "../providers";
 import { buildMarketDecisionPrompt } from "../prompts/market-decision";
 import {
   MarketDecisionSchema,
@@ -6,6 +7,18 @@ import {
   type MarketDecision,
 } from "../schemas";
 import { localFallbackDecision } from "./local-fallback";
+
+/**
+ * Compact provider label for logs. Renders `groq#2/llama-3.3-70b-versatile`
+ * when the provider exposes an `accountId`, otherwise the legacy
+ * `groq/llama-3.3-70b-versatile` form. Makes multi-account Groq chains
+ * readable without breaking single-account log greps.
+ */
+function formatProviderLabel(p: LlmProvider): string {
+  return p.accountId != null
+    ? `${p.name}#${p.accountId}/${p.model}`
+    : `${p.name}/${p.model}`;
+}
 
 /**
  * Local prefilter result. Built from the strategy snapshot the server
@@ -250,7 +263,7 @@ export async function getMarketDecisionFor(
     return null;
   }
   console.info(
-    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} chain=${chain.map((p) => `${p.name}/${p.model}`).join(" → ")}`,
+    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} chain=${chain.map((p) => `${formatProviderLabel(p)}`).join(" → ")}`,
   );
 
   let lastErr: unknown = null;
@@ -282,7 +295,7 @@ export async function getMarketDecisionFor(
       writeCache(key, entry);
       if (i > 0) {
         console.warn(
-          `[ai/market-decision] served via fallback #${i}: ${provider.name}/${provider.model}`,
+          `[ai/market-decision] served via fallback #${i}: ${formatProviderLabel(provider)}`,
         );
       }
       return entry;
@@ -291,7 +304,7 @@ export async function getMarketDecisionFor(
       const more = i < chain.length - 1;
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(
-        `[ai/market-decision] ${provider.name}/${provider.model} failed${more ? " — trying next fallback" : ""}: ${msg}`,
+        `[ai/market-decision] ${formatProviderLabel(provider)} failed${more ? " — trying next fallback" : ""}: ${msg}`,
       );
     }
   }

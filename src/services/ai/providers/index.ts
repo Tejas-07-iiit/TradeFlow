@@ -81,32 +81,60 @@ function openRouterFallbackModels(): string[] {
 }
 
 /**
- * Round-robin API key picker. Set `GROQ_API_KEY_2` (and `_3`, etc.) in env
- * and we'll rotate between them, doubling effective rate limits per
- * separate Groq account. Single-key setups continue to work unchanged.
+ * Enumerate every Groq API key in env, in priority order, tagged with a
+ * stable 1-based id that matches the env var suffix:
  *
- * The counter is module-scoped and process-local — fine for paper trading,
- * not durable across restarts (acceptable for round-robin).
+ *   GROQ_API_KEY     → accountId 1
+ *   GROQ_API_KEY_2   → accountId 2
+ *   GROQ_API_KEY_3   → accountId 3   (etc., up to 5)
+ *
+ * The id is what the token-budget tracker and cooldown registry key on,
+ * so each Groq account maintains its own TPM bucket. Adding a second key
+ * effectively doubles the system's Groq throughput because key #1
+ * exhausting its 12k/min cap no longer blocks key #2 from serving the
+ * same model.
+ *
+ * Returns an empty list when no keys are configured — callers building a
+ * provider chain skip Groq entirely in that case.
  */
-let keyCursor = 0;
-function pickApiKey(): string {
-  const keys = collectApiKeys();
-  if (keys.length === 0) return "";
-  const idx = keyCursor % keys.length;
-  keyCursor = (keyCursor + 1) % keys.length;
-  return keys[idx];
+export interface GroqAccount {
+  /** 1-based id matching the env var suffix. */
+  id: number;
+  /** Bearer token sent to Groq. */
+  key: string;
 }
 
-function collectApiKeys(): string[] {
-  const keys: string[] = [];
+function collectGroqAccounts(): GroqAccount[] {
+  const accounts: GroqAccount[] = [];
   const primary = process.env.GROQ_API_KEY?.trim();
-  if (primary) keys.push(primary);
+  if (primary) accounts.push({ id: 1, key: primary });
   // Allow up to GROQ_API_KEY_5 — adjust if you ever need more.
   for (let i = 2; i <= 5; i++) {
     const k = process.env[`GROQ_API_KEY_${i}`]?.trim();
-    if (k) keys.push(k);
+    if (k) accounts.push({ id: i, key: k });
   }
-  return keys;
+  return accounts;
+}
+
+/**
+ * Cold-start log: report how many Groq keys this process saw, so misconfigs
+ * are obvious on boot rather than after the first rate limit. Logged once
+ * per process via a side-effect-on-import sentinel.
+ */
+let _bootLogged = false;
+function logBootOnce(): void {
+  if (_bootLogged) return;
+  _bootLogged = true;
+  const accounts = collectGroqAccounts();
+  if (accounts.length === 0) {
+    console.warn(
+      "[LLM/boot] no Groq API keys configured (GROQ_API_KEY unset) — Groq disabled in chain",
+    );
+  } else {
+    console.info(
+      `[LLM/boot] loaded ${accounts.length} Groq account(s): ${accounts.map((a) => `#${a.id}`).join(", ")}`,
+    );
+  }
 }
 
 /**
@@ -133,13 +161,17 @@ export interface ProviderOptions {
 
 /**
  * Resolve an LLM provider for the given purpose. The returned instance is
- * lightweight — it's safe (and cheap) to call this per request so each
- * call site picks up fresh env / API-key rotation state.
+ * lightweight — it's safe (and cheap) to call this per request.
+ *
+ * For Groq with multiple accounts configured, this picks the first one;
+ * `getLlmProviderChain` is where multi-account round-robin actually
+ * matters because the chain tries each account in turn.
  *
  * Throws on missing credentials or missing model env so we fail fast at
  * the boundary.
  */
 export function getLlmProvider(opts: ProviderOptions = {}): LlmProvider {
+  logBootOnce();
   const purpose: LlmPurpose = opts.purpose ?? "default";
   const provider = providerForPurpose(purpose);
   const model = modelForPurpose(purpose, provider);
@@ -151,18 +183,38 @@ export function getLlmProvider(opts: ProviderOptions = {}): LlmProvider {
       provider,
     );
   }
+  if (provider === "groq") {
+    const first = collectGroqAccounts()[0];
+    if (!first) {
+      throw new LlmProviderError(
+        "GROQ_API_KEY is not set",
+        undefined,
+        "groq",
+      );
+    }
+    return new GroqProvider({ apiKey: first.key, model, accountId: first.id });
+  }
   return buildProvider(provider, model);
 }
 
+/**
+ * Build a non-Groq provider for the chain. Groq goes through
+ * `buildGroqProvider` so it can carry the explicit accountId.
+ */
 function buildProvider(provider: string, model: string): LlmProvider {
   switch (provider) {
-    case "groq":
-      return new GroqProvider({ apiKey: pickApiKey(), model });
     case "openrouter":
       return new OpenRouterProvider({
         apiKey: process.env.OPENROUTER_API_KEY?.trim() ?? "",
         model,
       });
+    case "groq":
+      // Fallback: caller didn't specify an account. Use the first one.
+      const first = collectGroqAccounts()[0];
+      if (!first) {
+        throw new LlmProviderError("GROQ_API_KEY is not set", undefined, "groq");
+      }
+      return new GroqProvider({ apiKey: first.key, model, accountId: first.id });
     default:
       throw new LlmProviderError(
         `Unknown provider: ${provider}. Supported: groq, openrouter`,
@@ -172,6 +224,14 @@ function buildProvider(provider: string, model: string): LlmProvider {
   }
 }
 
+function buildGroqProvider(model: string, account: GroqAccount): LlmProvider {
+  return new GroqProvider({
+    apiKey: account.key,
+    model,
+    accountId: account.id,
+  });
+}
+
 /**
  * Ordered fallback chain for a call site. Callers iterate until one
  * succeeds — designed for the decision call where a Groq TPD exhaustion
@@ -179,29 +239,57 @@ function buildProvider(provider: string, model: string): LlmProvider {
  * for ~30 minutes.
  *
  * Chain composition (best-effort, dedup'd):
- *   1. Configured primary for the purpose.
- *   2. If primary is Groq, the cheap-tier Groq model from `GROQ_MODEL_CHEAP`
- *      (or `GROQ_MODEL`) — separate per-model bucket on the free tier.
+ *   1. Configured primary model for the purpose, tried on *every* Groq
+ *      account in order (key #1 → key #2 → …). Each account has its own
+ *      TPM bucket, so when key #1 reports "12000/12000 tpm exhausted" we
+ *      immediately try key #2 on the same model before stepping down.
+ *   2. If primary is Groq, the cheap-tier Groq model (`GROQ_MODEL_CHEAP`),
+ *      again across every Groq account.
  *   3. OpenRouter on the purpose's configured model.
  *   4. OpenRouter on each model in `OPENROUTER_FALLBACK_MODELS`.
+ *
+ * Dedup is by `(provider:model:accountId)` so the same Groq model on two
+ * different accounts both make it into the chain.
  *
  * Providers that can't be constructed (missing creds or missing model env)
  * are silently omitted — they're only valid links when properly configured.
  */
 export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
+  logBootOnce();
   const purpose: LlmPurpose = opts.purpose ?? "default";
   const primary = providerForPurpose(purpose);
   const chain: LlmProvider[] = [];
   const seen = new Set<string>();
-  const push = (provider: string, model: string | undefined) => {
+
+  const groqAccounts = collectGroqAccounts();
+
+  /** Push one Groq model once per available account. */
+  const pushGroqAcrossAccounts = (model: string | undefined) => {
     if (!model) return;
-    const key = `${provider}:${model}`;
+    for (const acct of groqAccounts) {
+      const key = `groq:${model}:${acct.id}`;
+      if (seen.has(key)) continue;
+      try {
+        chain.push(buildGroqProvider(model, acct));
+        seen.add(key);
+      } catch {
+        // Construction error — skip this link silently.
+      }
+    }
+  };
+
+  /** Push a non-Groq link (currently only OpenRouter). */
+  const pushOther = (provider: string, model: string | undefined) => {
+    if (!model) return;
+    // OpenRouter is single-account today, but key by `:0` so the dedup
+    // namespace stays uniform with the Groq entries above.
+    const key = `${provider}:${model}:0`;
     if (seen.has(key)) return;
     try {
       chain.push(buildProvider(provider, model));
       seen.add(key);
     } catch {
-      // Missing creds for this fallback — skip silently.
+      // Missing creds — skip silently.
     }
   };
 
@@ -218,17 +306,17 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
   if (decisionWithTier) {
     const configuredPremium = modelForPurpose(purpose, "groq");
     if (opts.tier === "cheap") {
-      push("groq", cheapModel);
-      push("groq", configuredPremium);
+      pushGroqAcrossAccounts(cheapModel);
+      pushGroqAcrossAccounts(configuredPremium);
     } else {
-      push("groq", configuredPremium);
-      push("groq", cheapModel);
+      pushGroqAcrossAccounts(configuredPremium);
+      pushGroqAcrossAccounts(cheapModel);
     }
+  } else if (primary === "groq") {
+    pushGroqAcrossAccounts(modelForPurpose(purpose, "groq"));
+    pushGroqAcrossAccounts(cheapModel);
   } else {
-    push(primary, modelForPurpose(purpose, primary));
-    if (primary === "groq") {
-      push("groq", cheapModel);
-    }
+    pushOther(primary, modelForPurpose(purpose, primary));
   }
 
   // OpenRouter expansion: try the user-configured model first, then sweep
@@ -238,10 +326,10 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
   // the free pool is upstream-throttled.
   if (process.env.OPENROUTER_API_KEY?.trim()) {
     if (primary !== "openrouter") {
-      push("openrouter", modelForPurpose(purpose, "openrouter"));
+      pushOther("openrouter", modelForPurpose(purpose, "openrouter"));
     }
     for (const model of openRouterFallbackModels()) {
-      push("openrouter", model);
+      pushOther("openrouter", model);
     }
   }
 

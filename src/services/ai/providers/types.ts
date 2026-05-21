@@ -28,6 +28,12 @@ export interface LlmProvider {
   readonly name: string;
   /** Model identifier the adapter will route the request to. */
   readonly model: string;
+  /**
+   * Optional sub-account id (e.g. Groq key #1 vs #2). When present, log
+   * formatters render `${name}#${accountId}/${model}` so multi-account
+   * chains are readable. Single-account providers omit this.
+   */
+  readonly accountId?: number;
 
   /**
    * Send a chat completion that MUST return JSON parseable into `schema`.

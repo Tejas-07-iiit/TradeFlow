@@ -78,6 +78,12 @@ export function AiDecisionSubscriber() {
         (p.status === "OPEN" || p.status === "PARTIALLY_CLOSED"),
     );
 
+    // Skip AI analysis entirely if we already have an open trade on this coin.
+    // It will resume automatically once the trade is closed.
+    if (hasThisSymbol) {
+      return;
+    }
+
     inFlightRef.current[target] = true;
     setLoading(target, true);
     try {

@@ -40,9 +40,16 @@ interface GroqChatResponse {
 export class GroqProvider implements LlmProvider {
   readonly name = "groq";
   readonly model: string;
+  /**
+   * Stable id of the Groq account this instance is bound to (1-based,
+   * matching the env var suffix: `GROQ_API_KEY` → 1, `GROQ_API_KEY_2` → 2,
+   * etc.). Surfaces in logs and keys the TPM/cooldown trackers so the two
+   * accounts don't share one local bucket.
+   */
+  readonly accountId: number;
   private readonly apiKey: string;
 
-  constructor(opts: { apiKey: string; model: string }) {
+  constructor(opts: { apiKey: string; model: string; accountId?: number }) {
     if (!opts.apiKey) {
       throw new LlmProviderError("GROQ_API_KEY is not set", undefined, "groq");
     }
@@ -55,6 +62,11 @@ export class GroqProvider implements LlmProvider {
     }
     this.apiKey = opts.apiKey;
     this.model = opts.model;
+    this.accountId = opts.accountId ?? 1;
+  }
+
+  private get logLabel(): string {
+    return `${this.model}#${this.accountId}`;
   }
 
   async chatJson<TSchema extends ZodTypeAny>(
@@ -73,7 +85,9 @@ export class GroqProvider implements LlmProvider {
     // decision calls reserve 4K of output tokens and exhaust the local
     // budget while Groq sees only ~1.5K actual usage. After the response
     // lands, recordActual replaces the estimate with truth.
-    const budget = budgetFor(this.model);
+    // Per-(account, model) budget so two Groq accounts track independently:
+    // exhausting key #1 no longer blocks key #2 from serving the same model.
+    const budget = budgetFor(this.model, this.accountId);
     const promptTokens = estimatePromptTokens(messages);
     const reservedOutput = Math.min(maxTokens, Math.max(400, Math.ceil(maxTokens * 0.4)));
     const estimatedTotal = promptTokens + reservedOutput;
@@ -110,20 +124,22 @@ export class GroqProvider implements LlmProvider {
             const retryAfter = parseFloat(
               res.headers.get("retry-after") ?? "",
             );
-            // Persist a cooldown for the model so subsequent reservations
-            // fail fast instead of round-tripping a guaranteed-429. Groq
-            // returns retry-after even for the daily (TPD) cap, which the
-            // sliding-60s TPM throttle alone cannot see.
+            // Persist a cooldown for THIS (account, model) so subsequent
+            // reservations fail fast instead of round-tripping a guaranteed-
+            // 429. Groq returns retry-after even for the daily (TPD) cap,
+            // which the sliding-60s TPM throttle alone cannot see. The
+            // cooldown is account-scoped so a 429 on key #1 does not lock
+            // key #2 out of the same model.
             if (Number.isFinite(retryAfter) && retryAfter > 0) {
-              markModelCooldown(this.model, retryAfter);
+              markModelCooldown(this.model, retryAfter, this.accountId);
             }
             const isTpd = /tokens per day|TPD/i.test(text);
             console.warn(
-              `[LLM] groq 429 on ${this.model} — ${isTpd ? "daily quota" : "rate limit"}; cooldown ${Number.isFinite(retryAfter) ? `${retryAfter.toFixed(0)}s` : "unknown"}`,
+              `[LLM] groq 429 on ${this.logLabel} — ${isTpd ? "daily quota" : "rate limit"}; cooldown ${Number.isFinite(retryAfter) ? `${retryAfter.toFixed(0)}s` : "unknown"}`,
             );
             throw new LlmProviderError(
-              `Groq rate limit on ${this.model}`,
-              { status: 429, retryAfterSec: retryAfter, body: text, tpd: isTpd },
+              `Groq rate limit on ${this.logLabel}`,
+              { status: 429, retryAfterSec: retryAfter, body: text, tpd: isTpd, accountId: this.accountId },
               this.name,
             );
           }
@@ -137,11 +153,12 @@ export class GroqProvider implements LlmProvider {
           if (isJsonValidateFailed) {
             const failedGen = extractFailedGeneration(text);
             throw new LlmProviderError(
-              `Groq json_validate_failed on ${this.model}`,
+              `Groq json_validate_failed on ${this.logLabel}`,
               {
                 status: 400,
                 code: "json_validate_failed",
                 model: this.model,
+                accountId: this.accountId,
                 body: text,
                 failedGeneration: failedGen,
               },
@@ -149,11 +166,11 @@ export class GroqProvider implements LlmProvider {
             );
           }
           console.error(
-            `[LLM] groq HTTP ${res.status} on ${this.model} — ${(text || res.statusText).slice(0, 400)}`,
+            `[LLM] groq HTTP ${res.status} on ${this.logLabel} — ${(text || res.statusText).slice(0, 400)}`,
           );
           throw new LlmProviderError(
-            `Groq HTTP ${res.status} on ${this.model}: ${(text || res.statusText).slice(0, 200)}`,
-            { status: res.status, model: this.model, body: text },
+            `Groq HTTP ${res.status} on ${this.logLabel}: ${(text || res.statusText).slice(0, 200)}`,
+            { status: res.status, model: this.model, body: text, accountId: this.accountId },
             this.name,
           );
         }

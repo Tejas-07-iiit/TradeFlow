@@ -101,27 +101,46 @@ const WINDOW_MS = 60_000;
 const MAX_WAIT_MS = 25_000;
 
 /**
- * Per-model cooldown registry. Populated by providers when the API returns
- * a 429 with a `retry-after` header — typically a longer-than-TPM window
- * like Groq's daily (TPD) cap. Every subsequent `reserve()` for that model
- * fails fast until the cooldown elapses, so the executor moves on instead
- * of burning HTTP roundtrips on calls guaranteed to 429.
+ * Per-(account, model) cooldown registry. Populated by providers when the
+ * API returns a 429 with a `retry-after` header — typically a longer-than-
+ * TPM window like Groq's daily (TPD) cap. Every subsequent `reserve()` for
+ * that (account, model) fails fast until the cooldown elapses, so the
+ * executor moves on instead of burning HTTP roundtrips on calls guaranteed
+ * to 429.
+ *
+ * The `accountId` lets us track two Groq accounts independently — when key #1
+ * hits its daily cap, key #2 is still free to serve the same model.
  */
 const cooldownUntilMs = new Map<string, number>();
 
-export function markModelCooldown(model: string, retryAfterSec: number): void {
-  if (!Number.isFinite(retryAfterSec) || retryAfterSec <= 0) return;
-  const until = Date.now() + retryAfterSec * 1000;
-  const prev = cooldownUntilMs.get(model) ?? 0;
-  if (until > prev) cooldownUntilMs.set(model, until);
+function bucketKey(model: string, accountId?: string | number): string {
+  // Single-account setups (accountId omitted) keep the bare model key so the
+  // legacy log format ("on llama-3.3-70b-versatile") is unchanged.
+  return accountId == null ? model : `${accountId}@${model}`;
 }
 
-export function modelCooldownRemainingMs(model: string): number {
-  const until = cooldownUntilMs.get(model);
+export function markModelCooldown(
+  model: string,
+  retryAfterSec: number,
+  accountId?: string | number,
+): void {
+  if (!Number.isFinite(retryAfterSec) || retryAfterSec <= 0) return;
+  const key = bucketKey(model, accountId);
+  const until = Date.now() + retryAfterSec * 1000;
+  const prev = cooldownUntilMs.get(key) ?? 0;
+  if (until > prev) cooldownUntilMs.set(key, until);
+}
+
+export function modelCooldownRemainingMs(
+  model: string,
+  accountId?: string | number,
+): number {
+  const key = bucketKey(model, accountId);
+  const until = cooldownUntilMs.get(key);
   if (!until) return 0;
   const remaining = until - Date.now();
   if (remaining <= 0) {
-    cooldownUntilMs.delete(model);
+    cooldownUntilMs.delete(key);
     return 0;
   }
   return remaining;
@@ -133,7 +152,16 @@ class TokenBudget {
   constructor(
     private readonly model: string,
     private readonly tpmCap: number,
+    /** Optional account id (e.g. Groq key #1 vs #2). Surfaces in logs and
+     *  composes the cooldown key so each account tracks independently. */
+    private readonly accountId?: string | number,
   ) {}
+
+  private get label(): string {
+    return this.accountId == null
+      ? this.model
+      : `${this.model}#${this.accountId}`;
+  }
 
   /**
    * Reserve `tokens` against the budget. Resolves with a handle the
@@ -142,10 +170,10 @@ class TokenBudget {
    * than `MAX_WAIT_MS` — caller treats that as "skip this cycle".
    */
   async reserve(tokens: number): Promise<ReservationHandle> {
-    const cooldownLeft = modelCooldownRemainingMs(this.model);
+    const cooldownLeft = modelCooldownRemainingMs(this.model, this.accountId);
     if (cooldownLeft > 0) {
       throw new BudgetExhaustedError(
-        this.model,
+        this.label,
         this.tpmCap,
         this.tpmCap,
         cooldownLeft,
@@ -166,9 +194,9 @@ class TokenBudget {
         : 500;
       if (waitMs > MAX_WAIT_MS) {
         console.warn(
-          `[LLM] budget exhausted ${this.model} — used=${used}/${this.tpmCap} tpm, would wait ${(waitMs / 1000).toFixed(0)}s. Skipping.`,
+          `[LLM] budget exhausted ${this.label} — used=${used}/${this.tpmCap} tpm, would wait ${(waitMs / 1000).toFixed(0)}s. Skipping.`,
         );
-        throw new BudgetExhaustedError(this.model, used, this.tpmCap, waitMs);
+        throw new BudgetExhaustedError(this.label, used, this.tpmCap, waitMs);
       }
       await new Promise((r) => setTimeout(r, waitMs));
     }
@@ -195,11 +223,25 @@ class TokenBudget {
 
 const budgets = new Map<string, TokenBudget>();
 
-export function budgetFor(model: string): TokenBudget {
-  let b = budgets.get(model);
+/**
+ * Get the TokenBudget for a (model, accountId) pair. Single-account callers
+ * omit `accountId` and get the legacy per-model bucket. Multi-account
+ * setups (e.g. two Groq keys) pass distinct ids so each account tracks its
+ * own TPM independently — exhausting one no longer blocks the other.
+ *
+ * The TPM cap is read per *model* (Groq enforces it that way per account),
+ * so account-A's `llama-3.3-70b-versatile` and account-B's same model both
+ * get 12k TPM individually.
+ */
+export function budgetFor(
+  model: string,
+  accountId?: string | number,
+): TokenBudget {
+  const key = bucketKey(model, accountId);
+  let b = budgets.get(key);
   if (!b) {
-    b = new TokenBudget(model, tpmBudgetFor(model));
-    budgets.set(model, b);
+    b = new TokenBudget(model, tpmBudgetFor(model), accountId);
+    budgets.set(key, b);
   }
   return b;
 }
