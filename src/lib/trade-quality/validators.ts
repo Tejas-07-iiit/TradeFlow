@@ -76,8 +76,8 @@ export const QUALITY_VALIDATORS: Validator[] = [
     id: "min_rr",
     name: "Risk/reward below floor",
     evaluate: (_p, d, t) =>
-      d.riskRewardRatio < t.minRiskRewardRatio
-        ? fail("min_rr", `RR ${d.riskRewardRatio.toFixed(2)} < ${t.minRiskRewardRatio}`, {
+      d.riskRewardRatio <= t.minRiskRewardRatio
+        ? fail("min_rr", `RR ${d.riskRewardRatio.toFixed(2)} <= ${t.minRiskRewardRatio}`, {
             riskRewardRatio: d.riskRewardRatio,
             threshold: t.minRiskRewardRatio,
           })
