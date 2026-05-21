@@ -41,7 +41,7 @@ const FLAG = "on";
 
 const PER_SYMBOL_EXIT_COOLDOWN_MS = 60 * 1000;
 /** Max concurrent positions across the book. */
-const MAX_OPEN_POSITIONS = 3;
+const MAX_OPEN_POSITIONS = 5;
 
 export function AiExecutionEngine() {
   const router = useRouter();

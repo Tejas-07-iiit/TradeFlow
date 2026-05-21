@@ -29,7 +29,7 @@ const AUTO_EXEC_COOLDOWN_MS = 60_000;
 const AUTONOMY_FLAG = "on";
 
 /** Max concurrent positions across the book. Mirrors the LLM engine. */
-const MAX_OPEN_POSITIONS = 3;
+const MAX_OPEN_POSITIONS = 5;
 
 /**
  * Rule-based signal engine. Always produces signals for display/context,
