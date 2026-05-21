@@ -75,9 +75,13 @@ export const QUALITY_VALIDATORS: Validator[] = [
   {
     id: "min_rr",
     name: "Risk/reward below floor",
+    // Strictly-below check: a trade at exactly the floor (e.g. RR 1.00 vs
+    // a 1.0 floor) is *at* the floor, not below it. The previous `<=`
+    // killed legitimately at-floor scalps that the threshold was meant
+    // to allow ("1.0 allows parity trades to clear validation").
     evaluate: (_p, d, t) =>
-      d.riskRewardRatio <= t.minRiskRewardRatio
-        ? fail("min_rr", `RR ${d.riskRewardRatio.toFixed(2)} <= ${t.minRiskRewardRatio}`, {
+      d.riskRewardRatio < t.minRiskRewardRatio
+        ? fail("min_rr", `RR ${d.riskRewardRatio.toFixed(2)} < ${t.minRiskRewardRatio}`, {
             riskRewardRatio: d.riskRewardRatio,
             threshold: t.minRiskRewardRatio,
           })

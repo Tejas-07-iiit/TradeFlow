@@ -136,7 +136,7 @@ export default async function PlatformLayout({
 
   return (
     <TooltipProvider delayDuration={150} skipDelayDuration={250}>
-    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)]">
+    <div className="min-h-screen bg-[var(--color-bg)] text-[var(--fg)]">
       <div className="flex min-h-screen">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col">

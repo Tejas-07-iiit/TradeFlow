@@ -206,11 +206,11 @@ export function ChartPanel() {
 
   return (
     <div className="panel flex flex-col h-full overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 border-b border-[var(--color-border)]">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-4 border-b border-[var(--border)]">
         <div className="flex items-center gap-5">
           <div className="flex items-center gap-2.5">
             <div className="relative">
-              <CircleDot className="size-4 text-[var(--color-accent)]" />
+              <CircleDot className="size-4 text-[var(--accent)]" />
             </div>
             <div>
               <div className="flex items-baseline gap-2">
@@ -219,7 +219,7 @@ export function ChartPanel() {
                 </span>
                 <Badge variant="muted">Binance Spot</Badge>
               </div>
-              <div className="text-[11px] text-[var(--color-fg-subtle)] mt-0.5">
+              <div className="text-[11px] text-[var(--fg-subtle)] mt-0.5">
                 {SYMBOL_NAMES[symbol] || symbol} · USD-margined
               </div>
             </div>
@@ -246,17 +246,17 @@ export function ChartPanel() {
                 <ArrowDown className="size-3" />
               )}
               {ticker ? formatPct(ticker.changePct) : "—"}
-              <span className="text-[var(--color-fg-subtle)] ml-1">24h</span>
+              <span className="text-[var(--fg-subtle)] ml-1">24h</span>
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-5 pl-5 border-l border-[var(--color-border)]">
+          <div className="hidden md:flex items-center gap-5 pl-5 border-l border-[var(--border)]">
             {headerStats.map((s) => (
               <div key={s.label} className="space-y-0.5">
-                <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                   {s.label}
                 </div>
-                <div className="text-mono-tabular text-xs text-[var(--color-fg)]">
+                <div className="text-mono-tabular text-xs text-[var(--fg)]">
                   {s.value}
                 </div>
               </div>

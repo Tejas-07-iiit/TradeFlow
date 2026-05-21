@@ -17,7 +17,7 @@ import { useNewsStore } from "@/store/news-store";
 const FNG_TONE = (value: number): string => {
   if (value <= 24) return "text-[var(--color-bear)]";
   if (value <= 44) return "text-[var(--color-warn)]";
-  if (value <= 55) return "text-[var(--color-fg)]";
+  if (value <= 55) return "text-[var(--fg)]";
   return "text-[var(--color-bull)]";
 };
 
@@ -39,12 +39,12 @@ export function NewsWidget() {
     <Card className="flex flex-col">
       <CardHeader className="shrink-0">
         <CardTitle className="flex items-center gap-2">
-          <Newspaper className="size-4 text-[var(--color-accent)]" />
+          <Newspaper className="size-4 text-[var(--accent)]" />
           Market Pulse
         </CardTitle>
         <Link
           href="/news"
-          className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] hover:underline"
+          className="text-[10px] uppercase tracking-wider text-[var(--accent)] hover:underline"
         >
           View all
         </Link>
@@ -59,7 +59,7 @@ export function NewsWidget() {
             valueClass={
               feed?.pulse.fearGreed
                 ? FNG_TONE(feed.pulse.fearGreed.value)
-                : "text-[var(--color-fg-subtle)]"
+                : "text-[var(--fg-subtle)]"
             }
             icon={Gauge}
           />
@@ -81,12 +81,12 @@ export function NewsWidget() {
 
         {/* Trending tickers */}
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
-            <TrendingUp className="size-3 text-[var(--color-accent)]" />
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
+            <TrendingUp className="size-3 text-[var(--accent)]" />
             Trending
           </div>
           {!feed?.trending.length ? (
-            <p className="text-[11px] text-[var(--color-fg-subtle)]">
+            <p className="text-[11px] text-[var(--fg-subtle)]">
               No watchlist symbols spotted in the latest feed.
             </p>
           ) : (
@@ -98,7 +98,7 @@ export function NewsWidget() {
                   className="text-[10px] h-5 px-1.5 gap-1"
                 >
                   {t.symbol.replace("USDT", "")}
-                  <span className="text-[var(--color-accent)] tabular-nums">
+                  <span className="text-[var(--accent)] tabular-nums">
                     ·{t.mentions}
                   </span>
                 </Badge>
@@ -109,8 +109,8 @@ export function NewsWidget() {
 
         {/* Top chatter */}
         <div className="space-y-1.5">
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
-            <MessageSquare className="size-3 text-[var(--color-accent)]" />
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
+            <MessageSquare className="size-3 text-[var(--accent)]" />
             What people are saying
           </div>
           {!feed ? (
@@ -127,12 +127,12 @@ export function NewsWidget() {
                       href={it.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block px-2 py-1.5 rounded-md hover:bg-white/[0.03] transition-colors"
+                      className="block px-2 py-1.5 rounded-md hover:bg-[var(--bg-elevated)] transition-colors"
                     >
-                      <p className="text-[11.5px] leading-snug text-[var(--color-fg)] line-clamp-2">
+                      <p className="text-[11.5px] leading-snug text-[var(--fg)] line-clamp-2">
                         {it.title}
                       </p>
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[var(--color-fg-subtle)]">
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[var(--fg-subtle)]">
                         <span className="text-[var(--color-bull)] tabular-nums">
                           ▲ {formatScore(it.score)}
                         </span>
@@ -170,15 +170,15 @@ function PulseCell({
   icon: React.ElementType;
 }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-2">
-      <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-2">
+      <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-[var(--fg-subtle)]">
         <Icon className="size-2.5" />
         {label}
       </div>
       <div className={cn("mt-0.5 text-base font-semibold leading-none tabular-nums", valueClass)}>
         {value}
       </div>
-      <div className="mt-0.5 text-[9px] text-[var(--color-fg-subtle)] capitalize truncate">
+      <div className="mt-0.5 text-[9px] text-[var(--fg-subtle)] capitalize truncate">
         {sub}
       </div>
     </div>
@@ -190,8 +190,8 @@ function SkeletonRows() {
     <ul className="space-y-1">
       {[0, 1, 2].map((i) => (
         <li key={i} className="px-2 py-1.5">
-          <div className="h-3 w-5/6 rounded bg-white/[0.06] animate-pulse" />
-          <div className="h-2.5 w-1/2 rounded bg-white/[0.04] animate-pulse mt-1.5" />
+          <div className="h-3 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
+          <div className="h-2.5 w-1/2 rounded bg-[var(--bg-elevated)] animate-pulse mt-1.5" />
         </li>
       ))}
     </ul>
@@ -203,12 +203,12 @@ function capitalize(s: string) {
 }
 
 function moodColor(mood?: string): string {
-  if (!mood) return "text-[var(--color-fg-subtle)]";
+  if (!mood) return "text-[var(--fg-subtle)]";
   if (mood.includes("very bullish")) return "text-[var(--color-bull)]";
   if (mood.includes("bullish")) return "text-[var(--color-bull)]";
   if (mood.includes("very bearish")) return "text-[var(--color-bear)]";
   if (mood.includes("bearish")) return "text-[var(--color-bear)]";
-  return "text-[var(--color-fg)]";
+  return "text-[var(--fg)]";
 }
 
 function formatScore(n: number): string {

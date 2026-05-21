@@ -127,14 +127,14 @@ export function LivePaperTradingPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BrainCog className="size-4 text-[var(--color-accent)]" />
+                <BrainCog className="size-4 text-[var(--accent)]" />
                 Active LLM Decision
               </CardTitle>
               <Badge variant="muted">{symbol}</Badge>
             </CardHeader>
             <CardContent className="space-y-3">
               {!activeLlmDecision ? (
-                <p className="text-xs text-[var(--color-fg-subtle)]">
+                <p className="text-xs text-[var(--fg-subtle)]">
                   Awaiting first decision for this symbol.
                 </p>
               ) : (
@@ -157,7 +157,7 @@ export function LivePaperTradingPage() {
                       <Badge variant="muted">{activeLlmDecision.confidence}%</Badge>
                     </div>
                   </div>
-                  <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">
+                  <p className="text-[12px] leading-relaxed text-[var(--fg)]">
                     {activeLlmDecision.marketSummary}
                   </p>
                   <div className="grid grid-cols-3 gap-2 pt-1 text-[11px]">
@@ -180,7 +180,7 @@ export function LivePaperTradingPage() {
                     {activeLlmDecision.reasoning.slice(0, 3).map((r) => (
                       <li
                         key={r}
-                        className="text-[11px] text-[var(--color-fg-muted)] leading-snug before:content-['•'] before:mr-1.5 before:text-[var(--color-accent)]"
+                        className="text-[11px] text-[var(--fg-muted)] leading-snug before:content-['•'] before:mr-1.5 before:text-[var(--accent)]"
                       >
                         {r}
                       </li>
@@ -194,10 +194,10 @@ export function LivePaperTradingPage() {
           <Card className="flex-1 min-h-0 flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Zap className="size-4 text-[var(--color-accent)]" />
+                <Zap className="size-4 text-[var(--accent)]" />
                 AI Execution Log
               </CardTitle>
-              <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 text-[10px] text-[var(--fg-subtle)] uppercase tracking-wider">
                 <Activity className="size-3 text-[var(--color-bull)]" />
                 {executionLog.length} events
               </div>
@@ -222,8 +222,8 @@ export function LivePaperTradingPage() {
                       className={cn(
                         "rounded-md border px-2.5 py-2 space-y-1",
                         e.outcome === "executed"
-                          ? "border-[var(--color-accent)]/30 bg-[var(--color-accent-soft)]"
-                          : "border-[var(--color-border)] bg-white/[0.01]",
+                          ? "border-[var(--accent)]/30 bg-[var(--accent-soft)]"
+                          : "border-[var(--border)] bg-[var(--bg-elevated)]",
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -234,18 +234,18 @@ export function LivePaperTradingPage() {
                           >
                             {e.decision}
                           </Badge>
-                          <span className="text-xs font-medium text-[var(--color-fg)]">
+                          <span className="text-xs font-medium text-[var(--fg)]">
                             {e.symbol.replace("USDT", "")}
                           </span>
                           <Badge variant="muted" className="text-[9px] h-4 px-1">
                             {e.setupQuality} · {e.confidence}%
                           </Badge>
                         </div>
-                        <span className="text-[10px] text-[var(--color-fg-subtle)] shrink-0">
+                        <span className="text-[10px] text-[var(--fg-subtle)] shrink-0">
                           {formatDistanceToNowStrict(e.at, { addSuffix: true })}
                         </span>
                       </div>
-                      <p className="text-[11px] text-[var(--color-fg-muted)] leading-snug">
+                      <p className="text-[11px] text-[var(--fg-muted)] leading-snug">
                         {e.outcome === "rejected"
                           ? `Rejected — ${e.rejectionReason ?? "no reason"}`
                           : e.headline || "Executed"}
@@ -282,11 +282,11 @@ export function LivePaperTradingPage() {
                   }) => (
                     <div
                       key={position.id}
-                      className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3 space-y-2"
+                      className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3 space-y-2"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-[var(--color-fg)]">
+                          <span className="text-sm font-semibold text-[var(--fg)]">
                             {position.symbol}
                           </span>
                           <Badge
@@ -316,7 +316,7 @@ export function LivePaperTradingPage() {
                           )}
                         >
                           {formatCurrency(pnl)}
-                          <span className="block text-[10px] text-[var(--color-fg-subtle)]">
+                          <span className="block text-[10px] text-[var(--fg-subtle)]">
                             {unrealizedPnlPct >= 0 ? "+" : ""}
                             {unrealizedPnlPct.toFixed(2)}% ROE
                           </span>
@@ -324,15 +324,15 @@ export function LivePaperTradingPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8 text-[11px]">
                         <div className="space-y-0.5">
-                          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                          <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                             Qty / Notional
                           </div>
-                          <div className="mt-1 text-mono-tabular text-xs text-[var(--color-fg)]">
+                          <div className="mt-1 text-mono-tabular text-xs text-[var(--fg)]">
                             {position.quantity}
                             {position.status === "PARTIALLY_CLOSED"
                               ? ` / ${position.initialQuantity}`
                               : ""}
-                            <span className="text-[10px] text-[var(--color-fg-subtle)] block">
+                            <span className="text-[10px] text-[var(--fg-subtle)] block">
                               {formatCurrency(position.quantity * position.entryPrice)}
                             </span>
                           </div>
@@ -364,39 +364,39 @@ export function LivePaperTradingPage() {
                         const sizing = parseSizingMeta(position.decisionMeta);
                         if (!sizing) return null;
                         return (
-                          <div className="rounded border border-[var(--color-border)] bg-white/[0.015] px-2.5 py-1.5 text-[10px] leading-tight text-[var(--color-fg-subtle)]">
+                          <div className="rounded border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-[10px] leading-tight text-[var(--fg-subtle)]">
                             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono tabular-nums">
                               <span>
-                                <span className="text-[var(--color-fg-subtle)]">EQUITY </span>
-                                <span className="text-[var(--color-fg)]">
+                                <span className="text-[var(--fg-subtle)]">EQUITY </span>
+                                <span className="text-[var(--fg)]">
                                   {sizing.equityPercent.toFixed(1)}%
                                 </span>
                               </span>
                               <span>
-                                <span className="text-[var(--color-fg-subtle)]">RISK </span>
+                                <span className="text-[var(--fg-subtle)]">RISK </span>
                                 <span className="text-[var(--color-bear)]">
                                   {formatCurrency(sizing.riskAmount)}
                                 </span>
-                                <span className="text-[var(--color-fg-subtle)]">
+                                <span className="text-[var(--fg-subtle)]">
                                   {" "}
                                   ({sizing.riskPercent.toFixed(2)}%)
                                 </span>
                               </span>
                               <span>
-                                <span className="text-[var(--color-fg-subtle)]">TARGET </span>
+                                <span className="text-[var(--fg-subtle)]">TARGET </span>
                                 <span className="text-[var(--color-bull)]">
                                   +{formatCurrency(sizing.expectedProfit)}
                                 </span>
                               </span>
                               <span>
-                                <span className="text-[var(--color-fg-subtle)]">MAX LOSS </span>
+                                <span className="text-[var(--fg-subtle)]">MAX LOSS </span>
                                 <span className="text-[var(--color-bear)]">
                                   -{formatCurrency(sizing.expectedLoss)}
                                 </span>
                               </span>
                             </div>
                             {sizing.rationale ? (
-                              <div className="mt-1 text-[var(--color-fg)]">
+                              <div className="mt-1 text-[var(--fg)]">
                                 {sizing.rationale}
                               </div>
                             ) : null}
@@ -425,7 +425,7 @@ export function LivePaperTradingPage() {
                 pendingOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between rounded-md bg-white/[0.025] px-3 py-2.5"
+                    className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5"
                   >
                     <div className="flex gap-3 items-center">
                       <Badge
@@ -435,10 +435,10 @@ export function LivePaperTradingPage() {
                         {order.side}
                       </Badge>
                       <div>
-                        <div className="text-sm font-medium text-[var(--color-fg)]">
+                        <div className="text-sm font-medium text-[var(--fg)]">
                           {order.symbol}
                         </div>
-                        <div className="text-xs text-[var(--color-fg-subtle)]">
+                        <div className="text-xs text-[var(--fg-subtle)]">
                           {order.orderType} · {order.quantity} @{" "}
                           {order.price ? formatPrice(order.price) : "MARKET"}
                         </div>
@@ -466,14 +466,14 @@ export function LivePaperTradingPage() {
             </CardHeader>
             <CardContent className="space-y-1.5">
               {tradeHistory.length === 0 ? (
-                <div className="py-4 text-center text-xs text-[var(--color-fg-subtle)]">
+                <div className="py-4 text-center text-xs text-[var(--fg-subtle)]">
                   No closed trades yet
                 </div>
               ) : (
                 tradeHistory.slice(0, 25).map((trade) => (
                   <div
                     key={trade.id}
-                    className="flex items-center justify-between rounded-md bg-white/[0.01] px-3 py-2 border border-[var(--color-border)]"
+                    className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2 border border-[var(--border)]"
                   >
                     <div className="flex gap-3 items-center min-w-0">
                       <div
@@ -487,19 +487,19 @@ export function LivePaperTradingPage() {
                         {trade.side}
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-medium text-[var(--color-fg)]">
+                        <div className="text-xs font-medium text-[var(--fg)]">
                           {trade.symbol}
                         </div>
-                        <div className="text-[10px] text-[var(--color-fg-subtle)] flex items-center gap-2">
+                        <div className="text-[10px] text-[var(--fg-subtle)] flex items-center gap-2">
                           <span>
                             {trade.quantity} @ {formatPrice(trade.entryPrice)} →{" "}
                             {formatPrice(trade.exitPrice)}
                           </span>
-                          <span className="text-[var(--color-fg-subtle)]/60">·</span>
+                          <span className="text-[var(--fg-subtle)]/60">·</span>
                           <span>{formatDuration(trade.durationMs)}</span>
                           {trade.riskReward != null && (
                             <>
-                              <span className="text-[var(--color-fg-subtle)]/60">·</span>
+                              <span className="text-[var(--fg-subtle)]/60">·</span>
                               <span>RR {trade.riskReward.toFixed(2)}</span>
                             </>
                           )}
@@ -538,7 +538,7 @@ export function LivePaperTradingPage() {
         </section>
       </div>
 
-      <p className="text-[10.5px] text-[var(--color-fg-subtle)] leading-relaxed italic text-center pt-2">
+      <p className="text-[10.5px] text-[var(--fg-subtle)] leading-relaxed italic text-center pt-2">
         Paper trading only — no real capital, no live exchange execution.
         Mark price streams from Binance Spot; execution is fully simulated.
         Toggle <code>NEXT_PUBLIC_AI_AUTONOMY</code> between <code>on</code> and{" "}
@@ -610,7 +610,7 @@ function Cell({
 }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
       <div
@@ -620,7 +620,7 @@ function Cell({
             ? "text-[var(--color-bull)]"
             : tone === "bear"
               ? "text-[var(--color-bear)]"
-              : "text-[var(--color-fg)]",
+              : "text-[var(--fg)]",
         )}
       >
         {value}
@@ -639,15 +639,15 @@ function SecondaryStat({
   detail?: string;
 }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] px-3 py-2.5">
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
-      <div className="mt-1 text-mono-tabular text-base font-semibold tabular-nums text-[var(--color-fg)]">
+      <div className="mt-1 text-mono-tabular text-base font-semibold tabular-nums text-[var(--fg)]">
         {value}
       </div>
       {detail ? (
-        <div className="mt-0.5 text-[10px] text-[var(--color-fg-subtle)] truncate">
+        <div className="mt-0.5 text-[10px] text-[var(--fg-subtle)] truncate">
           {detail}
         </div>
       ) : null}
@@ -665,8 +665,8 @@ function Metric({
   tone?: "bull" | "bear";
 }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-2">
-      <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-2">
+      <div className="text-[9px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
       <div
@@ -676,7 +676,7 @@ function Metric({
             ? "text-[var(--color-bull)]"
             : tone === "bear"
               ? "text-[var(--color-bear)]"
-              : "text-[var(--color-fg)]",
+              : "text-[var(--fg)]",
         )}
       >
         {value}

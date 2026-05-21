@@ -41,7 +41,7 @@ export function LiveInsightsPage() {
       </div>
 
       {decision.signal !== "HOLD" && (
-        <Card className="mb-4 bg-[var(--color-accent-soft)] border-[var(--color-accent)]/20">
+        <Card className="mb-4 bg-[var(--accent-soft)] border-[var(--accent)]/20">
           <CardHeader>
             <CardTitle>Trade Execution Suggestion</CardTitle>
             <Badge variant="accent">Quant Parameters</Badge>
@@ -65,8 +65,8 @@ export function LiveInsightsPage() {
               <Badge variant="muted">{interval.toUpperCase()} {symbol}</Badge>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)]/60 p-5">
-                <p className="max-w-4xl text-sm leading-7 text-[var(--color-fg-muted)]">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--color-bg-elevated)]/60 p-5">
+                <p className="max-w-4xl text-sm leading-7 text-[var(--fg-muted)]">
                   {decision.verdict} {decision.warnings.length > 0 ? decision.warnings.join(" ") : "No elevated indicator warnings are currently active."}
                 </p>
               </div>
@@ -82,9 +82,9 @@ export function LiveInsightsPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {decision.reasons.map((reason) => (
-                <article key={reason} className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3">
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)]">Live indicator</div>
-                  <p className="mt-2 text-xs leading-5 text-[var(--color-fg-muted)]">{reason}</p>
+                <article key={reason} className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-[var(--accent)]">Live indicator</div>
+                  <p className="mt-2 text-xs leading-5 text-[var(--fg-muted)]">{reason}</p>
                 </article>
               ))}
             </CardContent>
@@ -113,8 +113,8 @@ function InsightCard({
         <StatusBadge tone="accent">{tag}</StatusBadge>
       </CardHeader>
       <CardContent>
-        <div className="text-xl font-semibold tracking-tight text-[var(--color-fg)]">{value}</div>
-        <p className="mt-4 text-sm leading-7 text-[var(--color-fg-muted)]">{body}</p>
+        <div className="text-xl font-semibold tracking-tight text-[var(--fg)]">{value}</div>
+        <p className="mt-4 text-sm leading-7 text-[var(--fg-muted)]">{body}</p>
       </CardContent>
     </Card>
   );
@@ -131,8 +131,8 @@ function TradeParam({
 }) {
   if (!value) return null;
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]/40 p-3">
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--color-bg)]/40 p-3">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
       <div
@@ -140,7 +140,7 @@ function TradeParam({
           "mt-1 text-mono-tabular text-lg font-semibold tabular-nums",
           tone === "bull" && "text-[var(--color-bull)]",
           tone === "bear" && "text-[var(--color-bear)]",
-          tone === "muted" && "text-[var(--color-fg)]",
+          tone === "muted" && "text-[var(--fg)]",
         )}
       >
         {value.toLocaleString(undefined, {

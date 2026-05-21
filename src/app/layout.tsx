@@ -20,16 +20,16 @@ export default function RootLayout({
       className="h-full antialiased"
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[var(--color-bg)] text-[var(--color-fg)]">
+      <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--fg)]" suppressHydrationWarning>
         <Providers>{children}</Providers>
         <Toaster
           theme="dark"
           position="bottom-right"
           toastOptions={{
             style: {
-              background: "var(--color-card)",
-              border: "1px solid var(--color-border)",
-              color: "var(--color-fg)",
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              color: "var(--fg)",
             },
           }}
         />

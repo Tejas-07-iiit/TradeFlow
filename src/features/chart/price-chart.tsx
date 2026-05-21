@@ -16,6 +16,7 @@ import {
   type UTCTimestamp,
   type SeriesMarker,
 } from "lightweight-charts";
+import { useTheme } from "next-themes";
 
 import { chartTickMarkFormatter, chartTimeFormatter } from "@/lib/datetime";
 import type { Candle } from "@/types/market";
@@ -61,6 +62,7 @@ export function PriceChart({
   priceLines,
   resetKey,
 }: PriceChartProps) {
+  const { resolvedTheme } = useTheme();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -155,6 +157,29 @@ export function PriceChart({
       dataHydratedRef.current = false;
     };
   }, []);
+
+  // Sync theme with chart
+  useEffect(() => {
+    if (!chartRef.current) return;
+    
+    const isDark = resolvedTheme !== "light";
+    
+    chartRef.current.applyOptions({
+      layout: {
+        textColor: isDark ? "#8A9BB5" : "#64748b",
+      },
+      grid: {
+        vertLines: { color: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.05)" },
+        horzLines: { color: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.05)" },
+      },
+      rightPriceScale: {
+        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.1)",
+      },
+      timeScale: {
+        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.1)",
+      },
+    });
+  }, [resolvedTheme]);
 
   // 2. Data Hydration
   useEffect(() => {

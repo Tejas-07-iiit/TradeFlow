@@ -39,10 +39,10 @@ const RISK_TONE: Record<AIDecision["risk"], "bull" | "warn" | "bear"> = {
 };
 
 const QUALITY_COLOR: Record<AIDecision["setupQuality"], string> = {
-  "A+": "text-[var(--color-accent)]",
+  "A+": "text-[var(--accent)]",
   A: "text-[var(--color-bull)]",
   B: "text-[var(--color-warn)]",
-  C: "text-[var(--color-fg-muted)]",
+  C: "text-[var(--fg-muted)]",
 };
 
 export function DecisionPanel({ decision }: DecisionPanelProps) {
@@ -74,10 +74,10 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
   return (
     <div className={cn("panel overflow-hidden transition-opacity", isExpired && "opacity-60 grayscale-[0.5]")}>
-      <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b border-[var(--color-border)]">
+      <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3 border-b border-[var(--border)]">
         <div className="flex items-center gap-2">
-          <Brain className="size-4 text-[var(--color-accent)]" />
-          <h3 className="text-[13px] font-semibold tracking-wide uppercase text-[var(--color-fg-muted)]">
+          <Brain className="size-4 text-[var(--accent)]" />
+          <h3 className="text-[13px] font-semibold tracking-wide uppercase text-[var(--fg-muted)]">
             AI Signal Intelligence
           </h3>
         </div>
@@ -99,8 +99,8 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
         {/* Headline */}
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
-              <Zap className="size-3 text-[var(--color-accent)]" />
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
+              <Zap className="size-3 text-[var(--accent)]" />
               {decision.type} · {decision.symbol}
             </div>
             <div
@@ -108,7 +108,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
                 "flex items-center gap-2 text-2xl font-semibold tracking-tight",
                 signal.tone === "bull" && "text-[var(--color-bull)]",
                 signal.tone === "bear" && "text-[var(--color-bear)]",
-                signal.tone === "muted" && "text-[var(--color-fg)]",
+                signal.tone === "muted" && "text-[var(--fg)]",
               )}
             >
               <SignalIcon className="size-5" />
@@ -122,15 +122,15 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
         {/* Intraday Metrics */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3">
-            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">Setup Quality</div>
+          <div className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">Setup Quality</div>
             <div className={cn("mt-1 text-xl font-bold", QUALITY_COLOR[decision.setupQuality])}>
               {decision.setupQuality}
             </div>
           </div>
-          <div className="flex flex-col rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3">
-            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">Risk/Reward</div>
-            <div className="mt-1 text-xl font-mono text-[var(--color-fg)]">
+          <div className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+            <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">Risk/Reward</div>
+            <div className="mt-1 text-xl font-mono text-[var(--fg)]">
               1:{decision.rrRatio?.toFixed(1) ?? "—"}
             </div>
           </div>
@@ -138,7 +138,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
         {/* Trade Levels */}
         {decision.signal !== "HOLD" && decision.entryPrice && (
-          <div className="grid grid-cols-3 gap-2 py-3 border-y border-[var(--color-border)] bg-white/[0.01]">
+          <div className="grid grid-cols-3 gap-2 py-3 border-y border-[var(--border)] bg-[var(--bg-elevated)]">
             <TradeLevel label="Entry" value={decision.entryPrice} tone="muted" />
             <TradeLevel label="Stop Loss" value={decision.stopLoss} tone="bear" />
             <TradeLevel label="Take Profit" value={decision.takeProfit} tone="bull" />
@@ -155,14 +155,14 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
                   ? decision.signal === "BUY"
                     ? "border-[var(--color-bull)]/30 bg-[var(--color-bull-soft)] text-[var(--color-bull)]"
                     : "border-[var(--color-bear)]/30 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
-                  : "border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-muted)]",
+                  : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)]",
               )}
             >
               {isAutoFired
                 ? `AI AUTO-EXECUTED ${decision.signal} · ${decision.type}`
                 : `Awaiting transition — ${decision.signal} ${decision.type}`}
             </div>
-            <p className="mt-2 text-[10px] text-center text-[var(--color-fg-subtle)] leading-relaxed">
+            <p className="mt-2 text-[10px] text-center text-[var(--fg-subtle)] leading-relaxed">
               Rule-engine context. When NEXT_PUBLIC_AI_AUTONOMY=on the LLM owns
               execution; this signal is informational only. When off, the rule
               engine fires paper orders on transitions (60s cooldown).
@@ -172,11 +172,11 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
         {/* Intraday Context */}
         <div className="grid grid-cols-2 gap-4 text-[11px]">
-          <div className="flex items-center gap-2 text-[var(--color-fg-subtle)]">
+          <div className="flex items-center gap-2 text-[var(--fg-subtle)]">
             <Clock className="size-3" />
             <span>Hold: <strong>{decision.expectedHoldTime}</strong></span>
           </div>
-          <div className="flex items-center gap-2 text-[var(--color-fg-subtle)]">
+          <div className="flex items-center gap-2 text-[var(--fg-subtle)]">
             <Layers className="size-3" />
             <span>Regime: <strong>{decision.marketCondition}</strong></span>
           </div>
@@ -189,7 +189,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
             {decision.reasons.map((r) => (
               <li
                 key={r}
-                className="flex items-start gap-2 text-[13px] leading-relaxed text-[var(--color-fg)]"
+                className="flex items-start gap-2 text-[13px] leading-relaxed text-[var(--fg)]"
               >
                 <CheckCircle2 className="size-3.5 mt-0.5 text-[var(--color-bull)] shrink-0" />
                 <span>{r}</span>
@@ -206,7 +206,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
               {decision.warnings.map((w) => (
                 <li
                   key={w}
-                  className="flex items-start gap-2 text-[13px] leading-relaxed text-[var(--color-fg-muted)]"
+                  className="flex items-start gap-2 text-[13px] leading-relaxed text-[var(--fg-muted)]"
                 >
                   <AlertTriangle className="size-3.5 mt-0.5 text-[var(--color-warn)] shrink-0" />
                   <span>{w}</span>
@@ -217,16 +217,16 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
         ) : null}
 
         {/* Verdict */}
-        <div className="rounded-md border border-[var(--color-accent)]/20 bg-[var(--color-accent-soft)] px-3 py-2.5">
-          <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] mb-1 font-bold">
+        <div className="rounded-md border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-3 py-2.5">
+          <div className="text-[10px] uppercase tracking-wider text-[var(--accent)] mb-1 font-bold">
             Intraday Verdict
           </div>
-          <p className="text-[13px] leading-relaxed text-[var(--color-fg)]">
+          <p className="text-[13px] leading-relaxed text-[var(--fg)]">
             {decision.verdict}
           </p>
         </div>
 
-        <p className="text-[10.5px] text-[var(--color-fg-subtle)] leading-relaxed italic border-t border-[var(--color-border)] pt-3">
+        <p className="text-[10.5px] text-[var(--fg-subtle)] leading-relaxed italic border-t border-[var(--border)] pt-3">
           Signals expire after 60 minutes or upon trend invalidation.
           Paper simulation only — no real-money execution.
         </p>
@@ -237,7 +237,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
       {children}
     </div>
   );
@@ -253,8 +253,8 @@ function StatTile({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] px-3 py-2">
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
       <div
@@ -263,7 +263,7 @@ function StatTile({
           tone === "bull" && "text-[var(--color-bull)]",
           tone === "bear" && "text-[var(--color-bear)]",
           tone === "warn" && "text-[var(--color-warn)]",
-          tone === "muted" && "text-[var(--color-fg)]",
+          tone === "muted" && "text-[var(--fg)]",
         )}
       >
         {children}
@@ -284,7 +284,7 @@ function TradeLevel({
   if (!value) return null;
   return (
     <div className="text-center">
-      <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] mb-1">
+      <div className="text-[9px] uppercase tracking-wider text-[var(--fg-subtle)] mb-1">
         {label}
       </div>
       <div
@@ -292,7 +292,7 @@ function TradeLevel({
           "text-mono-tabular text-xs font-semibold tabular-nums",
           tone === "bull" && "text-[var(--color-bull)]",
           tone === "bear" && "text-[var(--color-bear)]",
-          tone === "muted" && "text-[var(--color-fg)]",
+          tone === "muted" && "text-[var(--fg)]",
         )}
       >
         {value.toLocaleString(undefined, {
@@ -313,7 +313,7 @@ function ConfidenceRing({ value }: { value: number }) {
     pct >= 70
       ? "var(--color-bull)"
       : pct >= 45
-        ? "var(--color-accent)"
+        ? "var(--accent)"
         : "var(--color-warn)";
   return (
     <div className="relative size-[64px] grid place-items-center">
@@ -342,7 +342,7 @@ function ConfidenceRing({ value }: { value: number }) {
         <div className="text-mono-tabular text-sm font-semibold leading-none">
           {pct}%
         </div>
-        <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] mt-0.5">
+        <div className="text-[9px] uppercase tracking-wider text-[var(--fg-subtle)] mt-0.5">
           Conf.
         </div>
       </div>

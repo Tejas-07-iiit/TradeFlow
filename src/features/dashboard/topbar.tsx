@@ -2,7 +2,9 @@
 
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
-import { Bell, ChevronDown, LogOut, Search, Settings, User2 } from "lucide-react";
+import { ChevronDown, LogOut, Search, User2, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import Link from "next/link";
 
 import {
   Avatar,
@@ -40,6 +42,7 @@ export function Topbar() {
   const setSymbol = useMarketStore((s) => s.setSymbol);
   const ticker = useMarketStore((s) => s.ticker);
   const lastPrice = useMarketStore((s) => s.lastPrice);
+  const { setTheme, theme } = useTheme();
   
   const account = useAccountMetrics();
 
@@ -54,17 +57,17 @@ export function Topbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 h-14 border-b border-[var(--color-border)] bg-[var(--color-bg)]/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 h-14 border-b border-[var(--border)] bg-[var(--bg-elevated)]/60 backdrop-blur-md shadow-sm">
       <div className="h-full flex items-center justify-between gap-4 px-5">
         {/* Left: ticker tape + Symbol Selector */}
         <div className="flex items-center gap-4 min-w-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 hover:bg-white/5 px-2 py-1 rounded-md transition-colors">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-fg)]">
+              <button className="flex items-center gap-2 hover:bg-[var(--card-hover)] px-2 py-1 rounded-md transition-colors">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--fg)]">
                   {symbol.replace("USDT", " / USDT")}
                 </span>
-                <ChevronDown className="size-3 text-[var(--color-fg-subtle)]" />
+                <ChevronDown className="size-3 text-[var(--fg-subtle)]" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -82,7 +85,7 @@ export function Topbar() {
             <span
               className={cn(
                 "text-mono-tabular text-[15px] font-semibold tabular-nums",
-                up ? "text-[var(--color-bull)]" : "text-[var(--color-bear)]",
+                up ? "text-[var(--bull)]" : "text-[var(--bear)]",
               )}
             >
               {lastPrice != null ? formatPrice(lastPrice) : "—"}
@@ -90,7 +93,7 @@ export function Topbar() {
             <span
               className={cn(
                 "text-mono-tabular text-[11px]",
-                up ? "text-[var(--color-bull)]" : "text-[var(--color-bear)]",
+                up ? "text-[var(--bull)]" : "text-[var(--bear)]",
               )}
             >
               {ticker ? formatPct(ticker.changePct) : "—"}
@@ -106,13 +109,13 @@ export function Topbar() {
         </div>
 
         {/* Center: search */}
-        <div className="hidden lg:flex flex-1 max-w-md items-center gap-2 h-9 px-3 rounded-md border border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-subtle)]">
+        <div className="hidden lg:flex flex-1 max-w-md items-center gap-2 h-9 px-3 rounded-md border border-[var(--border)] bg-[var(--card)] shadow-inner text-[var(--fg-subtle)] focus-within:border-[var(--accent)] transition-colors">
           <Search className="size-3.5" />
           <input
             placeholder="Search symbols, strategies, signals…"
-            className="bg-transparent flex-1 text-[13px] placeholder:text-[var(--color-fg-subtle)] focus:outline-none text-[var(--color-fg)]"
+            className="bg-transparent flex-1 text-[13px] placeholder:text-[var(--fg-subtle)] focus:outline-none text-[var(--fg)]"
           />
-          <kbd className="text-[10px] text-[var(--color-fg-subtle)] border border-[var(--color-border)] rounded px-1 py-0.5">
+          <kbd className="text-[10px] text-[var(--fg-subtle)] border border-[var(--border)] rounded px-1 py-0.5">
             ⌘ K
           </kbd>
         </div>
@@ -122,13 +125,13 @@ export function Topbar() {
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="hidden sm:flex flex-col items-end leading-tight cursor-help">
-                <span className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                <span className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                   Equity
                 </span>
-                <span className="text-mono-tabular text-[13px] text-[var(--color-fg)]">
+                <span className="text-mono-tabular text-[13px] text-[var(--fg)]">
                   {formatCurrency(account.totalEquity, account.currency)}
                 </span>
-                <span className="text-mono-tabular text-[10px] text-[var(--color-fg-subtle)]">
+                <span className="text-mono-tabular text-[10px] text-[var(--fg-subtle)]">
                   Avail {formatCurrency(account.availableBalance, account.currency)}
                 </span>
               </div>
@@ -143,7 +146,7 @@ export function Topbar() {
                   value={formatCurrency(account.unrealizedPnl, account.currency)}
                   tone={account.unrealizedPnl >= 0 ? "bull" : "bear"}
                 />
-                <div className="pt-1 mt-1 border-t border-[var(--color-border)]">
+                <div className="pt-1 mt-1 border-t border-[var(--border)]">
                   <Row label="Total equity" value={formatCurrency(account.totalEquity, account.currency)} strong />
                 </div>
               </div>
@@ -152,23 +155,24 @@ export function Topbar() {
 
           <button
             type="button"
-            aria-label="Notifications"
-            className="relative grid place-items-center size-9 rounded-md border border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] hover:bg-white/[0.05]"
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            aria-label="Toggle theme"
+            className="grid place-items-center size-9 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)]/50 text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--card-hover)] transition-colors"
           >
-            <Bell className="size-4" />
-            <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-[var(--color-accent)]" />
+            <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+            <Moon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-white/[0.02] pl-1 pr-2 h-9 hover:bg-white/[0.05]"
+                className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)]/50 pl-1 pr-2 h-9 hover:bg-[var(--card-hover)] transition-colors"
               >
                 <Avatar className="size-7">
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
-                <span className="hidden md:block text-[12px] text-[var(--color-fg)] max-w-[120px] truncate">
+                <span className="hidden md:block text-[12px] text-[var(--fg)] max-w-[120px] truncate">
                   {session?.user?.name || session?.user?.email || "Account"}
                 </span>
               </button>
@@ -178,11 +182,10 @@ export function Topbar() {
                 {session?.user?.email ?? "Trader"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User2 className="size-3.5 mr-2" /> Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="size-3.5 mr-2" /> Settings
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="w-full cursor-pointer">
+                  <User2 className="size-3.5 mr-2" /> Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -190,7 +193,7 @@ export function Topbar() {
                   e.preventDefault();
                   void signOut({ callbackUrl: `${window.location.origin}/login` });
                 }}
-                className="text-[var(--color-bear)]"
+                className="text-[var(--bear)] focus:text-[var(--bear)] focus:bg-[var(--bear-soft)] cursor-pointer"
               >
                 <LogOut className="size-3.5 mr-2" /> Sign out
               </DropdownMenuItem>
@@ -215,16 +218,16 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between gap-6">
-      <span className="text-[var(--color-fg-muted)]">{label}</span>
+      <span className="text-[var(--fg-muted)]">{label}</span>
       <span
         className={cn(
           "text-mono-tabular tabular-nums",
           strong && "font-semibold",
           tone === "bull"
-            ? "text-[var(--color-bull)]"
+            ? "text-[var(--bull)]"
             : tone === "bear"
-              ? "text-[var(--color-bear)]"
-              : "text-[var(--color-fg)]",
+              ? "text-[var(--bear)]"
+              : "text-[var(--fg)]",
         )}
       >
         {value}

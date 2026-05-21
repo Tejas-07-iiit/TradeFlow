@@ -8,7 +8,7 @@ export default function AuthLayout({
   return (
     <div className="relative min-h-screen flex">
       {/* Left brand panel */}
-      <aside className="relative hidden lg:flex w-[44%] xl:w-[40%] flex-col justify-between p-10 border-r border-[var(--color-border)] bg-[var(--color-card)]/40 grid-bg overflow-hidden">
+      <aside className="relative hidden lg:flex w-[44%] xl:w-[40%] flex-col justify-between p-10 border-r border-[var(--border)] bg-[var(--color-card)]/40 grid-bg overflow-hidden">
         <div className="absolute inset-0 pointer-events-none [background:radial-gradient(800px_400px_at_10%_10%,rgba(0,212,255,0.18),transparent_60%),radial-gradient(800px_400px_at_90%_90%,rgba(0,230,118,0.08),transparent_60%)]" />
         <Link href="/" className="relative flex items-center gap-2.5 z-10">
           <span
@@ -20,19 +20,19 @@ export default function AuthLayout({
               boxShadow: "0 0 24px -6px rgba(0,212,255,0.6)",
             }}
           />
-          <span className="text-sm font-semibold tracking-[0.18em] uppercase text-[var(--color-fg)]">
+          <span className="text-sm font-semibold tracking-[0.18em] uppercase text-[var(--fg)]">
             TradeFlow
           </span>
         </Link>
 
         <div className="relative z-10 max-w-md space-y-6">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--color-accent)]/80">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-[var(--accent)]/80">
             Institutional · AI-Assisted · Paper Trading
           </p>
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight text-[var(--color-fg)]">
+          <h1 className="text-4xl font-semibold leading-tight tracking-tight text-[var(--fg)]">
             An intelligent trading terminal that explains its decisions.
           </h1>
-          <p className="text-sm leading-relaxed text-[var(--color-fg-muted)]">
+          <p className="text-sm leading-relaxed text-[var(--fg-muted)]">
             Bloomberg-grade workspace, live market microstructure, and a
             decision panel that surfaces the reasoning behind every signal —
             not a black box.
@@ -46,12 +46,12 @@ export default function AuthLayout({
             ].map((s) => (
               <div
                 key={s.k}
-                className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elevated)]/60 px-3 py-2.5"
+                className="rounded-lg border border-[var(--border)] bg-[var(--color-bg-elevated)]/60 px-3 py-2.5"
               >
-                <div className="text-[10px] uppercase tracking-wide text-[var(--color-fg-subtle)]">
+                <div className="text-[10px] uppercase tracking-wide text-[var(--fg-subtle)]">
                   {s.k}
                 </div>
-                <div className="text-mono-tabular text-sm text-[var(--color-fg)] mt-0.5">
+                <div className="text-mono-tabular text-sm text-[var(--fg)] mt-0.5">
                   {s.v}
                 </div>
               </div>
@@ -59,7 +59,7 @@ export default function AuthLayout({
           </div>
         </div>
 
-        <div className="relative z-10 text-[11px] text-[var(--color-fg-subtle)]">
+        <div className="relative z-10 text-[11px] text-[var(--fg-subtle)]">
           © {new Date().getFullYear()} TradeFlow · Simulation environment.
           No real funds are at risk.
         </div>

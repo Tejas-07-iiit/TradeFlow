@@ -44,7 +44,7 @@ export function LoginForm() {
     <div className="space-y-7">
       <header className="space-y-2">
         <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
-        <p className="text-sm text-[var(--color-fg-muted)]">
+        <p className="text-sm text-[var(--fg-muted)]">
           Access your trading workspace and paper portfolio.
         </p>
       </header>
@@ -96,11 +96,11 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-sm text-[var(--color-fg-muted)]">
+      <p className="text-sm text-[var(--fg-muted)]">
         New to TradeFlow?{" "}
         <Link
           href="/register"
-          className="text-[var(--color-accent)] hover:underline underline-offset-4"
+          className="text-[var(--accent)] hover:underline underline-offset-4"
         >
           Create an account
         </Link>

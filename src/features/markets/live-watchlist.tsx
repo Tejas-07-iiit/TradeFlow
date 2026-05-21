@@ -48,15 +48,15 @@ function WatchlistRow({
     : [2, 2, 2, 2];
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--color-border)] bg-white/[0.02] px-3 py-2.5">
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium text-[var(--color-fg)]">
+          <span className="truncate text-sm font-medium text-[var(--fg)]">
             {symbol}
           </span>
           {!compact ? <Badge variant="muted">{SYMBOL_NAMES[symbol]}</Badge> : null}
         </div>
-        <div className="mt-1 text-mono-tabular text-xs text-[var(--color-fg-muted)]">
+        <div className="mt-1 text-mono-tabular text-xs text-[var(--fg-muted)]">
           {ticker ? formatPrice(ticker.last, ticker.last < 10 ? 4 : 2) : "Connecting"}
         </div>
       </div>

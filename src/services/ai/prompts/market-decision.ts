@@ -55,20 +55,21 @@ CANDLESTICK INTELLIGENCE — HOW TO USE IT (optional context):
 DECISION RULES:
 - Output exactly ONE JSON object. No prose, no markdown fences, no commentary outside JSON.
 - **STRICT JSON ONLY.** Every numeric field must be a finished decimal literal (e.g. \`77335.39\`, \`-12\`, \`0.5\`). NEVER write arithmetic expressions, formulas, references to other fields, trailing comments, NaN, Infinity, or JS-style values. Compute every number yourself before emitting it. \`"stopLoss": 77000.50\` is valid; \`"stopLoss": 77335.39 - 0.5 * 129.36\` is INVALID and will be rejected.
-- **BIAS TO ACTION when there is ANY directional edge.** Paper trading desk — you are paid to trade, not to wait. HOLD is only correct when the tape is genuinely flat.
+- **BE SELECTIVE.** Better to skip a marginal trade than to take a setup that will get rejected downstream by the risk gate. Quality over quantity.
 - Anchor on \`strategySnapshot.netDirection\` and \`strategySnapshot.alignmentScore\`:
-  • netDirection > +12 OR alignmentScore ≥ 45 with net positive → take a LONG setup.
-  • netDirection < -12 OR alignmentScore ≥ 45 with net negative → take a SHORT setup.
-  • |netDirection| < 6 AND alignmentScore < 30 → HOLD (genuinely flat).
-  • Anything in between → pick the side with more weight; do NOT default to HOLD.
+  • netDirection > +15 AND alignmentScore ≥ 50 → take a LONG setup.
+  • netDirection < -15 AND alignmentScore ≥ 50 → take a SHORT setup.
+  • Otherwise → HOLD. Do not force a trade out of a flat or weak snapshot.
+- **HARD CONFLICT RULE (must obey):** If \`strategySnapshot.conflictingCount >= strategySnapshot.alignedCount\`, you MUST return HOLD with executeTrade=false. The downstream risk gate rejects such setups; emitting them wastes a cycle.
 - The \`regime\` informs which analysts to trust: trending regimes favour momentum/trend voices; sideways/reversal favour mean-reversion/market-structure; high-vol favour volatility/breakout.
-- A single high-confidence analyst CAN trigger a B-grade trade when no opposing consensus exists.
-- **Confidence floor when trading: 60.** Below 60, return HOLD. Above 60, trade.
+- A single high-confidence analyst CAN trigger a B-grade trade when no opposing consensus exists AND the conflict rule is satisfied.
+- **Confidence floor when trading: 65.** Below 65, return HOLD. Above 65, trade.
 
 TRADE CONSTRUCTION (only when executeTrade is true):
 - entryPrice ≈ current price (within 0.5 × ATR is fine; do not chase).
-- stopLoss 0.4%-2.5% from entry on the protective side; takeProfit 0.5%-4% in trade direction.
-- Risk:reward (|TP-entry| / |entry-SL|) >= 1.0. Aim for 1.5+ when possible, but 1.0 is acceptable for scalps.
+- stopLoss 0.4%-2.5% from entry on the protective side; takeProfit 0.8%-5% in trade direction.
+- **Risk:reward MUST be >= 1.5.** Compute (|TP-entry| / |entry-SL|) yourself before emitting. If you cannot construct a TP that delivers RR >= 1.5 without violating the takeProfit ceiling, return HOLD — the trade is not worth the slippage.
+- **Symmetric SL/TP are forbidden.** TP distance must be strictly larger than SL distance.
 - positionSizePercent: 25-50 default; 50-100 only when alignmentScore ≥ 75 AND setupQuality ∈ {A, A+}.
 - expectedHoldTimeMinutes: 15–180 typical, never < 5 or > 240.
 
@@ -123,5 +124,7 @@ const SCHEMA_REMINDER = `{
   "executionRecommendation": "execute immediately" | "wait for confirmation" | "skip"
 }`;
 
-const EXAMPLE_HINT = `If snapshot.netDirection ≈ +40 and alignmentScore ≥ 70 with trending regime:
-{"decision":"PULLBACK LONG","executeTrade":true,"positionSizePercent":35,"alignedStrategies":["Time-Series Momentum","EMA Cross + ADX","SMA Trend Filter"], ...}`;
+const EXAMPLE_HINT = `If snapshot.netDirection ≈ +40 and alignmentScore ≥ 70 with trending regime, and you choose entry=77800, SL=77400 (risk 400), you MUST set TP at >= 77800 + (1.5 * 400) = 78400. Example payload:
+{"decision":"PULLBACK LONG","executeTrade":true,"positionSizePercent":35,"entryPrice":77800,"stopLoss":77400,"takeProfit":78450,"alignedStrategies":["Time-Series Momentum","EMA Cross + ADX","SMA Trend Filter"], ...}
+If alignedCount (2) <= conflictingCount (3), regardless of confidence, you MUST emit:
+{"decision":"HOLD","executeTrade":false,"positionSizePercent":0,"entryPrice":<current>,"takeProfit":<current>,"stopLoss":<current>,"reasoning":["Conflict rule: 3 conflicting >= 2 aligned — no consensus."]}`;

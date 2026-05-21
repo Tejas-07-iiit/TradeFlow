@@ -7,7 +7,7 @@ export function Skeleton({
   return (
     <div
       className={cn(
-        "animate-pulse rounded-md bg-white/[0.06]",
+        "animate-pulse rounded-md bg-[var(--border)]",
         className,
       )}
       {...props}

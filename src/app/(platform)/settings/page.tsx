@@ -63,13 +63,13 @@ function SettingsGrid({ start, end }: { start: number; end: number }) {
             <Card key={group.title}>
               <CardHeader>
                 <div className="flex items-center gap-2">
-                  <Icon className="size-4 text-[var(--color-accent)]" />
+                  <Icon className="size-4 text-[var(--accent)]" />
                   <CardTitle>{group.title}</CardTitle>
                 </div>
                 <StatusBadge tone="muted">Phase 1</StatusBadge>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-sm leading-6 text-[var(--color-fg-muted)]">
+                <p className="text-sm leading-6 text-[var(--fg-muted)]">
                   {group.description}
                 </p>
                 {group.rows.map((row) => (
@@ -92,8 +92,8 @@ function SettingsGrid({ start, end }: { start: number; end: number }) {
           </CardHeader>
           <CardContent className="space-y-3">
             {["Auth configured", "Paper wallet active", "Real trading disabled", "API keys not required"].map((item) => (
-              <div key={item} className="flex items-center justify-between rounded-md bg-white/[0.025] px-3 py-2.5">
-                <span className="text-sm text-[var(--color-fg-muted)]">{item}</span>
+              <div key={item} className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5">
+                <span className="text-sm text-[var(--fg-muted)]">{item}</span>
                 <StatusBadge tone={item.includes("disabled") || item.includes("not") ? "warn" : "bull"}>
                   {item.includes("disabled") || item.includes("not") ? "Safe" : "On"}
                 </StatusBadge>

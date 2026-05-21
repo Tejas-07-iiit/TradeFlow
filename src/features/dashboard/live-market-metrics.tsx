@@ -48,13 +48,13 @@ export function LiveMarketMetrics() {
           return (
             <div
               key={metric.label}
-              className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3"
+              className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
             >
-              <Icon className="mb-2 size-4 text-[var(--color-accent)]" />
-              <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+              <Icon className="mb-2 size-4 text-[var(--accent)]" />
+              <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                 {metric.label}
               </div>
-              <div className="mt-1 text-sm font-medium text-[var(--color-fg)]">
+              <div className="mt-1 text-sm font-medium text-[var(--fg)]">
                 {metric.value}
               </div>
             </div>

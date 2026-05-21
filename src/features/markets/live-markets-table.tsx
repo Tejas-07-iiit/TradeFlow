@@ -40,18 +40,18 @@ export function LiveMarketsTable() {
 
   return (
     <div className="panel overflow-hidden">
-      <div className="flex flex-col gap-3 border-b border-[var(--color-border)] p-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 border-b border-[var(--border)] p-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-[var(--color-fg)]">
+          <h2 className="text-sm font-semibold text-[var(--fg)]">
             Live Market Overview
           </h2>
-          <p className="mt-1 text-xs text-[var(--color-fg-muted)]">
+          <p className="mt-1 text-xs text-[var(--fg-muted)]">
             Binance 24h ticker stream with realtime price, volume, volatility, and regime context.
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--color-fg-subtle)]" />
+            <Search className="absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--fg-subtle)]" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
@@ -62,7 +62,7 @@ export function LiveMarketsTable() {
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value as SortKey)}
-            className="h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elevated)] px-3 text-xs text-[var(--color-fg)] outline-none"
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--color-bg-elevated)] px-3 text-xs text-[var(--fg)] outline-none"
           >
             <option value="changePct">Sort: 24h Change</option>
             <option value="last">Sort: Price</option>
@@ -74,7 +74,7 @@ export function LiveMarketsTable() {
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[780px] text-left text-sm">
-          <thead className="border-b border-[var(--color-border)] text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+          <thead className="border-b border-[var(--border)] text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
             <tr>
               {["Asset", "Price", "24h", "Volume", "Volatility", "Regime", "Micro Trend"].map((heading) => (
                 <th key={heading} className="px-4 py-3 font-medium">
@@ -86,7 +86,7 @@ export function LiveMarketsTable() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
+          <tbody className="divide-y divide-[var(--border)]">
             {rows.map((ticker) => (
               <MarketRow
                 key={ticker.symbol}
@@ -109,18 +109,18 @@ function MarketRow({ ticker, regime }: { ticker: Ticker24h; regime: string }) {
   );
 
   return (
-    <tr className="hover:bg-white/[0.025]">
+    <tr className="hover:bg-[var(--bg-elevated)]">
       <td className="px-4 py-3">
-        <div className="font-medium text-[var(--color-fg)]">{ticker.symbol}</div>
-        <div className="text-xs text-[var(--color-fg-subtle)]">{SYMBOL_NAMES[ticker.symbol]}</div>
+        <div className="font-medium text-[var(--fg)]">{ticker.symbol}</div>
+        <div className="text-xs text-[var(--fg-subtle)]">{SYMBOL_NAMES[ticker.symbol]}</div>
       </td>
-      <td className="px-4 py-3 text-mono-tabular text-[var(--color-fg)]">
+      <td className="px-4 py-3 text-mono-tabular text-[var(--fg)]">
         {formatPrice(ticker.last, ticker.last < 10 ? 4 : 2)}
       </td>
       <td className={cn("px-4 py-3 text-mono-tabular", up ? "text-[var(--color-bull)]" : "text-[var(--color-bear)]")}>
         {formatPct(ticker.changePct)}
       </td>
-      <td className="px-4 py-3 text-mono-tabular text-[var(--color-fg-muted)]">
+      <td className="px-4 py-3 text-mono-tabular text-[var(--fg-muted)]">
         {(ticker.quoteVolume / 1_000_000_000).toFixed(2)}B
       </td>
       <td className="px-4 py-3">

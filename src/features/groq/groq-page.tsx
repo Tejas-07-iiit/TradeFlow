@@ -89,7 +89,7 @@ export function GroqPage() {
                       {SYMBOL_NAMES[sym] ?? sym}
                     </Badge>
                   </CardTitle>
-                  <div className="text-[11px] text-[var(--color-fg-subtle)]">
+                  <div className="text-[11px] text-[var(--fg-subtle)]">
                     {ticker
                       ? `${formatPrice(ticker.last, ticker.last < 10 ? 4 : 2)} · ${ticker.changePct.toFixed(2)}% 24h`
                       : "Connecting"}
@@ -97,7 +97,7 @@ export function GroqPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {loading && (
-                    <Loader2 className="size-3.5 animate-spin text-[var(--color-fg-subtle)]" />
+                    <Loader2 className="size-3.5 animate-spin text-[var(--fg-subtle)]" />
                   )}
                   {entry && (
                     <Badge variant="muted">
@@ -128,7 +128,7 @@ export function GroqPage() {
                     if (loading) return <Skeleton />;
                     if (error) return <ErrorView error={error} />;
                     return (
-                      <p className="text-xs text-[var(--color-fg-subtle)]">
+                      <p className="text-xs text-[var(--fg-subtle)]">
                         Awaiting first thesis fetch for this symbol.
                       </p>
                     );
@@ -138,7 +138,7 @@ export function GroqPage() {
                     <>
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                          <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                             Bias
                           </div>
                           <div
@@ -152,7 +152,7 @@ export function GroqPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="text-right">
-                            <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                            <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                               Setup
                             </div>
                             <div
@@ -183,16 +183,16 @@ export function GroqPage() {
                       <Section icon={ShieldAlert} title="Risk" tone="warn">
                         {view.riskCommentary}
                       </Section>
-                      <div className="rounded-md border border-[var(--color-accent)]/20 bg-[var(--color-accent-soft)] px-3 py-2.5">
-                        <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] mb-1 font-bold">
+                      <div className="rounded-md border border-[var(--accent)]/20 bg-[var(--accent-soft)] px-3 py-2.5">
+                        <div className="text-[10px] uppercase tracking-wider text-[var(--accent)] mb-1 font-bold">
                           Trade Thesis
                         </div>
-                        <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">
+                        <p className="text-[12px] leading-relaxed text-[var(--fg)]">
                           {view.tradeThesis}
                         </p>
                       </div>
                       {!entry && decisionEntry ? (
-                        <p className="text-[10px] text-[var(--color-fg-subtle)] italic">
+                        <p className="text-[10px] text-[var(--fg-subtle)] italic">
                           Showing live decision while the narrative thesis loads.
                         </p>
                       ) : null}
@@ -275,17 +275,17 @@ function decisionToView(d: MarketDecision): CardView {
 const BIAS_TONE: Record<MarketBias, string> = {
   "strongly bearish": "text-[var(--color-bear)]",
   "moderately bearish": "text-[var(--color-bear)]",
-  neutral: "text-[var(--color-fg)]",
+  neutral: "text-[var(--fg)]",
   "moderately bullish": "text-[var(--color-bull)]",
   "strongly bullish": "text-[var(--color-bull)]",
 };
 
 const QUALITY_TONE: Record<SetupQuality, string> = {
-  "A+": "text-[var(--color-accent)]",
+  "A+": "text-[var(--accent)]",
   A: "text-[var(--color-bull)]",
   "B+": "text-[var(--color-bull)]",
   B: "text-[var(--color-warn)]",
-  C: "text-[var(--color-fg-muted)]",
+  C: "text-[var(--fg-muted)]",
   Avoid: "text-[var(--color-bear)]",
 };
 
@@ -302,16 +302,16 @@ function Section({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         <Icon
           className={cn(
             "size-3",
-            tone === "warn" ? "text-[var(--color-warn)]" : "text-[var(--color-accent)]",
+            tone === "warn" ? "text-[var(--color-warn)]" : "text-[var(--accent)]",
           )}
         />
         {title}
       </div>
-      <p className="text-[12px] leading-relaxed text-[var(--color-fg)]">{children}</p>
+      <p className="text-[12px] leading-relaxed text-[var(--fg)]">{children}</p>
     </div>
   );
 }
@@ -319,10 +319,10 @@ function Section({
 function Skeleton() {
   return (
     <div className="space-y-2">
-      <div className="h-3 w-2/3 rounded bg-white/[0.06] animate-pulse" />
-      <div className="h-3 w-5/6 rounded bg-white/[0.06] animate-pulse" />
-      <div className="h-3 w-1/2 rounded bg-white/[0.06] animate-pulse" />
-      <div className="text-[10px] text-[var(--color-fg-subtle)] pt-2">Generating thesis…</div>
+      <div className="h-3 w-2/3 rounded bg-[var(--bg-elevated)] animate-pulse" />
+      <div className="h-3 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
+      <div className="h-3 w-1/2 rounded bg-[var(--bg-elevated)] animate-pulse" />
+      <div className="text-[10px] text-[var(--fg-subtle)] pt-2">Generating thesis…</div>
     </div>
   );
 }
@@ -333,8 +333,8 @@ function ErrorView({ error }: { error: string }) {
       <div className="flex items-center gap-2 text-[var(--color-warn)] text-xs font-semibold">
         <AlertTriangle className="size-3.5" /> Unavailable
       </div>
-      <p className="text-[11px] leading-5 text-[var(--color-fg-muted)] break-words">{error}</p>
-      <p className="text-[10px] text-[var(--color-fg-subtle)]">
+      <p className="text-[11px] leading-5 text-[var(--fg-muted)] break-words">{error}</p>
+      <p className="text-[10px] text-[var(--fg-subtle)]">
         Verify <code>GROQ_API_KEY</code> in <code>.env</code> and restart the dev server.
       </p>
     </div>
@@ -347,7 +347,7 @@ function ConfidenceRing({ value }: { value: number }) {
   const c = 2 * Math.PI * r;
   const offset = c * (1 - pct / 100);
   const color =
-    pct >= 70 ? "var(--color-bull)" : pct >= 45 ? "var(--color-accent)" : "var(--color-warn)";
+    pct >= 70 ? "var(--color-bull)" : pct >= 45 ? "var(--accent)" : "var(--color-warn)";
   return (
     <div className="relative size-[52px] grid place-items-center">
       <svg viewBox="0 0 48 48" className="absolute inset-0 -rotate-90">

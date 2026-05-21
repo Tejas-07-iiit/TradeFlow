@@ -108,7 +108,7 @@ export function LivePortfolioPage({
             </StatusBadge>
           </CardHeader>
           <CardContent>
-            <div className="h-[280px] rounded-lg border border-[var(--color-border)] bg-[linear-gradient(180deg,rgba(0,212,255,0.08),transparent)] p-5">
+            <div className="h-[280px] rounded-lg border border-[var(--border)] bg-[linear-gradient(180deg,rgba(0,212,255,0.08),transparent)] p-5">
               <div className="flex h-full items-end justify-between gap-2">
                 {[
                   { label: "Wallet", value: walletBalance },
@@ -121,7 +121,7 @@ export function LivePortfolioPage({
                     className="flex flex-1 flex-col items-center gap-2"
                   >
                     <div
-                      className="w-full rounded-t bg-[var(--color-accent)]/75"
+                      className="w-full rounded-t bg-[var(--accent)]/75"
                       style={{
                         height: `${Math.max(
                           8,
@@ -130,7 +130,7 @@ export function LivePortfolioPage({
                         )}%`,
                       }}
                     />
-                    <span className="text-[10px] text-[var(--color-fg-subtle)]">
+                    <span className="text-[10px] text-[var(--fg-subtle)]">
                       {bar.label}
                     </span>
                   </div>
@@ -147,9 +147,9 @@ export function LivePortfolioPage({
               <Badge variant="muted">Realtime</Badge>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex h-3 overflow-hidden rounded-full bg-white/[0.04]">
+              <div className="flex h-3 overflow-hidden rounded-full bg-[var(--bg-elevated)]">
                 <span
-                  className="bg-[var(--color-accent)]"
+                  className="bg-[var(--accent)]"
                   style={{ width: `${cashPct}%` }}
                 />
                 <span
@@ -188,7 +188,7 @@ export function LivePortfolioPage({
           <Card>
             <CardHeader>
               <CardTitle>Equity Distribution</CardTitle>
-              <Coins className="size-4 text-[var(--color-fg-muted)]" />
+              <Coins className="size-4 text-[var(--fg-muted)]" />
             </CardHeader>
             <CardContent>
               <MiniBars
@@ -206,8 +206,8 @@ export function LivePortfolioPage({
 function AllocationRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between text-sm">
-      <span className="text-[var(--color-fg-muted)]">{label}</span>
-      <span className="text-mono-tabular text-[var(--color-fg)]">
+      <span className="text-[var(--fg-muted)]">{label}</span>
+      <span className="text-mono-tabular text-[var(--fg)]">
         {value.toFixed(1)}%
       </span>
     </div>
@@ -216,8 +216,8 @@ function AllocationRow({ label, value }: { label: string; value: number }) {
 
 function RiskRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-md bg-white/[0.025] px-3 py-2.5">
-      <span className="text-sm text-[var(--color-fg-muted)]">{label}</span>
+    <div className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5">
+      <span className="text-sm text-[var(--fg-muted)]">{label}</span>
       <StatusBadge tone="muted">{value}</StatusBadge>
     </div>
   );

@@ -2,23 +2,26 @@
 @plugin "tailwindcss-animate";
 
 @theme {
-  --color-bg: #0b1020;
-  --color-bg-elevated: #0f1530;
-  --color-card: #131a2e;
-  --color-card-hover: #182039;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.14);
-  --color-fg: #e6f1ff;
-  --color-fg-muted: #8a9bb5;
-  --color-fg-subtle: #5a6a86;
-  --color-accent: #00d4ff;
-  --color-accent-soft: rgba(0, 212, 255, 0.12);
-  --color-bull: #00e676;
-  --color-bull-soft: rgba(0, 230, 118, 0.12);
-  --color-bear: #ff5252;
-  --color-bear-soft: rgba(255, 82, 82, 0.12);
-  --color-warn: #ffb547;
-  --color-warn-soft: rgba(255, 181, 71, 0.12);
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-bull: var(--bull);
+  --color-bull-fg: var(--bull-fg);
+  --color-bull-soft: var(--bull-soft);
+  --color-bear: var(--bear);
+  --color-bear-fg: var(--bear-fg);
+  --color-bear-soft: var(--bear-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
 
   --font-sans:
     "Satoshi", "IBM Plex Sans", "Aptos", ui-sans-serif, system-ui, sans-serif;
@@ -30,28 +33,76 @@
   --radius-md: 10px;
   --radius-sm: 6px;
 
-  --shadow-card:
-    0 1px 0 rgba(255, 255, 255, 0.04) inset,
-    0 8px 24px -12px rgba(0, 0, 0, 0.6);
-  --shadow-glow-accent:
-    0 0 0 1px rgba(0, 212, 255, 0.25),
-    0 8px 28px -10px rgba(0, 212, 255, 0.45);
+  --shadow-card: var(--shadow-card-val);
+  --shadow-glow-accent: var(--shadow-glow-val);
 }
 
 @layer base {
+  :root {
+    --bg: #f8fafc;
+    --bg-elevated: #ffffff;
+    --card: #ffffff;
+    --card-hover: #f1f5f9;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --fg: #0f172a;
+    --fg-muted: #64748b;
+    --fg-subtle: #94a3b8;
+    --accent: #2563eb;
+    --accent-fg: #ffffff;
+    --accent-soft: rgba(37, 99, 235, 0.12);
+    --bull: #10b981;
+    --bull-fg: #ffffff;
+    --bull-soft: rgba(16, 185, 129, 0.12);
+    --bear: #ef4444;
+    --bear-fg: #ffffff;
+    --bear-soft: rgba(239, 68, 68, 0.12);
+    --warn: #f59e0b;
+    --warn-soft: rgba(245, 158, 11, 0.12);
+
+    --shadow-card-val: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
+    --shadow-glow-val: 0 0 0 1px rgba(37, 99, 235, 0.15), 0 8px 28px -10px rgba(37, 99, 235, 0.25);
+  }
+
+  .dark {
+    --bg: #060913;
+    --bg-elevated: #0c1222;
+    --card: #0c1222;
+    --card-hover: #111a2f;
+    --border: rgba(255, 255, 255, 0.06);
+    --border-strong: rgba(255, 255, 255, 0.12);
+    --fg: #f1f5f9;
+    --fg-muted: #8a9bb5;
+    --fg-subtle: #475569;
+    --accent: #00d4ff;
+    --accent-fg: #060913;
+    --accent-soft: rgba(0, 212, 255, 0.15);
+    --bull: #00e676;
+    --bull-fg: #060913;
+    --bull-soft: rgba(0, 230, 118, 0.15);
+    --bear: #ff5252;
+    --bear-fg: #060913;
+    --bear-soft: rgba(255, 82, 82, 0.15);
+    --warn: #ffb547;
+    --warn-soft: rgba(255, 181, 71, 0.15);
+
+    --shadow-card-val: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.7);
+    --shadow-glow-val: 0 0 0 1px rgba(0, 212, 255, 0.25), 0 8px 28px -10px rgba(0, 212, 255, 0.45);
+  }
+
   * {
-    border-color: var(--color-border);
+    border-color: var(--border);
   }
   html,
   body {
-    background: var(--color-bg);
-    color: var(--color-fg);
+    background: var(--bg);
+    color: var(--fg);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     font-feature-settings: "cv11", "ss01", "ss03";
   }
-  body {
+  .dark body {
     background-image:
       radial-gradient(
         1200px 600px at 0% -10%,
@@ -65,9 +116,23 @@
       );
     background-attachment: fixed;
   }
+  body {
+    background-image:
+      radial-gradient(
+        1200px 600px at 0% -10%,
+        rgba(37, 99, 235, 0.03),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at 100% -20%,
+        rgba(16, 185, 129, 0.02),
+        transparent 60%
+      );
+    background-attachment: fixed;
+  }
   ::selection {
-    background: rgba(0, 212, 255, 0.25);
-    color: var(--color-fg);
+    background: var(--accent-soft);
+    color: var(--fg);
   }
   ::-webkit-scrollbar {
     width: 10px;
@@ -77,13 +142,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--border);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: var(--border-strong);
     background-clip: padding-box;
     border: 2px solid transparent;
   }

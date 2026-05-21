@@ -112,12 +112,14 @@ export function AiThesisSubscriber() {
     }
   };
 
-  // Initial fan-out across watchlist symbols, lightly staggered so the
-  // provider sees them as discrete requests rather than a thundering herd.
-  // Runs regardless of autonomy: theses are served by a different provider
-  // (OpenRouter by default — see `AI_PROVIDER_THESIS`) so they don't share
-  // a token budget with the Groq decision call. Without this fan-out the
-  // /groq dashboard sits at "0/5 theses ready" forever under autonomy.
+  // Initial fan-out across watchlist symbols, lightly staggered so Groq
+  // sees them as discrete requests rather than a thundering herd. Theses
+  // run on the same Groq vendor as the decision call but use a lighter
+  // model (`GROQ_MODEL_THESIS`, typically the 8B), and the two Groq
+  // accounts give the chain two independent TPM buckets per model — so
+  // thesis traffic can't starve the decision traffic in practice.
+  // Without this fan-out the /groq dashboard sits at "0/5 theses ready"
+  // forever under autonomy.
   useEffect(() => {
     const STAGGER_MS = 5000;
     const timers: ReturnType<typeof setTimeout>[] = [];

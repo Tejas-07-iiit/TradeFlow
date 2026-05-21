@@ -76,9 +76,9 @@ export function RegisterForm() {
         <h2 className="text-2xl font-semibold tracking-tight">
           Create your terminal
         </h2>
-        <p className="text-sm text-[var(--color-fg-muted)]">
+        <p className="text-sm text-[var(--fg-muted)]">
           We&apos;ll provision a paper wallet with{" "}
-          <span className="text-mono-tabular text-[var(--color-fg)]">
+          <span className="text-mono-tabular text-[var(--fg)]">
             10,000 USDT
           </span>{" "}
           so you can trade risk-free.
@@ -139,8 +139,8 @@ export function RegisterForm() {
           </div>
         ) : null}
 
-        <div className="flex items-start gap-2 rounded-md border border-[var(--color-border)] bg-white/[0.02] px-3 py-2.5 text-[11px] text-[var(--color-fg-muted)]">
-          <Wallet className="size-3.5 mt-0.5 text-[var(--color-accent)]" />
+        <div className="flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5 text-[11px] text-[var(--fg-muted)]">
+          <Wallet className="size-3.5 mt-0.5 text-[var(--accent)]" />
           <span>
             Your paper wallet is provisioned automatically during signup. All
             positions execute against simulated markets.
@@ -162,11 +162,11 @@ export function RegisterForm() {
         </Button>
       </form>
 
-      <p className="text-sm text-[var(--color-fg-muted)]">
+      <p className="text-sm text-[var(--fg-muted)]">
         Already trading?{" "}
         <Link
           href="/login"
-          className="text-[var(--color-accent)] hover:underline underline-offset-4"
+          className="text-[var(--accent)] hover:underline underline-offset-4"
         >
           Sign in
         </Link>

@@ -37,7 +37,7 @@ export function ConnectionStatus() {
           tone === "bull" && "bg-[var(--color-bull)]",
           tone === "warn" && "bg-[var(--color-warn)]",
           tone === "bear" && "bg-[var(--color-bear)]",
-          tone === "muted" && "bg-[var(--color-fg-subtle)]",
+          tone === "muted" && "bg-[var(--fg-subtle)]",
         )}
       >
         {live ? (

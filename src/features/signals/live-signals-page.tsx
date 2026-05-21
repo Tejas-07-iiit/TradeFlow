@@ -47,7 +47,7 @@ export function LiveSignalsPage() {
             <CardHeader>
               <div>
                 <CardTitle>{decision.signal} {decision.symbol.replace("USDT", "")}</CardTitle>
-                <div className="mt-1 text-xs text-[var(--color-fg-subtle)]">
+                <div className="mt-1 text-xs text-[var(--fg-subtle)]">
                   Recalculated from latest {interval.toUpperCase()} Binance candles
                 </div>
               </div>
@@ -65,12 +65,12 @@ export function LiveSignalsPage() {
               </div>
 
               <div>
-                <div className="mb-2 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
+                <div className="mb-2 text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
                   Why this signal
                 </div>
                 <ul className="space-y-2">
                   {decision.reasons.map((reason) => (
-                    <li key={reason} className="flex gap-2 text-sm leading-6 text-[var(--color-fg-muted)]">
+                    <li key={reason} className="flex gap-2 text-sm leading-6 text-[var(--fg-muted)]">
                       <CheckCircle2 className="mt-1 size-3.5 shrink-0 text-[var(--color-bull)]" />
                       {reason}
                     </li>
@@ -79,13 +79,13 @@ export function LiveSignalsPage() {
               </div>
 
               {decision.warnings.length > 0 ? (
-                <div className="rounded-md border border-[var(--color-warn)]/20 bg-[var(--color-warn-soft)] p-3 text-sm leading-6 text-[var(--color-fg)]">
+                <div className="rounded-md border border-[var(--color-warn)]/20 bg-[var(--color-warn-soft)] p-3 text-sm leading-6 text-[var(--fg)]">
                   {decision.warnings.join(" ")}
                 </div>
               ) : null}
 
               {decision.signal !== "HOLD" && decision.entryPrice != null && (
-                <div className="grid grid-cols-3 gap-2 rounded-md border border-[var(--color-border)] bg-white/[0.01] p-3">
+                <div className="grid grid-cols-3 gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
                   <SignalLevel label="Entry" value={decision.entryPrice} />
                   <SignalLevel label="Stop Loss" value={decision.stopLoss} tone="bear" />
                   <SignalLevel label="Take Profit" value={decision.takeProfit} tone="bull" />
@@ -99,7 +99,7 @@ export function LiveSignalsPage() {
                     ? decision.signal === "BUY"
                       ? "border-[var(--color-bull)]/30 bg-[var(--color-bull-soft)] text-[var(--color-bull)]"
                       : "border-[var(--color-bear)]/30 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
-                    : "border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-muted)]",
+                    : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)]",
                 )}
               >
                 {isAutoFired
@@ -108,7 +108,7 @@ export function LiveSignalsPage() {
                     ? "No actionable signal — engine waiting"
                     : `Awaiting transition · ${decision.signal} ${decision.type}`}
               </div>
-              <p className="mt-2 text-[10px] text-center text-[var(--color-fg-subtle)] leading-relaxed">
+              <p className="mt-2 text-[10px] text-center text-[var(--fg-subtle)] leading-relaxed">
                 {process.env.NEXT_PUBLIC_AI_AUTONOMY === "on"
                   ? "LLM Autonomy is ON. These rule-based signals are fed to the Groq AI, which owns the final execution."
                   : "LLM Autonomy is OFF. The Rule Engine will auto-execute these signals once per transition."}
@@ -123,33 +123,33 @@ export function LiveSignalsPage() {
             </CardHeader>
             <CardContent>
               {signalHistory.length === 0 ? (
-                <div className="py-8 text-center text-sm text-[var(--color-fg-subtle)]">
+                <div className="py-8 text-center text-sm text-[var(--fg-subtle)]">
                   No signals generated yet. Stay tuned for live market alerts.
                 </div>
               ) : (
                 <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
                   {signalHistory.map((s, i) => (
-                    <div key={`${s.generatedAt}-${i}`} className={cn("flex items-center justify-between rounded-md border border-[var(--color-border)] bg-white/[0.01] p-3", s.status === "EXPIRED" && "opacity-50")}>
+                    <div key={`${s.generatedAt}-${i}`} className={cn("flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3", s.status === "EXPIRED" && "opacity-50")}>
                       <div className="flex items-center gap-4">
                         <StatusBadge tone={s.signal === "BUY" ? "bull" : s.signal === "SELL" ? "bear" : "muted"}>
                           {s.signal}
                         </StatusBadge>
                         <div>
-                          <div className="text-sm font-medium text-[var(--color-fg)] flex items-center gap-2">
+                          <div className="text-sm font-medium text-[var(--fg)] flex items-center gap-2">
                             {s.symbol}
                             <Badge variant="muted" className="text-[9px] h-4 px-1 uppercase tracking-tighter">
                               {s.type.split(" ")[0]}
                             </Badge>
                           </div>
-                          <div className="text-[10px] text-[var(--color-fg-subtle)] flex items-center gap-1">
+                          <div className="text-[10px] text-[var(--fg-subtle)] flex items-center gap-1">
                             {formatDistanceToNowStrict(new Date(s.generatedAt), { addSuffix: true })}
                             {s.status !== "ACTIVE" && <span className="uppercase font-bold">· {s.status}</span>}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-semibold text-[var(--color-fg)]">{s.confidence}%</div>
-                        <div className="text-[10px] text-[var(--color-fg-subtle)]">Quality: {s.setupQuality}</div>
+                        <div className="text-sm font-semibold text-[var(--fg)]">{s.confidence}%</div>
+                        <div className="text-[10px] text-[var(--fg-subtle)]">Quality: {s.setupQuality}</div>
                       </div>
                     </div>
                   ))}
@@ -163,7 +163,7 @@ export function LiveSignalsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Filters</CardTitle>
-              <Filter className="size-4 text-[var(--color-fg-muted)]" />
+              <Filter className="size-4 text-[var(--fg-muted)]" />
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               {[symbol, interval.toUpperCase(), decision.signal, decision.risk, decision.marketCondition].map((filter) => (
@@ -182,9 +182,9 @@ export function LiveSignalsPage() {
                 ["Momentum", indicators.rsi14 ? indicators.rsi14 > 55 ? "Positive" : indicators.rsi14 < 45 ? "Negative" : "Neutral" : "Pending"],
                 ["Strength", indicators.adx14 ? indicators.adx14 > 20 ? "Confirmed" : "Weak" : "Pending"],
               ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between rounded-md bg-white/[0.025] px-3 py-2.5">
-                  <span className="text-sm text-[var(--color-fg-muted)]">{label}</span>
-                  <span className={cn("text-sm text-[var(--color-fg)]", value === "Bullish" || value === "Positive" || value === "Confirmed" ? "text-[var(--color-bull)]" : "")}>{value}</span>
+                <div key={label} className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5">
+                  <span className="text-sm text-[var(--fg-muted)]">{label}</span>
+                  <span className={cn("text-sm text-[var(--fg)]", value === "Bullish" || value === "Positive" || value === "Confirmed" ? "text-[var(--color-bull)]" : "")}>{value}</span>
                 </div>
               ))}
             </CardContent>
@@ -197,9 +197,9 @@ export function LiveSignalsPage() {
 
 function SignalStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-[var(--color-border)] bg-white/[0.02] p-3">
-      <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">{label}</div>
-      <div className="mt-1 text-mono-tabular text-sm font-semibold text-[var(--color-fg)]">{value}</div>
+    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+      <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">{label}</div>
+      <div className="mt-1 text-mono-tabular text-sm font-semibold text-[var(--fg)]">{value}</div>
     </div>
   );
 }
@@ -215,7 +215,7 @@ function SignalLevel({
 }) {
   return (
     <div className="text-center">
-      <div className="text-[9px] uppercase tracking-wider text-[var(--color-fg-subtle)] mb-1">
+      <div className="text-[9px] uppercase tracking-wider text-[var(--fg-subtle)] mb-1">
         {label}
       </div>
       <div
@@ -223,7 +223,7 @@ function SignalLevel({
           "text-mono-tabular text-sm font-semibold tabular-nums",
           tone === "bull" && "text-[var(--color-bull)]",
           tone === "bear" && "text-[var(--color-bear)]",
-          tone === "muted" && "text-[var(--color-fg)]",
+          tone === "muted" && "text-[var(--fg)]",
         )}
       >
         {value != null

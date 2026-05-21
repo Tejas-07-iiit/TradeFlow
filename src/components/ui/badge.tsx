@@ -9,14 +9,14 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-white/[0.05] text-[var(--color-fg)] border border-[var(--color-border)]",
+          "bg-[var(--card-hover)] text-[var(--fg)] border border-[var(--border)]",
         accent:
-          "bg-[var(--color-accent-soft)] text-[var(--color-accent)] border border-[var(--color-accent)]/20",
-        bull: "bg-[var(--color-bull-soft)] text-[var(--color-bull)] border border-[var(--color-bull)]/20",
-        bear: "bg-[var(--color-bear-soft)] text-[var(--color-bear)] border border-[var(--color-bear)]/20",
-        warn: "bg-[var(--color-warn-soft)] text-[var(--color-warn)] border border-[var(--color-warn)]/20",
+          "bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/20",
+        bull: "bg-[var(--bull-soft)] text-[var(--bull)] border border-[var(--bull)]/20",
+        bear: "bg-[var(--bear-soft)] text-[var(--bear)] border border-[var(--bear)]/20",
+        warn: "bg-[var(--warn-soft)] text-[var(--warn)] border border-[var(--warn)]/20",
         muted:
-          "bg-transparent text-[var(--color-fg-muted)] border border-[var(--color-border)]",
+          "bg-transparent text-[var(--fg-muted)] border border-[var(--border)]",
       },
     },
     defaultVariants: { variant: "default" },

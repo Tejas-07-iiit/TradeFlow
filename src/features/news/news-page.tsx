@@ -119,7 +119,7 @@ export function NewsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="size-4 text-[var(--color-accent)]" />
+            <TrendingUp className="size-4 text-[var(--accent)]" />
             Trending Tickers
           </CardTitle>
           <Badge variant="muted">
@@ -128,7 +128,7 @@ export function NewsPage() {
         </CardHeader>
         <CardContent>
           {!feed?.trending.length ? (
-            <p className="text-xs text-[var(--color-fg-subtle)]">
+            <p className="text-xs text-[var(--fg-subtle)]">
               No watchlist symbols mentioned in the latest feed.
             </p>
           ) : (
@@ -171,33 +171,33 @@ export function NewsPage() {
 
       {/* Horizontal Scrolling Marquee */}
       {feed && marqueeItems.length > 0 && (
-        <div className="relative overflow-hidden flex items-center bg-white/[0.02] border border-[var(--color-border)] rounded-xl py-3 mt-2">
+        <div className="relative overflow-hidden flex items-center bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl py-3 mt-2">
            <div className="absolute left-0 w-16 h-full bg-gradient-to-r from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
            <div className="absolute right-0 w-16 h-full bg-gradient-to-l from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
            <div className="flex whitespace-nowrap animate-marquee hover:[animation-play-state:paused] w-max">
              <div className="flex shrink-0 items-center">
                {marqueeItems.map((it, idx) => (
-                  <a key={`${it.id}-${idx}`} href={it.url} target="_blank" rel="noopener noreferrer" className="mx-6 flex items-center gap-2 hover:text-white transition-colors">
-                    <Badge variant="accent" className="text-[9px] h-4 px-1.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-none">
+                  <a key={`${it.id}-${idx}`} href={it.url} target="_blank" rel="noopener noreferrer" className="mx-6 flex items-center gap-2 hover:text-[var(--fg)] transition-colors">
+                    <Badge variant="accent" className="text-[9px] h-4 px-1.5 bg-[var(--accent)]/10 text-[var(--accent)] border-none">
                       {it.sourceLabel}
                     </Badge>
-                    <span className="text-[13px] font-medium text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]">
+                    <span className="text-[13px] font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]">
                       {it.title}
                     </span>
-                    <span className="text-[var(--color-border)] mx-6">•</span>
+                    <span className="text-[var(--border)] mx-6">•</span>
                   </a>
                ))}
              </div>
              <div className="flex shrink-0 items-center">
                {marqueeItems.map((it, idx) => (
-                  <a key={`${it.id}-dup-${idx}`} href={it.url} target="_blank" rel="noopener noreferrer" className="mx-6 flex items-center gap-2 hover:text-white transition-colors">
-                    <Badge variant="accent" className="text-[9px] h-4 px-1.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-none">
+                  <a key={`${it.id}-dup-${idx}`} href={it.url} target="_blank" rel="noopener noreferrer" className="mx-6 flex items-center gap-2 hover:text-[var(--fg)] transition-colors">
+                    <Badge variant="accent" className="text-[9px] h-4 px-1.5 bg-[var(--accent)]/10 text-[var(--accent)] border-none">
                       {it.sourceLabel}
                     </Badge>
-                    <span className="text-[13px] font-medium text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]">
+                    <span className="text-[13px] font-medium text-[var(--fg-muted)] hover:text-[var(--fg)]">
                       {it.title}
                     </span>
-                    <span className="text-[var(--color-border)] mx-6">•</span>
+                    <span className="text-[var(--border)] mx-6">•</span>
                   </a>
                ))}
              </div>
@@ -230,7 +230,7 @@ export function NewsPage() {
         )}
       </div>
 
-      <p className="text-[10.5px] text-[var(--color-fg-subtle)] leading-relaxed italic text-center pt-2">
+      <p className="text-[10.5px] text-[var(--fg-subtle)] leading-relaxed italic text-center pt-2">
         News and community sentiment for context only — the autonomous engine
         treats them as one of many inputs, never a guarantee. Sources:
         CryptoCompare News, r/CryptoCurrency, alternative.me Fear &amp; Greed.
@@ -260,9 +260,9 @@ function SourceFailures({ sources }: { sources: SourceStatus[] }) {
         {bad.map((s) => (
           <li
             key={s.source}
-            className="text-[11px] leading-5 text-[var(--color-fg-muted)] break-words"
+            className="text-[11px] leading-5 text-[var(--fg-muted)] break-words"
           >
-            <span className="font-medium text-[var(--color-fg)]">
+            <span className="font-medium text-[var(--fg)]">
               {SOURCE_LABEL[s.source]}
             </span>{" "}
             — {s.status === "stale" ? "showing cached items, " : ""}
@@ -270,7 +270,7 @@ function SourceFailures({ sources }: { sources: SourceStatus[] }) {
           </li>
         ))}
       </ul>
-      <p className="text-[10px] text-[var(--color-fg-subtle)]">
+      <p className="text-[10px] text-[var(--fg-subtle)]">
         Reddit often rate-limits data-center IPs (AWS, GCP). CryptoCompare
         usually works; set <code>CRYPTOCOMPARE_API_KEY</code> in env if you
         see persistent 429s.
@@ -285,13 +285,13 @@ function RedditRow({ item }: { item: FeedItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col rounded-2xl border border-[var(--color-border)] bg-white/[0.01] hover:bg-[var(--color-accent-soft)] hover:border-[var(--color-accent)]/30 overflow-hidden transition-all duration-200 group min-h-[160px]"
+      className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] hover:bg-[var(--accent-soft)] hover:border-[var(--accent)]/30 overflow-hidden transition-all duration-200 group min-h-[160px]"
     >
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1.5 flex-wrap">
             {item.sourceLabel ? (
-              <Badge variant="accent" className="text-[9px] h-5 px-1.5 rounded-sm bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-none">
+              <Badge variant="accent" className="text-[9px] h-5 px-1.5 rounded-sm bg-[var(--accent)]/10 text-[var(--accent)] border-none">
                 {item.sourceLabel}
               </Badge>
             ) : null}
@@ -301,22 +301,22 @@ function RedditRow({ item }: { item: FeedItem }) {
               </Badge>
             ))}
           </div>
-          <div className="text-[10px] text-[var(--color-fg-subtle)] shrink-0">
+          <div className="text-[10px] text-[var(--fg-subtle)] shrink-0">
             {formatDistanceToNowStrict(item.publishedAt * 1000, { addSuffix: true })}
           </div>
         </div>
         <div className="flex-1 space-y-2">
-          <p className="text-[15px] font-semibold leading-snug text-[var(--color-fg)] group-hover:text-white transition-colors line-clamp-3">
+          <p className="text-[15px] font-semibold leading-snug text-[var(--fg)] group-hover:text-[var(--fg)] transition-colors line-clamp-3">
             {item.title}
           </p>
           {item.excerpt ? (
-            <p className="text-[12px] leading-relaxed text-[var(--color-fg-muted)] line-clamp-3">
+            <p className="text-[12px] leading-relaxed text-[var(--fg-muted)] line-clamp-3">
               {item.excerpt}
             </p>
           ) : null}
         </div>
-        <div className="flex items-center justify-between pt-3 mt-2 border-t border-[var(--color-border)]/50">
-          <div className="flex items-center gap-4 text-[11px] text-[var(--color-fg-subtle)] font-medium">
+        <div className="flex items-center justify-between pt-3 mt-2 border-t border-[var(--border)]/50">
+          <div className="flex items-center gap-4 text-[11px] text-[var(--fg-subtle)] font-medium">
             <div className="flex items-center gap-1 text-[var(--color-bull)]">
               ▲ {formatScore(item.score)}
             </div>
@@ -336,10 +336,10 @@ function NewsRow({ item }: { item: FeedItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col rounded-2xl border border-[var(--color-border)] bg-white/[0.01] hover:bg-[var(--color-accent-soft)] hover:border-[var(--color-accent)]/30 overflow-hidden transition-all duration-200 group min-h-[220px]"
+      className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] hover:bg-[var(--accent-soft)] hover:border-[var(--accent)]/30 overflow-hidden transition-all duration-200 group min-h-[220px]"
     >
       {item.imageUrl ? (
-        <div className="w-full h-40 overflow-hidden shrink-0 border-b border-[var(--color-border)] bg-[var(--color-bg)]">
+        <div className="w-full h-40 overflow-hidden shrink-0 border-b border-[var(--border)] bg-[var(--color-bg)]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={item.imageUrl}
@@ -351,11 +351,11 @@ function NewsRow({ item }: { item: FeedItem }) {
       ) : null}
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div className="space-y-2 mb-2">
-          <p className="text-[15px] font-semibold leading-snug text-[var(--color-fg)] group-hover:text-white transition-colors line-clamp-3">
+          <p className="text-[15px] font-semibold leading-snug text-[var(--fg)] group-hover:text-[var(--fg)] transition-colors line-clamp-3">
             {item.title}
           </p>
           {item.excerpt ? (
-            <p className="text-[12px] leading-relaxed text-[var(--color-fg-muted)] line-clamp-2">
+            <p className="text-[12px] leading-relaxed text-[var(--fg-muted)] line-clamp-2">
               {item.excerpt}
             </p>
           ) : null}
@@ -368,12 +368,12 @@ function NewsRow({ item }: { item: FeedItem }) {
               </Badge>
             ) : null}
             {item.mentions.map((m) => (
-              <Badge key={m} variant="accent" className="text-[9px] h-5 px-1.5 rounded-sm bg-[var(--color-accent)]/10 text-[var(--color-accent)] border-none">
+              <Badge key={m} variant="accent" className="text-[9px] h-5 px-1.5 rounded-sm bg-[var(--accent)]/10 text-[var(--accent)] border-none">
                 {m.replace("USDT", "")}
               </Badge>
             ))}
           </div>
-          <span className="text-[10px] text-[var(--color-fg-subtle)] ml-auto shrink-0">
+          <span className="text-[10px] text-[var(--fg-subtle)] ml-auto shrink-0">
             {formatDistanceToNowStrict(item.publishedAt * 1000, { addSuffix: true })}
           </span>
         </div>
@@ -402,17 +402,17 @@ function FilterChip({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-2.5 h-7 text-[11px] font-medium transition-colors",
         active
-          ? "bg-[var(--color-accent-soft)] border-[var(--color-accent)]/40 text-[var(--color-fg)]"
+          ? "bg-[var(--accent-soft)] border-[var(--accent)]/40 text-[var(--fg)]"
           : dim
-            ? "border-[var(--color-border)] bg-white/[0.01] text-[var(--color-fg-subtle)] hover:bg-white/[0.03] hover:text-[var(--color-fg-muted)]"
-            : "border-[var(--color-border)] bg-white/[0.02] text-[var(--color-fg-muted)] hover:bg-white/[0.05] hover:text-[var(--color-fg)]",
+            ? "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-subtle)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg-muted)]"
+            : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]",
       )}
     >
       <span>{label}</span>
       <span
         className={cn(
           "text-[10px] tabular-nums",
-          active ? "text-[var(--color-accent)]" : "text-[var(--color-fg-subtle)]",
+          active ? "text-[var(--accent)]" : "text-[var(--fg-subtle)]",
         )}
       >
         {count}
@@ -437,8 +437,8 @@ function SourceTab({
       className={cn(
         "px-3 h-7 text-[11px] font-medium rounded-md border transition-colors",
         active
-          ? "bg-[var(--color-accent-soft)] border-[var(--color-accent)]/40 text-[var(--color-fg)]"
-          : "border-[var(--color-border)] bg-white/[0.01] text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]",
+          ? "bg-[var(--accent-soft)] border-[var(--accent)]/40 text-[var(--fg)]"
+          : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:text-[var(--fg)]",
       )}
     >
       {label}
@@ -452,13 +452,13 @@ function SkeletonRows() {
       {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
         <div
           key={i}
-          className="flex flex-col rounded-2xl border border-[var(--color-border)] bg-white/[0.01] overflow-hidden h-[240px]"
+          className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] overflow-hidden h-[240px]"
         >
-          <div className="w-full h-32 bg-white/[0.03] animate-pulse shrink-0 border-b border-[var(--color-border)]" />
+          <div className="w-full h-32 bg-[var(--bg-elevated)] animate-pulse shrink-0 border-b border-[var(--border)]" />
           <div className="p-4 space-y-3 flex-1">
-            <div className="h-4 w-5/6 rounded bg-white/[0.05] animate-pulse" />
-            <div className="h-3 w-4/6 rounded bg-white/[0.05] animate-pulse" />
-            <div className="h-3 w-1/3 rounded bg-white/[0.05] animate-pulse mt-auto" />
+            <div className="h-4 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
+            <div className="h-3 w-4/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
+            <div className="h-3 w-1/3 rounded bg-[var(--bg-elevated)] animate-pulse mt-auto" />
           </div>
         </div>
       ))}
@@ -472,7 +472,7 @@ function ErrorState({ error }: { error: string }) {
       <div className="flex items-center gap-2 text-[var(--color-warn)] text-xs font-semibold">
         <Sparkles className="size-3.5" /> News feed unavailable
       </div>
-      <p className="text-[11px] leading-5 text-[var(--color-fg-muted)] break-words">
+      <p className="text-[11px] leading-5 text-[var(--fg-muted)] break-words">
         {error}
       </p>
     </div>

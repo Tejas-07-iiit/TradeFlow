@@ -24,10 +24,10 @@ export function LiveAutoExecFeed() {
       <CardHeader className="shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Zap className="size-4 text-[var(--color-accent)]" />
+            <Zap className="size-4 text-[var(--accent)]" />
             AI Active Trades
           </CardTitle>
-          <div className="flex items-center gap-1.5 text-[10px] text-[var(--color-fg-subtle)] uppercase tracking-wider">
+          <div className="flex items-center gap-1.5 text-[10px] text-[var(--fg-subtle)] uppercase tracking-wider">
             <Activity className="size-3 text-[var(--color-bull)]" />
             Live
           </div>
@@ -36,10 +36,10 @@ export function LiveAutoExecFeed() {
       <CardContent className="flex-1 overflow-y-auto min-h-0 pt-0">
         {liveTrades.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="size-10 rounded-full bg-white/[0.02] border border-[var(--color-border)] grid place-items-center mb-3">
-              <Zap className="size-5 text-[var(--color-fg-muted)]" />
+            <div className="size-10 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] grid place-items-center mb-3">
+              <Zap className="size-5 text-[var(--fg-muted)]" />
             </div>
-            <p className="text-xs text-[var(--color-fg-subtle)]">
+            <p className="text-xs text-[var(--fg-subtle)]">
               No active AI trades.
             </p>
           </div>
@@ -48,7 +48,7 @@ export function LiveAutoExecFeed() {
             {liveTrades.map((event, i) => (
               <div
                 key={`${event.symbol}:${event.executedAt}:${i}`}
-                className="flex items-center justify-between gap-3 p-2.5 rounded-md border border-[var(--color-border)] bg-white/[0.01]"
+                className="flex items-center justify-between gap-3 p-2.5 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)]"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -60,16 +60,16 @@ export function LiveAutoExecFeed() {
                     )}>
                       {event.signal}
                     </span>
-                    <span className="text-xs font-semibold text-[var(--color-fg)]">
+                    <span className="text-xs font-semibold text-[var(--fg)]">
                       {event.symbol.replace("USDT", "")}
                     </span>
                   </div>
-                  <div className="text-[10px] text-[var(--color-fg-subtle)] truncate">
+                  <div className="text-[10px] text-[var(--fg-subtle)] truncate">
                     {event.type}
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-[10px] text-[var(--color-fg-muted)]">
+                  <div className="text-[10px] text-[var(--fg-muted)]">
                     {formatDistanceToNowStrict(event.executedAt, { addSuffix: true })}
                   </div>
                 </div>
