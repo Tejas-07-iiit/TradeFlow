@@ -8,7 +8,7 @@ import { getLiveKeysStats, getRecentRateLimitEvents } from "./state";
 
 const MAX_CONCURRENT = process.env.AI_ORCH_MAX_CONCURRENT
   ? parseInt(process.env.AI_ORCH_MAX_CONCURRENT, 10)
-  : 2;
+  : 1;
 
 const PACING_DELAY_MS = process.env.AI_ORCH_PACING_MS
   ? parseInt(process.env.AI_ORCH_PACING_MS, 10)
@@ -89,10 +89,18 @@ export class Scheduler {
       // Trigger the execution
       this.execute(entry.job, this)
         .then((result) => {
-          entry.resolve({
-            ...result,
-            durationMs: result.durationMs || Date.now() - startedAt,
-          });
+          if (result.isTransient && entry.job.attempt < 5 && entry.job.expiresAt > Date.now()) {
+            this.activeCount--;
+            this.reEnqueue(entry);
+            this.tick();
+          } else {
+            entry.resolve({
+              ...result,
+              durationMs: result.durationMs || Date.now() - startedAt,
+            });
+            this.activeCount--;
+            this.tick();
+          }
         })
         .catch((err) => {
           const message = err instanceof Error ? err.message : String(err);
@@ -101,10 +109,11 @@ export class Scheduler {
             error: `Pipeline crashed: ${message}`,
             durationMs: Date.now() - startedAt,
           });
-        })
-        .finally(() => {
           this.activeCount--;
           this.tick();
+        })
+        .finally(() => {
+          // pacing is handled on tick start via timeSinceLast
         });
 
       // Break loop to enforce pacing delay for next tick if MAX_CONCURRENT > 1
@@ -117,6 +126,13 @@ export class Scheduler {
         return;
       }
     }
+  }
+
+  private reEnqueue(entry: QueueEntry): void {
+    entry.job.attempt++;
+    entry.job.runAfter = Date.now() + Math.pow(2, entry.job.attempt) * 2000 + Math.random() * 2000;
+    this.totalRetries++;
+    this.queue.enqueue(entry);
   }
 
   stats(extras: { inFlightKeys: string[]; model?: string }): OrchestratorStats {

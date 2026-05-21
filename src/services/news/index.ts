@@ -3,6 +3,7 @@ import { WATCHLIST_SYMBOLS, type WatchlistSymbol } from "@/lib/market/symbols";
 import { getFearGreed, type FearGreed } from "../sentiment/fear-greed";
 import { getCryptoCompareNewsDetailed, type CCNewsItem } from "./cryptocompare";
 import { getRedditHotDetailed, type RedditPost } from "./reddit";
+import { saveNewsToStore, loadNewsFromStore } from "./news-store";
 
 export type NewsSource = "cryptocompare" | "reddit";
 export type Mood = "very bearish" | "bearish" | "neutral" | "bullish" | "very bullish";
@@ -205,55 +206,93 @@ function buildTrending(items: FeedItem[]): TrendingTicker[] {
  * items lead; clients can re-sort by score for "trending" views.
  */
 export async function getNewsFeed(): Promise<NewsFeed> {
-  const [ccRes, redditRes, fng] = await Promise.all([
-    getCryptoCompareNewsDetailed().catch(
-      (err) =>
-        ({
-          items: [] as CCNewsItem[],
-          error: err instanceof Error ? err.message : String(err),
-        }) as Awaited<ReturnType<typeof getCryptoCompareNewsDetailed>>,
-    ),
-    getRedditHotDetailed().catch(
-      (err) =>
-        ({
-          posts: [] as RedditPost[],
-          error: err instanceof Error ? err.message : String(err),
-        }) as Awaited<ReturnType<typeof getRedditHotDetailed>>,
-    ),
-    getFearGreed().catch(() => null),
-  ]);
+  try {
+    const [ccRes, redditRes, fng] = await Promise.all([
+      getCryptoCompareNewsDetailed().catch(
+        (err) =>
+          ({
+            items: [] as CCNewsItem[],
+            error: err instanceof Error ? err.message : String(err),
+          }) as Awaited<ReturnType<typeof getCryptoCompareNewsDetailed>>,
+      ),
+      getRedditHotDetailed().catch(
+        (err) =>
+          ({
+            posts: [] as RedditPost[],
+            error: err instanceof Error ? err.message : String(err),
+          }) as Awaited<ReturnType<typeof getRedditHotDetailed>>,
+      ),
+      getFearGreed().catch(() => null),
+    ]);
 
-  const cc = ccRes.items;
-  const reddit = redditRes.posts;
+    const cc = ccRes.items;
+    const reddit = redditRes.posts;
 
-  const items = [...ccToFeed(cc), ...redditToFeed(reddit)].sort(
-    (a, b) => b.publishedAt - a.publishedAt,
-  );
+    // Check if both sources failed to fetch anything (either error or returned empty lists)
+    const ccFailed = !!ccRes.error || cc.length === 0;
+    const redditFailed = !!redditRes.error || reddit.length === 0;
 
-  const sources: SourceStatus[] = [
-    {
-      source: "cryptocompare",
-      status: ccRes.error ? (ccRes.stale ? "stale" : "failed") : "ok",
-      count: cc.length,
-      error: ccRes.error,
-    },
-    {
-      source: "reddit",
-      status: redditRes.error ? (redditRes.stale ? "stale" : "failed") : "ok",
-      count: reddit.length,
-      error: redditRes.error,
-    },
-  ];
+    if (ccFailed && redditFailed) {
+      const cached = await loadNewsFromStore();
+      if (cached) {
+        console.info("[news] Both sources failed/empty, serving from local news store cache.");
+        // Mark all sources as stale to reflect they come from the cache
+        cached.sources = cached.sources.map((s) => ({
+          ...s,
+          status: "stale" as const,
+        }));
+        return cached;
+      }
+    }
 
-  return {
-    items,
-    trending: buildTrending(items),
-    pulse: {
-      fearGreed: fng,
-      redditMood: redditMoodFrom(reddit),
-      newsMood: newsMoodFrom(cc),
-    },
-    fetchedAt: Math.floor(Date.now() / 1000),
-    sources,
-  };
+    const items = [...ccToFeed(cc), ...redditToFeed(reddit)].sort(
+      (a, b) => b.publishedAt - a.publishedAt,
+    );
+
+    const sources: SourceStatus[] = [
+      {
+        source: "cryptocompare",
+        status: ccRes.error ? (ccRes.stale ? "stale" : "failed") : "ok",
+        count: cc.length,
+        error: ccRes.error,
+      },
+      {
+        source: "reddit",
+        status: redditRes.error ? (redditRes.stale ? "stale" : "failed") : "ok",
+        count: reddit.length,
+        error: redditRes.error,
+      },
+    ];
+
+    const feed: NewsFeed = {
+      items,
+      trending: buildTrending(items),
+      pulse: {
+        fearGreed: fng,
+        redditMood: redditMoodFrom(reddit),
+        newsMood: newsMoodFrom(cc),
+      },
+      fetchedAt: Math.floor(Date.now() / 1000),
+      sources,
+    };
+
+    // Save to local cache store if we got some items successfully
+    if (items.length > 0) {
+      await saveNewsToStore(feed);
+    }
+
+    return feed;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(`[news/index] Aggregator exception: ${msg}, attempting local cache fallback.`);
+    const cached = await loadNewsFromStore();
+    if (cached) {
+      cached.sources = cached.sources.map((s) => ({
+        ...s,
+        status: "stale" as const,
+      }));
+      return cached;
+    }
+    throw err;
+  }
 }

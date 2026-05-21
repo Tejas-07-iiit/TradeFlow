@@ -32,6 +32,7 @@ import {
 } from "./classifier";
 import { coinDisplayName, getCoinNewsFeed } from "./coin-feed";
 import type { FeedItem } from "./index";
+import { loadNewsFromStore } from "./news-store";
 import {
   noCoverageNewsResult,
   unavailableNewsResult,
@@ -74,7 +75,33 @@ async function runValidation(
   options: ValidateNewsOptions,
 ): Promise<NewsValidationResult> {
   try {
-    const feed = await getCoinNewsFeed(symbol);
+    let isFromCache = false;
+    let feed = await getCoinNewsFeed(symbol);
+    if (feed.unavailable) {
+      const cachedFeed = await loadNewsFromStore();
+      if (cachedFeed) {
+        const cutoff = Math.floor(Date.now() / 1000) - 24 * 3600; // 24 hours
+        const items = cachedFeed.items
+          .filter((it) => it.mentions.includes(symbol))
+          .filter((it) => it.publishedAt >= cutoff);
+        if (items.length > 0) {
+          isFromCache = true;
+          feed = {
+            symbol,
+            items,
+            sourceHealth: cachedFeed.sources.map((s) => ({
+              source: s.source,
+              status: "stale" as const,
+              itemCount: items.filter((it) => it.source === s.source).length,
+              error: s.error,
+            })),
+            fetchedAt: cachedFeed.fetchedAt,
+            unavailable: false,
+          };
+        }
+      }
+    }
+
     if (feed.unavailable) {
       return unavailableNewsResult(symbol, side, feed.error ?? "feed unavailable");
     }
@@ -86,16 +113,24 @@ async function runValidation(
     const nowSec = Math.floor(Date.now() / 1000);
 
     // Rule-classify everything first.
-    const ruleClassified = feed.items.map((it) =>
-      classifyFromRules(it, coinName, nowSec),
-    );
+    const ruleClassified = feed.items.map((it) => {
+      const cls = classifyFromRules(it, coinName, nowSec);
+      if (isFromCache) {
+        cls.confidence = "low";
+        // Recalculate impact using forced low confidence
+        const raw = NEWS_CLASS_RAW_IMPACT[cls.class];
+        const confMult = NEWS_CONFIDENCE_MULTIPLIER["low"];
+        cls.impact = raw * confMult * cls.freshnessWeight;
+      }
+      return cls;
+    });
 
     // Hybrid mode: pick the top-N by absolute pre-LLM impact, ask the
     // LLM for verdicts, and merge. Items the LLM didn't return retain
     // their rule classification.
     let llmEnrichmentUsed = false;
     let enriched = ruleClassified;
-    if (!options.rulesOnly && ruleClassified.length > 0) {
+    if (!options.rulesOnly && !isFromCache && ruleClassified.length > 0) {
       const topForLlm = [...ruleClassified]
         .sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact))
         .slice(0, ENRICH_TOP_N)

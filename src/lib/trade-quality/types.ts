@@ -59,6 +59,8 @@ export interface TradeProposal {
   /** Regime classifier output (e.g. "Trending", "Choppy"). */
   marketRegime: string;
   book: BookContext;
+  /** Cache key containing symbol info for same-symbol validation. */
+  key?: string;
 }
 
 /**

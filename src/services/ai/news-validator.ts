@@ -96,6 +96,10 @@ export async function classifyNewsItemsLLM(
   const hit = cache.get(cacheKey);
   if (hit && hit.expiresAt > Date.now()) return hit.value;
 
+  if (allowFallback && preferredAccountId === undefined) {
+    return null;
+  }
+
   let chain;
   try {
     chain = getLlmProviderChain({
@@ -146,49 +150,44 @@ export async function classifyNewsItemsLLM(
     `Items:\n${itemsBlob}\n\n` +
     `Return JSON only.`;
 
-  let lastErr: unknown = null;
-  for (const provider of chain) {
-    try {
-      const res = await provider.chatJson(
-        [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        LlmVerdictSchema,
-        { maxTokens: 600, temperature: 0.1, timeoutMs: 15_000 },
-      );
-      // Reorder/filter to the input set so callers can zip by id safely.
-      const byId = new Map(res.verdicts.map((v) => [v.id, v]));
-      const ordered: LlmClassifierVerdict[] = trimmed
-        .map((it) => byId.get(it.id))
-        .filter((v): v is LlmClassifierVerdict => v != null);
+  const provider = chain[0];
+  try {
+    const res = await provider.chatJson(
+      [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      LlmVerdictSchema,
+      { maxTokens: 600, temperature: 0.1, timeoutMs: 15_000 },
+    );
+    // Reorder/filter to the input set so callers can zip by id safely.
+    const byId = new Map(res.verdicts.map((v) => [v.id, v]));
+    const ordered: LlmClassifierVerdict[] = trimmed
+      .map((it) => byId.get(it.id))
+      .filter((v): v is LlmClassifierVerdict => v != null);
 
-      if (ordered.length === 0) {
-        console.warn(
-          `[news/llm-classifier] ${symbol}: LLM returned 0 matching ids — falling back to rules`,
-        );
-        if (!allowFallback) {
-          throw new Error("LLM returned 0 matching ids");
-        }
-        return null;
-      }
-
-      cache.set(cacheKey, { value: ordered, expiresAt: Date.now() + CACHE_TTL_MS });
-      return ordered;
-    } catch (err) {
-      lastErr = err;
-      const msg = err instanceof Error ? err.message : String(err);
+    if (ordered.length === 0) {
       console.warn(
-        `[news/llm-classifier] ${symbol}: ${provider.name}#${provider.accountId ?? 1} failed: ${msg}`,
+        `[news/llm-classifier] ${symbol}: LLM returned 0 matching ids — falling back to rules`,
       );
-      // Try next link in the chain.
+      if (!allowFallback) {
+        throw new Error("LLM returned 0 matching ids");
+      }
+      return null;
     }
-  }
 
-  if (!allowFallback) {
-    throw lastErr || new Error("All news classification providers failed");
+    cache.set(cacheKey, { value: ordered, expiresAt: Date.now() + CACHE_TTL_MS });
+    return ordered;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[news/llm-classifier] ${symbol}: ${provider.name}#${provider.accountId ?? 1} failed: ${msg}`,
+    );
+    if (!allowFallback) {
+      throw err;
+    }
+    return null;
   }
-  return null;
 }
 
 function truncate(s: string, n: number): string {

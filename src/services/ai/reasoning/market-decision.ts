@@ -284,96 +284,97 @@ export async function getMarketDecisionFor(
     return entry;
   }
 
+  if (allowFallback && preferredAccountId === undefined) {
+    const fallbackDecision = localFallbackDecision(input);
+    const fallbackEntry: CachedDecision = {
+      decision: fallbackDecision,
+      generatedAt: new Date().toISOString(),
+      provider: "local",
+      model: "fallback-engine",
+      key,
+      source: "local-fallback",
+    };
+    writeCache(key, fallbackEntry);
+    lastSuccessfulAnalysisTime[symbol] = Date.now();
+    return fallbackEntry;
+  }
+
   const messages = buildMarketDecisionPrompt(input);
   const chain = getLlmProviderChain({
     purpose: "decision",
     tier: prefilter.tier,
     preferredAccountId,
   });
+
   if (chain.length === 0) {
     console.error("[ai/market-decision] no provider configured for decision");
     if (!allowFallback) {
       throw new Error("No provider configured for decision");
     }
-    return null;
+    const fallbackDecision = localFallbackDecision(input);
+    const fallbackEntry: CachedDecision = {
+      decision: fallbackDecision,
+      generatedAt: new Date().toISOString(),
+      provider: "local",
+      model: "fallback-engine",
+      key,
+      source: "local-fallback",
+    };
+    writeCache(key, fallbackEntry);
+    lastSuccessfulAnalysisTime[symbol] = Date.now();
+    return fallbackEntry;
   }
+
+  const provider = chain[0];
   console.info(
-    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} chain=${chain
-      .map((p) => `${formatProviderLabel(p)}`)
-      .join(" → ")}`,
+    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} provider=${formatProviderLabel(provider)}`,
   );
 
-  let lastErr: unknown = null;
-  for (let i = 0; i < chain.length; i++) {
-    const provider = chain[i];
-    try {
-      // 1200 output tokens comfortably fits the schema (reasoning≤4×200
-      // + warnings≤3×200 + summaries ≈ ~1.6K chars ≈ ~500 tokens). The
-      // previous 2000 cap meant every reservation locked out a 2K slice
-      // of TPM budget that almost never materialized — at 2 concurrent
-      // calls the local tracker exhausted the 12K cap on llama-3.3-70b
-      // while Groq itself reported only ~5K actual usage.
-      // Use a NON-reasoning model — reasoning models burn output tokens
-      // on hidden chain-of-thought and regularly hit "max completion
-      // tokens reached" on this schema.
-      const decision = await provider.chatJson(messages, MarketDecisionSchema, {
-        temperature: 0.15,
-        maxTokens: 1200,
-        timeoutMs: 30_000,
-      });
-      const entry: CachedDecision = {
-        decision,
-        generatedAt: new Date().toISOString(),
-        provider: provider.name,
-        model: provider.model,
-        key,
-        source: "llm",
-      };
-      writeCache(key, entry);
-      lastSuccessfulAnalysisTime[symbol] = Date.now();
-      if (i > 0) {
-        console.warn(
-          `[ai/market-decision] served via fallback #${i}: ${formatProviderLabel(provider)}`,
-        );
-      }
-      return entry;
-    } catch (err) {
-      lastErr = err;
-      const more = i < chain.length - 1;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn(
-        `[ai/market-decision] ${formatProviderLabel(provider)} failed${
-          more ? " — trying next fallback" : ""
-        }: ${msg}`,
-      );
+  try {
+    // 1200 output tokens comfortably fits the schema (reasoning≤4×200
+    // + warnings≤3×200 + summaries ≈ ~1.6K chars ≈ ~500 tokens). The
+    // previous 2000 cap meant every reservation locked out a 2K slice
+    // of TPM budget that almost never materialized — at 2 concurrent
+    // calls the local tracker exhausted the 12K cap on llama-3.3-70b
+    // while Groq itself reported only ~5K actual usage.
+    // Use a NON-reasoning model — reasoning models burn output tokens
+    // on hidden chain-of-thought and regularly hit "max completion
+    // tokens reached" on this schema.
+    const decision = await provider.chatJson(messages, MarketDecisionSchema, {
+      temperature: 0.15,
+      maxTokens: 1200,
+      timeoutMs: 30_000,
+    });
+    const entry: CachedDecision = {
+      decision,
+      generatedAt: new Date().toISOString(),
+      provider: provider.name,
+      model: provider.model,
+      key,
+      source: "llm",
+    };
+    writeCache(key, entry);
+    lastSuccessfulAnalysisTime[symbol] = Date.now();
+    return entry;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[ai/market-decision] ${formatProviderLabel(provider)} failed: ${msg}`,
+    );
+    if (!allowFallback) {
+      throw err;
     }
+    const fallbackDecision = localFallbackDecision(input);
+    const fallbackEntry: CachedDecision = {
+      decision: fallbackDecision,
+      generatedAt: new Date().toISOString(),
+      provider: "local",
+      model: "fallback-engine",
+      key,
+      source: "local-fallback",
+    };
+    writeCache(key, fallbackEntry);
+    lastSuccessfulAnalysisTime[symbol] = Date.now();
+    return fallbackEntry;
   }
-
-  if (!allowFallback) {
-    throw lastErr || new Error("All market decision providers failed");
-  }
-
-  // Every LLM provider exhausted. Instead of returning null and freezing
-  // the executor for hours, hand control to the local deterministic engine.
-  // It reads the same snapshot the LLM would have read and produces a
-  // defensively-sized decision. Trading continues in degraded mode.
-  console.warn(
-    `[ai/market-decision] ${input.symbol} all providers failed — using local fallback engine. lastErr=${
-      lastErr instanceof Error ? lastErr.message : String(lastErr)
-    }`,
-  );
-  const fallbackDecision = localFallbackDecision(input);
-  const fallbackEntry: CachedDecision = {
-    decision: fallbackDecision,
-    generatedAt: new Date().toISOString(),
-    provider: "local",
-    model: "fallback-engine",
-    key,
-    source: "local-fallback",
-  };
-  // Shorter TTL than LLM cache (30s vs 90s) so we retry the LLM chain
-  // sooner once cooldowns elapse.
-  writeCache(key, fallbackEntry);
-  lastSuccessfulAnalysisTime[symbol] = Date.now();
-  return fallbackEntry;
 }

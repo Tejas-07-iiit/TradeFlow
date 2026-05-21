@@ -51,6 +51,8 @@ export class PriorityQueue {
     for (const p of priorities) {
       const bucket = this.buckets.get(p);
       if (!bucket || bucket.length === 0) continue;
+      
+      // Clean up expired jobs at the head of the bucket first
       while (bucket.length > 0 && bucket[0].job.expiresAt <= now) {
         const stale = bucket.shift()!;
         this.expiredCount++;
@@ -61,7 +63,12 @@ export class PriorityQueue {
           durationMs: now - stale.job.enqueuedAt,
         });
       }
-      if (bucket.length > 0) return bucket.shift();
+      
+      // Find the first job that is eligible to run (runAfter <= now)
+      const eligibleIdx = bucket.findIndex((e) => e.job.runAfter <= now);
+      if (eligibleIdx >= 0) {
+        return bucket.splice(eligibleIdx, 1)[0];
+      }
     }
     return undefined;
   }

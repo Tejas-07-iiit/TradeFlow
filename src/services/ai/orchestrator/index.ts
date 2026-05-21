@@ -64,6 +64,8 @@ export function submitDecisionJob(
     enqueuedAt: now,
     expiresAt: now + PRIORITY_SLA_MS[priority],
     abortSignal: options.signal,
+    attempt: 0,
+    runAfter: 0,
   };
 
   const promise = scheduler.submit(job).then((result) => {
@@ -110,6 +112,8 @@ export function submitThesisJob(
     enqueuedAt: now,
     expiresAt: now + PRIORITY_SLA_MS[priority],
     abortSignal: options.signal,
+    attempt: 0,
+    runAfter: 0,
   };
 
   const promise = scheduler.submit(job).then((result) => {
@@ -161,6 +165,8 @@ export function submitNewsJob(
     enqueuedAt: now,
     expiresAt: now + PRIORITY_SLA_MS[priority],
     abortSignal: options.signal,
+    attempt: 0,
+    runAfter: 0,
   };
 
   const promise = scheduler.submit(job).then((result) => {

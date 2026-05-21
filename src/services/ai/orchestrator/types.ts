@@ -67,6 +67,9 @@ export interface DecisionJob {
   enqueuedAt: number;
   expiresAt: number;
   abortSignal?: AbortSignal;
+  attempt: number;
+  runAfter: number;
+  modelOverride?: string;
 }
 
 export interface ThesisJob {
@@ -79,6 +82,9 @@ export interface ThesisJob {
   enqueuedAt: number;
   expiresAt: number;
   abortSignal?: AbortSignal;
+  attempt: number;
+  runAfter: number;
+  modelOverride?: string;
 }
 
 export interface NewsJob {
@@ -91,6 +97,9 @@ export interface NewsJob {
   enqueuedAt: number;
   expiresAt: number;
   abortSignal?: AbortSignal;
+  attempt: number;
+  runAfter: number;
+  modelOverride?: string;
 }
 
 export type AnalysisJob = DecisionJob | ThesisJob | NewsJob;
@@ -106,6 +115,7 @@ export interface JobResult {
   error?: string;
   source?: "llm" | "prefilter" | "local-fallback" | "cache" | "expired" | "aborted";
   durationMs: number;
+  isTransient?: boolean;
 }
 
 export interface KeyLoadStats {
@@ -117,6 +127,10 @@ export interface KeyLoadStats {
   totalRequests: number;
   total429s: number;
   avgLatencyMs: number;
+  healthScore: number;
+  cooldownUntil: number;
+  recent429s: number;
+  status: "healthy" | "cooldown" | "exhausted";
 }
 
 export interface RateLimitEvent {

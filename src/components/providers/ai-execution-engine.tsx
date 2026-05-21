@@ -288,6 +288,7 @@ export function AiExecutionEngine() {
           msSinceLastExecution: msSinceLast,
           availableBalance,
         },
+        key: entry.key,
       };
     }
 

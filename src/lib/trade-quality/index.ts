@@ -36,45 +36,11 @@ export function deriveMetrics(proposal: TradeProposal): DerivedMetrics {
   let entryDriftBps = 0;
 
   if (
-    Number.isFinite(expectedEntry) &&
-    expectedEntry > 0 &&
-    Number.isFinite(currentPrice) &&
-    currentPrice > 0
+    !Number.isFinite(expectedEntry) ||
+    expectedEntry <= 0 ||
+    !Number.isFinite(currentPrice) ||
+    currentPrice <= 0
   ) {
-    // Formula requested: driftPercent = abs(currentPrice - expectedEntry) / expectedEntry * 100
-    const rawDriftPercent = (Math.abs(currentPrice - expectedEntry) / expectedEntry) * 100;
-
-    // 2. Add defensive checks and debugging safeguards for impossible drift (> 100%)
-    // or mismatched symbol prices (e.g. order of magnitude difference).
-    const ratio = currentPrice / expectedEntry;
-    const isMismatchedSymbolPrice = ratio > 5 || ratio < 0.2;
-    const isImpossibleDrift = rawDriftPercent > 100 || isMismatchedSymbolPrice;
-
-    if (isImpossibleDrift) {
-      console.error(
-        `[DRIFT-PROTECTION-ALERT] Impossible drift detected! ` +
-        `Symbol: ${proposal.symbol}. ` +
-        `Expected Entry (LLM): ${expectedEntry}, ` +
-        `Current Price (Live): ${currentPrice}. ` +
-        `Calculated Drift: ${rawDriftPercent.toFixed(2)}%. ` +
-        `Mismatched Symbol Price: ${isMismatchedSymbolPrice}. ` +
-        `This indicates stale/mismatched market price or calculation bug.`
-      );
-      // Cap invalid drift output to prevent impossible percentages in logs/UI,
-      // but ensure it still triggers rejection by capping it at 100% (10,000 basis points)
-      entryDriftBps = 10_000;
-    } else {
-      // Normal drift calculation: round to basis points (1% = 100 bps) to prevent decimal precision errors
-      entryDriftBps = Math.round(rawDriftPercent * 100);
-    }
-
-    console.info(
-      `[DRIFT-CALCULATION] Symbol: ${proposal.symbol}, ` +
-      `expectedEntry: ${expectedEntry}, ` +
-      `currentPrice: ${currentPrice}, ` +
-      `drift: ${(entryDriftBps / 100).toFixed(2)}%`
-    );
-  } else {
     console.error(
       `[DRIFT-CALCULATION-ERROR] Invalid inputs for drift calculation. ` +
       `Symbol: ${proposal.symbol}, ` +
@@ -83,6 +49,60 @@ export function deriveMetrics(proposal: TradeProposal): DerivedMetrics {
     );
     // Safe fallback value that triggers rejection (cap drift at 100% / 10,000 basis points)
     entryDriftBps = 10_000;
+  } else {
+    // Verify expectedEntry and currentPrice are same symbol using key if present
+    let symbolMismatch = false;
+    if (proposal.key) {
+      const keySymbol = proposal.key.split("|")[0];
+      if (keySymbol && keySymbol.toUpperCase() !== proposal.symbol.toUpperCase()) {
+        console.error(
+          `[DRIFT-PROTECTION-ALERT] Symbol mismatch! ` +
+          `Proposal symbol: ${proposal.symbol}, Key symbol: ${keySymbol}. ` +
+          `Expected Entry: ${expectedEntry.toFixed(4)}, Current Price: ${currentPrice.toFixed(4)}`
+        );
+        symbolMismatch = true;
+      }
+    }
+
+    // Magnitude check: if prices differ by more than 3x, it's almost certainly mismatched symbols
+    const ratio = currentPrice / expectedEntry;
+    const priceMagnitudeMismatch = ratio > 3.0 || ratio < 0.33;
+
+    if (symbolMismatch || priceMagnitudeMismatch) {
+      console.error(
+        `[DRIFT-PROTECTION-ALERT] Impossible drift/mismatch detected! ` +
+        `Symbol: ${proposal.symbol}. ` +
+        `Expected Entry: ${expectedEntry.toFixed(4)}, Current Price: ${currentPrice.toFixed(4)}. ` +
+        `Symbol Mismatch: ${symbolMismatch}, Price Ratio: ${ratio.toFixed(4)}. ` +
+        `Magnitude Mismatch: ${priceMagnitudeMismatch}. ` +
+        `Capping drift to 100% (10,000 BPS) to force rejection.`
+      );
+      entryDriftBps = 10_000;
+    } else {
+      // Formula: driftPercent = abs(currentPrice - expectedEntry) / expectedEntry * 100
+      const rawDriftPercent = (Math.abs(currentPrice - expectedEntry) / expectedEntry) * 100;
+
+      if (rawDriftPercent > 100) {
+        console.error(
+          `[DRIFT-PROTECTION-ALERT] Impossible raw drift percent > 100%! ` +
+          `Symbol: ${proposal.symbol}. ` +
+          `Expected Entry: ${expectedEntry.toFixed(4)}, Current Price: ${currentPrice.toFixed(4)}. ` +
+          `Calculated Drift: ${rawDriftPercent.toFixed(4)}%. ` +
+          `Capping to 100% (10,000 BPS) to force rejection.`
+        );
+        entryDriftBps = 10_000;
+      } else {
+        // Normal drift calculation: round to basis points (1% = 100 bps) to prevent decimal precision errors
+        entryDriftBps = Math.round(rawDriftPercent * 100);
+      }
+    }
+
+    console.info(
+      `[DRIFT-CALCULATION] Symbol: ${proposal.symbol}, ` +
+      `expectedEntry: ${expectedEntry.toFixed(4)}, ` +
+      `currentPrice: ${currentPrice.toFixed(4)}, ` +
+      `drift: ${(entryDriftBps / 100).toFixed(4)}% (${entryDriftBps} BPS)`
+    );
   }
 
   const vol = proposal.atrPct ?? 0;

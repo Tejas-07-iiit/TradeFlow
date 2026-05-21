@@ -95,6 +95,10 @@ export async function getMarketThesisFor(
   const cached = readCache(key);
   if (cached) return cached;
 
+  if (allowFallback && preferredAccountId === undefined) {
+    return null;
+  }
+
   const chain = getLlmProviderChain({ purpose: "thesis", preferredAccountId });
   if (chain.length === 0) {
     console.error("[ai/market-thesis] no provider configured for thesis");
@@ -104,49 +108,30 @@ export async function getMarketThesisFor(
     return null;
   }
 
-  let lastErr: unknown = null;
-  for (let i = 0; i < chain.length; i++) {
-    const provider = chain[i];
-    try {
-      const messages = buildMarketThesisPrompt(input);
-      const thesis = await provider.chatJson(messages, MarketThesisSchema, {
-        temperature: 0.2,
-        maxTokens: 600,
-        timeoutMs: 20_000,
-      });
-      const cacheEntry: CachedThesis = {
-        thesis,
-        generatedAt: new Date().toISOString(),
-        provider: provider.name,
-        model: provider.model,
-      };
-      writeCache(key, cacheEntry);
-      if (i > 0) {
-        console.warn(
-          `[ai/market-thesis] served via fallback #${i}: ${formatProviderLabel(provider)}`,
-        );
-      }
-      return cacheEntry;
-    } catch (err) {
-      lastErr = err;
-      const more = i < chain.length - 1;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn(
-        `[ai/market-thesis] ${formatProviderLabel(provider)} failed${
-          more ? " — trying next fallback" : ""
-        }: ${msg}`,
-      );
+  const provider = chain[0];
+  try {
+    const messages = buildMarketThesisPrompt(input);
+    const thesis = await provider.chatJson(messages, MarketThesisSchema, {
+      temperature: 0.2,
+      maxTokens: 600,
+      timeoutMs: 20_000,
+    });
+    const cacheEntry: CachedThesis = {
+      thesis,
+      generatedAt: new Date().toISOString(),
+      provider: provider.name,
+      model: provider.model,
+    };
+    writeCache(key, cacheEntry);
+    return cacheEntry;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `[ai/market-thesis] ${formatProviderLabel(provider)} failed: ${msg}`,
+    );
+    if (!allowFallback) {
+      throw err;
     }
+    return null;
   }
-
-  console.error(
-    `[ai/market-thesis] all providers failed. lastErr=${
-      lastErr instanceof Error ? lastErr.message : String(lastErr)
-    }`,
-  );
-
-  if (!allowFallback) {
-    throw lastErr || new Error("All thesis providers failed");
-  }
-  return null;
 }
