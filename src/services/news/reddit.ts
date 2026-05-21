@@ -48,22 +48,26 @@ interface RedditListing {
 }
 
 /**
- * `www.reddit.com/.json` aggressively rate-limits data-center IPs (AWS,
- * GCP, etc.) — production deployments often see 403/429 even with a sane
- * User-Agent. `old.reddit.com` is served from a different edge config and
- * is far more tolerant in practice. We try the friendly host first and
- * fall back to www, then surface the failure so the UI can show why a
- * source is empty.
+ * `www.reddit.com/.json` and `old.reddit.com/.json` aggressively block
+ * data-center IPs (AWS, GCP, Azure). `api.reddit.com` is Reddit's
+ * official API host and is far more tolerant of server-to-server calls
+ * with a proper User-Agent. We try it first, then fall back.
  */
 const ENDPOINTS = [
+  "https://api.reddit.com/r/CryptoCurrency/hot?limit=30",
   "https://old.reddit.com/r/CryptoCurrency/hot.json?limit=30",
   "https://www.reddit.com/r/CryptoCurrency/hot.json?limit=30",
 ];
+/**
+ * Reddit requires a descriptive User-Agent for API access. Generic
+ * "node-fetch" or empty UAs get 403/429 from all hosts. The Reddit
+ * API docs recommend: `<platform>:<app ID>:<version> (by /u/<reddit username>)`
+ */
 const USER_AGENT =
   process.env.REDDIT_USER_AGENT?.trim() ||
-  "tradeflow:news-widget:1.0 (paper-trading simulator)";
+  "linux:tradeflow:1.0.0 (by /u/tradeflow_bot)";
 const TTL_MS = 5 * 60 * 1000;
-const FETCH_TIMEOUT_MS = 6_000;
+const FETCH_TIMEOUT_MS = 8_000;
 
 export interface RedditFetchResult {
   posts: RedditPost[];
@@ -88,7 +92,10 @@ export async function getRedditHotDetailed(): Promise<RedditFetchResult> {
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
       const res = await fetch(endpoint, {
-        headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+        headers: {
+          "User-Agent": USER_AGENT,
+          Accept: "application/json",
+        },
         signal: controller.signal,
         next: { revalidate: 300 },
       });
@@ -97,18 +104,27 @@ export async function getRedditHotDetailed(): Promise<RedditFetchResult> {
         continue;
       }
       const json = (await res.json()) as RedditListing;
-      const rows = json.data?.children ?? [];
-      const posts: RedditPost[] = rows
+      const children = json.data?.children;
+      // Validate shape — Reddit may return valid JSON that isn't the
+      // expected listing structure (e.g. error pages, captchas).
+      if (!children || !Array.isArray(children)) {
+        errors.push(`${new URL(endpoint).host} unexpected response shape`);
+        continue;
+      }
+      const posts: RedditPost[] = children
         .map((r) => r.data)
-        .filter((d): d is NonNullable<typeof d> => !!d && !d.over_18)
+        .filter(
+          (d): d is NonNullable<typeof d> =>
+            d != null && typeof d.id === "string" && typeof d.title === "string" && !d.over_18,
+        )
         .filter((d) => !d.stickied)
         .map((d) => ({
           id: d.id,
           title: d.title,
-          score: d.score,
-          numComments: d.num_comments,
-          createdAt: d.created_utc,
-          flair: d.link_flair_text,
+          score: d.score ?? 0,
+          numComments: d.num_comments ?? 0,
+          createdAt: d.created_utc ?? 0,
+          flair: d.link_flair_text ?? null,
           selftext: (d.selftext ?? "").slice(0, 400),
           permalink: `https://reddit.com${d.permalink}`,
           url: d.url,

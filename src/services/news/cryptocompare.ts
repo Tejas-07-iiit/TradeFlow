@@ -70,7 +70,11 @@ export async function getCryptoCompareNewsDetailed(): Promise<CCFetchResult> {
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(buildEndpoint(), {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent":
+          "tradeflow:news-aggregator:1.0 (paper-trading simulator)",
+      },
       signal: controller.signal,
       next: { revalidate: 300 },
     });
@@ -81,32 +85,37 @@ export async function getCryptoCompareNewsDetailed(): Promise<CCFetchResult> {
       return { items: [], error: err };
     }
     const json = (await res.json()) as CCResponse;
-    if (!json.Data) {
-      const err = json.Message ?? "empty payload";
+    // CryptoCompare sometimes returns Data as {} or "Success" instead of
+    // an array — guard with Array.isArray to prevent .map() crash.
+    if (!json.Data || !Array.isArray(json.Data)) {
+      const err = json.Message ?? `unexpected Data shape: ${typeof json.Data}`;
       console.warn(`[news/cryptocompare] ${err}`);
       if (cache) return { items: cache.value, error: err, stale: true };
       return { items: [], error: err };
     }
 
-    const items: CCNewsItem[] = json.Data.map((row) => {
-      const up = Number(row.upvotes ?? 0);
-      const down = Number(row.downvotes ?? 0);
-      const total = up + down;
-      // Net-vote score in [-1, 1]. Items with no votes land at 0 (neutral),
-      // not a missing field, so UI doesn't need a special case.
-      const votes = total > 0 ? (up - down) / total : 0;
-      return {
-        id: row.id,
-        title: row.title,
-        body: (row.body ?? "").slice(0, 400),
-        url: row.url,
-        source: row.source,
-        publishedAt: row.published_on,
-        imageUrl: row.imageurl || null,
-        categories: row.categories ?? "",
-        votes,
-      };
-    });
+    const items: CCNewsItem[] = json.Data
+      .filter(
+        (row): row is NonNullable<typeof row> =>
+          row != null && typeof row.id !== "undefined" && typeof row.title === "string",
+      )
+      .map((row) => {
+        const up = Number(row.upvotes ?? 0);
+        const down = Number(row.downvotes ?? 0);
+        const total = up + down;
+        const votes = total > 0 ? (up - down) / total : 0;
+        return {
+          id: String(row.id),
+          title: row.title,
+          body: (row.body ?? "").slice(0, 400),
+          url: row.url,
+          source: row.source,
+          publishedAt: row.published_on,
+          imageUrl: row.imageurl || null,
+          categories: row.categories ?? "",
+          votes,
+        };
+      });
 
     cache = { value: items, expiresAt: Date.now() + TTL_MS };
     return { items };

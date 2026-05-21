@@ -167,10 +167,14 @@ class TokenBudget {
   }
 
   /**
-   * Reserve `tokens` against the budget. Resolves with a handle the
-   * caller passes back to `recordActual` once the API response lands.
-   * Rejects with `BudgetExhaustedError` if waiting would take longer
-   * than `MAX_WAIT_MS` — caller treats that as "skip this cycle".
+   * Reserve `tokens` against the budget. Now a passthrough — always
+   * succeeds immediately. The only gate is the per-account cooldown set
+   * by actual Groq 429 responses (markModelCooldown). The old TPM
+   * estimation logic was too conservative and blocked requests that Groq
+   * would have accepted, starving idle accounts.
+   *
+   * The cooldown check remains because it's driven by *real* 429s from
+   * Groq with a `retry-after` header — not estimates.
    */
   async reserve(tokens: number): Promise<ReservationHandle> {
     const cooldownLeft = modelCooldownRemainingMs(this.model, this.accountId);
@@ -182,27 +186,11 @@ class TokenBudget {
         cooldownLeft,
       );
     }
-    while (true) {
-      const now = Date.now();
-      this.events = this.events.filter((e) => now - e.at < WINDOW_MS);
-      const used = this.events.reduce((s, e) => s + e.tokens, 0);
-      if (used + tokens <= this.tpmCap) {
-        const id = this.nextId++;
-        this.events.push({ id, at: now, tokens });
-        return { id, estimated: tokens };
-      }
-      const oldest = this.events[0];
-      const waitMs = oldest
-        ? Math.max(500, WINDOW_MS - (now - oldest.at) + 100)
-        : 500;
-      if (waitMs > MAX_WAIT_MS) {
-        console.warn(
-          `[LLM] budget exhausted ${this.label} — used=${used}/${this.tpmCap} tpm, would wait ${(waitMs / 1000).toFixed(0)}s. Skipping.`,
-        );
-        throw new BudgetExhaustedError(this.label, used, this.tpmCap, waitMs);
-      }
-      await new Promise((r) => setTimeout(r, waitMs));
-    }
+    const now = Date.now();
+    this.events = this.events.filter((e) => now - e.at < WINDOW_MS);
+    const id = this.nextId++;
+    this.events.push({ id, at: now, tokens });
+    return { id, estimated: tokens };
   }
 
   /**
