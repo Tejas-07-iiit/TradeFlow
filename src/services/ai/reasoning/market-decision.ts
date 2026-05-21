@@ -221,6 +221,11 @@ function writeCache(key: string, value: CachedDecision) {
   cache.set(key, { value, expiresAt: Date.now() + ttl });
 }
 
+const lastSuccessfulAnalysisTime: Record<string, number> = {};
+const AI_SCAN_COOLDOWN_SEC = process.env.AI_SCAN_COOLDOWN_SEC
+  ? parseInt(process.env.AI_SCAN_COOLDOWN_SEC, 10)
+  : 120;
+
 /**
  * Resolve (or generate) the LLM's trade decision for this snapshot.
  *
@@ -230,8 +235,30 @@ function writeCache(key: string, value: CachedDecision) {
  */
 export async function getMarketDecisionFor(
   input: DecisionInput,
+  preferredAccountId?: number,
+  allowFallback = true,
 ): Promise<CachedDecision | null> {
   const key = fingerprint(input);
+  const symbol = input.symbol;
+
+  // Routine scan cooldown check to limit requests on flat/inactive markets
+  const alignment = input.strategySnapshot?.alignmentScore ?? 0;
+  const isRoutine = !input.strategySnapshot || alignment < 50;
+
+  if (isRoutine && lastSuccessfulAnalysisTime[symbol]) {
+    const timeSinceLast = Date.now() - lastSuccessfulAnalysisTime[symbol];
+    if (timeSinceLast < AI_SCAN_COOLDOWN_SEC * 1000) {
+      console.info(
+        `[ai/market-decision] ${symbol} routine scan cooldown active (${Math.round(
+          timeSinceLast / 1000,
+        )}s / ${AI_SCAN_COOLDOWN_SEC}s). Skipping / returning cached.`,
+      );
+      const cachedEntry = readCache(key);
+      if (cachedEntry) return cachedEntry;
+      return null;
+    }
+  }
+
   const cached = readCache(key);
   if (cached) return cached;
 
@@ -253,17 +280,27 @@ export async function getMarketDecisionFor(
       source: "prefilter",
     };
     writeCache(key, entry);
+    lastSuccessfulAnalysisTime[symbol] = Date.now();
     return entry;
   }
 
   const messages = buildMarketDecisionPrompt(input);
-  const chain = getLlmProviderChain({ purpose: "decision", tier: prefilter.tier });
+  const chain = getLlmProviderChain({
+    purpose: "decision",
+    tier: prefilter.tier,
+    preferredAccountId,
+  });
   if (chain.length === 0) {
     console.error("[ai/market-decision] no provider configured for decision");
+    if (!allowFallback) {
+      throw new Error("No provider configured for decision");
+    }
     return null;
   }
   console.info(
-    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} chain=${chain.map((p) => `${formatProviderLabel(p)}`).join(" → ")}`,
+    `[ai/market-decision] ${input.symbol} tier=${prefilter.tier ?? "default"} reason=${prefilter.reason} chain=${chain
+      .map((p) => `${formatProviderLabel(p)}`)
+      .join(" → ")}`,
   );
 
   let lastErr: unknown = null;
@@ -293,6 +330,7 @@ export async function getMarketDecisionFor(
         source: "llm",
       };
       writeCache(key, entry);
+      lastSuccessfulAnalysisTime[symbol] = Date.now();
       if (i > 0) {
         console.warn(
           `[ai/market-decision] served via fallback #${i}: ${formatProviderLabel(provider)}`,
@@ -304,9 +342,15 @@ export async function getMarketDecisionFor(
       const more = i < chain.length - 1;
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(
-        `[ai/market-decision] ${formatProviderLabel(provider)} failed${more ? " — trying next fallback" : ""}: ${msg}`,
+        `[ai/market-decision] ${formatProviderLabel(provider)} failed${
+          more ? " — trying next fallback" : ""
+        }: ${msg}`,
       );
     }
+  }
+
+  if (!allowFallback) {
+    throw lastErr || new Error("All market decision providers failed");
   }
 
   // Every LLM provider exhausted. Instead of returning null and freezing
@@ -314,7 +358,9 @@ export async function getMarketDecisionFor(
   // It reads the same snapshot the LLM would have read and produces a
   // defensively-sized decision. Trading continues in degraded mode.
   console.warn(
-    `[ai/market-decision] ${input.symbol} all providers failed — using local fallback engine. lastErr=${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+    `[ai/market-decision] ${input.symbol} all providers failed — using local fallback engine. lastErr=${
+      lastErr instanceof Error ? lastErr.message : String(lastErr)
+    }`,
   );
   const fallbackDecision = localFallbackDecision(input);
   const fallbackEntry: CachedDecision = {
@@ -328,5 +374,6 @@ export async function getMarketDecisionFor(
   // Shorter TTL than LLM cache (30s vs 90s) so we retry the LLM chain
   // sooner once cooldowns elapse.
   writeCache(key, fallbackEntry);
+  lastSuccessfulAnalysisTime[symbol] = Date.now();
   return fallbackEntry;
 }

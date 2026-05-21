@@ -116,12 +116,25 @@ export function AiDecisionSubscriber() {
         console.info(
           `${srcTag} ${target} → ${res.decision.decision} conf=${res.decision.confidence} setup=${res.decision.setupQuality} exec=${res.decision.executeTrade} (${res.provider ?? "groq"}:${res.model ?? "?"})`,
         );
+        if (res.newsValidation) {
+          const nv = res.newsValidation;
+          if (nv.status === "ok") {
+            console.info(
+              `[news] ${target} ${nv.side} → ${nv.aggregateClass} score=${nv.score} action=${nv.action} (${nv.itemsConsidered} items, llm=${nv.llmEnrichmentUsed ? "yes" : "no"})`,
+            );
+          } else if (nv.status === "no_coverage") {
+            console.info(`[news] ${target} no coverage — proceeding on technicals`);
+          } else {
+            console.info(`[news] ${target} unavailable — ${nv.rationale}`);
+          }
+        }
         setDecision(target, {
           decision: res.decision,
           generatedAt: res.generatedAt,
           provider: res.provider ?? "groq",
           model: res.model ?? "unknown",
           key: res.key,
+          newsValidation: res.newsValidation,
         });
       } else {
         console.warn(`[LLM] ${target} decision failed: ${res.error ?? "unknown"}`);

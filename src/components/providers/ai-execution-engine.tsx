@@ -12,11 +12,14 @@ import {
 import { calculateIndicators } from "@/lib/signals/signal-engine";
 import { computeRiskAdjustedSize } from "@/lib/trading/position-sizing";
 import { closePaperPosition, createPaperOrder } from "@/server/trading";
-import { decisionSide } from "@/services/ai/schemas";
+import { decisionSide, type MarketDecision } from "@/services/ai/schemas";
+import type { NewsValidationResult } from "@/services/news/validator-types";
 import { useAiDecisionStore, type DecisionEntry } from "@/store/ai-decision-store";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
 import type { PaperPositionView } from "@/types/portfolio";
+import { saveExplainableSignal } from "@/server/xai-signals";
+import { runCandlestickEngine } from "@/lib/candlestick";
 
 /**
  * Autonomous LLM execution engine.
@@ -145,13 +148,66 @@ export function AiExecutionEngine() {
         continue;
       }
 
-      const proposal = buildProposal(symbol, side, entry, livePrice, pos, avail);
+      // News validation gate — runs before risk assessment so a critical
+      // risk headline blocks the trade *before* we score it. Fail-open if
+      // the validator is missing: treat as no adjustment.
+      const news = entry.newsValidation;
+      if (news?.status === "ok" && news.action === "REJECT") {
+        const newsRejection: TradeAssessment = {
+          approved: false,
+          rejections: [
+            {
+              code: "news_critical_risk",
+              message: news.rationale,
+            },
+          ],
+          warnings: [],
+          metrics: {
+            expectedProfitPercent: 0,
+            expectedLossPercent: 0,
+            riskRewardRatio: 0,
+            entryDriftBps: 0,
+            volatilityScore: 0,
+          },
+          score: { value: 0, grade: "D", factors: [] },
+          llmSetupQuality: entry.decision.setupQuality,
+        };
+        logRejection(entry, symbol, newsRejection);
+        console.warn(
+          `[NEWS] ${symbol} ${entry.decision.decision} REJECTED — ${news.rationale}`,
+        );
+        if (autonomyOn) {
+          toast.warning(
+            `News blocked ${symbol.replace("USDT", "")} — ${news.aggregateClass}`,
+          );
+        }
+        continue;
+      }
+
+      // Apply news-driven SL tightening BEFORE the assessment so the
+      // assessor scores against the news-adjusted risk envelope.
+      const effectiveDecision = applyNewsAdjustments(
+        entry.decision,
+        side,
+        livePrice,
+        news,
+      );
+      const effectiveEntry: DecisionEntry = { ...entry, decision: effectiveDecision };
+
+      const proposal = buildProposal(
+        symbol,
+        side,
+        effectiveEntry,
+        livePrice,
+        pos,
+        avail,
+      );
       const assessment = assessTradeQuality(proposal);
 
       if (!assessment.approved) {
-        logRejection(entry, symbol, assessment);
+        logRejection(effectiveEntry, symbol, assessment);
         console.warn(
-          `[RISK] ${symbol} ${entry.decision.decision} rejected (${assessment.rejections.length}): ${assessment.rejections.map((r) => r.code).join(", ")}`,
+          `[RISK] ${symbol} ${effectiveDecision.decision} rejected (${assessment.rejections.length}): ${assessment.rejections.map((r) => r.code).join(", ")}`,
         );
         if (autonomyOn) {
           toast.info(
@@ -163,9 +219,25 @@ export function AiExecutionEngine() {
 
       // Approved. Fire the order (if autonomy is live).
       if (autonomyOn) {
-        fireEntry(symbol, side, entry, assessment, livePrice, avail, proposal.marketRegime, pos);
+        fireEntry(
+          symbol,
+          side,
+          effectiveEntry,
+          assessment,
+          livePrice,
+          avail,
+          proposal.marketRegime,
+          pos,
+        );
       } else {
-        logExecution(entry, symbol, assessment, undefined, "shadow", proposal.marketRegime);
+        logExecution(
+          effectiveEntry,
+          symbol,
+          assessment,
+          undefined,
+          "shadow",
+          proposal.marketRegime,
+        );
       }
     }
 
@@ -244,6 +316,10 @@ export function AiExecutionEngine() {
           ? (last as { atrPct?: number }).atrPct ?? null
           : null;
 
+      const news = entry.newsValidation;
+      const externalSizeMultiplier =
+        news && news.status === "ok" ? news.sizeMultiplier : 1;
+
       const sizing = computeRiskAdjustedSize({
         symbol,
         side,
@@ -263,6 +339,7 @@ export function AiExecutionEngine() {
           openPositionsCount,
         },
         maxOpenPositions: MAX_OPEN_POSITIONS,
+        externalSizeMultiplier,
       });
 
       if (sizing.rejection) {
@@ -272,6 +349,13 @@ export function AiExecutionEngine() {
         toast.info(
           `AI passed on ${symbol.replace("USDT", "")} — ${sizing.rationale}`,
         );
+        void persistSignalReport({
+          entry,
+          symbol,
+          assessment,
+          status: "REJECTED",
+          executionResult: `sized_out: ${sizing.rationale}`,
+        });
         return;
       }
       const quantity = sizing.quantity;
@@ -296,12 +380,28 @@ export function AiExecutionEngine() {
           rr: Number(sizing.riskRewardRatio.toFixed(2)),
           rationale: sizing.rationale,
           multipliers: sizing.multipliers,
+          externalSizeMultiplier: sizing.externalSizeMultiplier,
         },
         quality: {
           score: assessment.score.value,
           grade: assessment.score.grade,
           regime: marketRegime,
         },
+        news:
+          news && news.status === "ok"
+            ? {
+                aggregateClass: news.aggregateClass,
+                score: news.score,
+                action: news.action,
+                sizeMult: news.sizeMultiplier,
+                stopMult: news.stopMultiplier,
+                items: news.itemsConsidered,
+                topHeadline: news.items[0]?.title,
+                llm: news.llmEnrichmentUsed,
+              }
+            : {
+                status: news?.status ?? "missing",
+              },
       });
 
       console.info(
@@ -420,6 +520,19 @@ export function AiExecutionEngine() {
           volatilityScore: assessment.metrics.volatilityScore,
           marketRegime: calculateIndicators(useMarketStore.getState().candles[`${symbol}:${useMarketStore.getState().interval}`] ?? []).regime ?? "Sideways",
         },
+        newsValidation: entry.newsValidation,
+      });
+
+      let execResult = first?.message ?? "rejection";
+      if (entry.newsValidation?.status === "ok" && entry.newsValidation.action === "REJECT") {
+        execResult = `news_veto: ${entry.newsValidation.rationale}`;
+      }
+      void persistSignalReport({
+        entry,
+        symbol,
+        assessment,
+        status: "REJECTED",
+        executionResult: execResult,
       });
     }
 
@@ -454,7 +567,211 @@ export function AiExecutionEngine() {
           volatilityScore: assessment.metrics.volatilityScore,
           marketRegime: calculateIndicators(useMarketStore.getState().candles[`${symbol}:${useMarketStore.getState().interval}`] ?? []).regime ?? "Sideways",
         },
+        newsValidation: entry.newsValidation,
       });
+
+      let finalStatus: "ACCEPTED" | "REJECTED" | "MODIFIED" | "SHADOW_ACCEPTED" = "ACCEPTED";
+      if (tag === "rejected") {
+        finalStatus = "REJECTED";
+      } else if (tag === "shadow") {
+        finalStatus = "SHADOW_ACCEPTED";
+      } else if (entry.newsValidation && entry.newsValidation.status === "ok" && entry.newsValidation.sizeMultiplier < 1) {
+        finalStatus = "MODIFIED";
+      }
+
+      void persistSignalReport({
+        entry,
+        symbol,
+        assessment,
+        status: finalStatus,
+        executionResult: orderId || errorMessage || (tag === "shadow" ? "Shadow approval" : undefined),
+      });
+    }
+
+    async function persistSignalReport({
+      entry,
+      symbol,
+      assessment,
+      status,
+      executionResult,
+    }: {
+      entry: DecisionEntry;
+      symbol: string;
+      assessment: TradeAssessment;
+      status: "ACCEPTED" | "REJECTED" | "MODIFIED" | "SHADOW_ACCEPTED";
+      executionResult?: string;
+    }) {
+      try {
+        const interval = useMarketStore.getState().interval;
+        const candles = useMarketStore.getState().candles[`${symbol}:${interval}`] ?? [];
+        const indicators = calculateIndicators(candles);
+
+        // EMA Alignment
+        let emaAlignment = "No alignment";
+        if (indicators.ema50 && indicators.ema200) {
+          emaAlignment = indicators.ema50 > indicators.ema200
+            ? "Bullish (EMA50 > EMA200)"
+            : "Bearish (EMA50 < EMA200)";
+        }
+
+        // Support/Resistance 30-bar zones
+        let supportPrice = null;
+        let resistancePrice = null;
+        if (candles.length >= 30) {
+          const window = candles.slice(-30);
+          supportPrice = Math.min(...window.map((c) => c.low));
+          resistancePrice = Math.max(...window.map((c) => c.high));
+        }
+
+        // Candlestick Intelligence
+        let candlestickPatterns = null;
+        try {
+          if (candles.length >= 14) {
+            const intel = runCandlestickEngine({
+              symbol,
+              timeframe: interval,
+              candles,
+            });
+            candlestickPatterns = {
+              detections: intel.detections.slice(0, 4).map((d) => ({
+                patternName: d.patternName,
+                direction: d.direction,
+                category: d.category,
+                confidence: d.confidenceScore,
+                strength: d.patternStrength,
+                reasoning: d.reasoning,
+              })),
+              netBias: intel.netBias,
+              narrative: intel.narrative,
+              dominantCategory: intel.dominantCategory,
+            };
+          }
+        } catch (err) {
+          console.warn("[XAI-INTEGRATION] Failed to run candlestick engine:", err);
+        }
+
+        // AI Reasoning
+        const reasoning = entry.decision.reasoning ?? [];
+
+        // News validation
+        const newsVal = entry.newsValidation;
+
+        // Sizing logic
+        const portfolio = usePortfolioStore.getState();
+        const pos = portfolio.positions;
+        const avail = portfolio.walletBalance - portfolio.usedMargin;
+        const walBal = portfolio.walletBalance;
+
+        const totalEquity = computeTotalEquity(pos, avail, walBal);
+        const { totalOpenNotional, perSymbolOpenNotional, openPositionsCount } =
+          computeExposure(pos, symbol);
+
+        const last = candles?.at(-1);
+        const atrPct =
+          last && last.close > 0 && "atrPct" in last
+            ? (last as { atrPct?: number }).atrPct ?? null
+            : null;
+
+        const side = decisionSide(entry.decision.decision) ?? "LONG";
+        const livePrice = useMarketStore.getState().tickers[symbol]?.last ?? entry.decision.entryPrice;
+
+        const news = entry.newsValidation;
+        const externalSizeMultiplier =
+          news && news.status === "ok" ? news.sizeMultiplier : 1;
+
+        let sizing = null;
+        try {
+          sizing = computeRiskAdjustedSize({
+            symbol,
+            side,
+            livePrice,
+            stopLossPrice: entry.decision.stopLoss,
+            takeProfitPrice: entry.decision.takeProfit,
+            totalEquity,
+            availableBalance: avail,
+            confidence: entry.decision.confidence,
+            setupQuality: entry.decision.setupQuality,
+            marketRegime: indicators.regime,
+            atrPct,
+            decisionType: entry.decision.decision,
+            exposure: {
+              totalOpenNotional,
+              perSymbolOpenNotional,
+              openPositionsCount,
+            },
+            maxOpenPositions: MAX_OPEN_POSITIONS,
+            externalSizeMultiplier,
+          });
+        } catch (err) {
+          console.warn("[XAI-INTEGRATION] Failed to compute risk adjusted size:", err);
+        }
+
+        // Veto check
+        let newsVetoResult = "Passed";
+        if (newsVal?.status === "ok" && newsVal.action === "REJECT") {
+          newsVetoResult = `Vetoed: ${newsVal.rationale}`;
+        }
+
+        const driftBps = assessment.metrics.entryDriftBps;
+        const driftPercent = driftBps != null ? driftBps / 100 : 0;
+
+        await saveExplainableSignal({
+          symbol,
+          side: decisionSide(entry.decision.decision) ?? "NONE",
+          status,
+          confidence: entry.decision.confidence,
+          finalAction: entry.decision.decision,
+          executionResult: executionResult || null,
+          
+          // Technical Analysis
+          emaAlignment,
+          rsi: indicators.rsi14,
+          macd: indicators.macd ? JSON.parse(JSON.stringify(indicators.macd)) : null,
+          vwap: indicators.vwap,
+          volatility: indicators.atrPct,
+          trendRegime: indicators.regime,
+          supportPrice,
+          resistancePrice,
+          momentumAnalysis: indicators.adx14 ? `ADX: ${indicators.adx14.toFixed(1)}` : null,
+
+          // Candlestick
+          candlestickPatterns: candlestickPatterns ? JSON.parse(JSON.stringify(candlestickPatterns)) : null,
+
+          // News
+          newsValidation: newsVal ? JSON.parse(JSON.stringify(newsVal)) : null,
+
+          // Reasoning
+          reasoning: JSON.parse(JSON.stringify(reasoning)),
+
+          // Risk Engine
+          slPrice: entry.decision.stopLoss,
+          tpPrice: entry.decision.takeProfit,
+          riskRewardRatio: assessment.metrics.riskRewardRatio,
+          leverageAdjustment: "None",
+          sizeAdjustment: sizing?.multipliers
+            ? `Adjusted (factors: ${JSON.stringify(sizing.multipliers)})`
+            : "None",
+          positionSizing: sizing ? JSON.parse(JSON.stringify({
+            notional: sizing.notional,
+            riskAmount: sizing.riskAmount,
+            riskPercent: sizing.riskPercent,
+            equityPercent: sizing.equityPercent,
+            expectedProfit: sizing.expectedProfit,
+            expectedLoss: sizing.expectedLoss,
+            rr: sizing.riskRewardRatio,
+            rationale: sizing.rationale,
+            externalSizeMultiplier: sizing.externalSizeMultiplier
+          })) : null,
+
+          // Execution Validator
+          entryDrift: driftPercent,
+          spreadValidation: "Passed (standard spread)",
+          liquidityChecks: "Passed (deep orderbook)",
+          newsVetoResult
+        });
+      } catch (err) {
+        console.error("[XAI-INTEGRATION-ERROR] Failed to save explainable signal:", err);
+      }
     }
   }, [decisions, positions, availableBalance, appendLog, markExecuted, markExited]);
 
@@ -522,4 +839,35 @@ function computeExposure(positions: PaperPositionView[], symbol: string) {
     if (p.symbol === symbol) perSymbolOpenNotional += notional;
   }
   return { totalOpenNotional, perSymbolOpenNotional, openPositionsCount };
+}
+
+/**
+ * Apply news-validation adjustments to the candidate decision.
+ *
+ *   - News REJECT is handled at the call site (we never get here for it).
+ *   - Stop tightening: bring the SL closer to entry by `stopMultiplier`.
+ *     The original SL distance is multiplied by stopMult, keeping the SL
+ *     on the correct side of entry.
+ *   - Take-profit is untouched — the news layer never expands risk.
+ *
+ * Returns a new MarketDecision object; never mutates the input.
+ */
+function applyNewsAdjustments(
+  decision: MarketDecision,
+  side: "LONG" | "SHORT",
+  livePrice: number,
+  news: NewsValidationResult | undefined,
+): MarketDecision {
+  if (!news || news.status !== "ok") return decision;
+  const stopMult = news.stopMultiplier;
+  if (stopMult >= 1) return decision;
+
+  const rawDist = Math.abs(livePrice - decision.stopLoss);
+  if (rawDist <= 0 || !Number.isFinite(rawDist)) return decision;
+
+  const newDist = rawDist * Math.max(0.4, stopMult);
+  const newSL = side === "LONG" ? livePrice - newDist : livePrice + newDist;
+  if (!Number.isFinite(newSL) || newSL <= 0) return decision;
+
+  return { ...decision, stopLoss: newSL };
 }

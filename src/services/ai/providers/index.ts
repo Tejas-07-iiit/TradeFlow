@@ -141,6 +141,8 @@ export interface ProviderOptions {
   purpose?: LlmPurpose;
   /** Routing tier — overrides the default chain order when set. */
   tier?: LlmTier;
+  /** Preferred account ID to prioritize at the beginning of the chain. */
+  preferredAccountId?: number;
 }
 
 function buildGroqProvider(model: string, account: GroqAccount): LlmProvider {
@@ -207,7 +209,18 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
   const chain: LlmProvider[] = [];
   const seen = new Set<string>();
 
-  const groqAccounts = rotateAccounts(collectGroqAccounts());
+  let groqAccounts = rotateAccounts(collectGroqAccounts());
+  if (opts.preferredAccountId !== undefined) {
+    const idx = groqAccounts.findIndex((a) => a.id === opts.preferredAccountId);
+    if (idx >= 0) {
+      const preferred = groqAccounts[idx];
+      groqAccounts = [
+        preferred,
+        ...groqAccounts.slice(0, idx),
+        ...groqAccounts.slice(idx + 1),
+      ];
+    }
+  }
 
   /** Push one Groq model once per available account. */
   const pushGroqAcrossAccounts = (model: string | undefined) => {

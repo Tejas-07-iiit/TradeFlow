@@ -1,39 +1,26 @@
 /**
  * Pipeline executor.
  *
- * This is the per-job worker the scheduler dispatches to. Each stage:
- *   1. Checks `signal.aborted` before doing meaningful work.
- *   2. Delegates the heavy lifting to existing modules — the orchestrator
- *      doesn't reimplement the prefilter, tier routing, provider chain,
- *      or local fallback. It just composes them.
- *
- * Why route through here instead of letting the server action call
- * `getMarketDecisionFor` directly? Two reasons:
- *   - Concurrency: every LLM-bound work goes through one scheduler that
- *     enforces MAX_CONCURRENT and prioritises EXEC_CRITICAL ahead of
- *     routine scans.
- *   - Cancellation: the orchestrator's AbortSignal can interrupt a job
- *     that's queued or in flight, which the previous fire-and-forget
- *     calls couldn't do.
+ * Implements job routing, key load balancing, and exponential backoff retries
+ * for decisions, theses, and news classification.
  */
 
 import { getMarketDecisionFor } from "../reasoning/market-decision";
+import { getMarketThesisFor } from "../reasoning/market-thesis";
+import { classifyNewsItemsLLM } from "../news-validator";
 import type { AnalysisJob, JobResult } from "./types";
+import { selectBestKey } from "./state";
+import type { Scheduler } from "./scheduler";
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function executeDecisionJob(
   job: AnalysisJob,
+  scheduler: Scheduler,
 ): Promise<JobResult> {
   const startedAt = Date.now();
 
-  if (job.kind !== "decision") {
-    return {
-      ok: false,
-      error: `Unsupported job kind: ${String((job as { kind: string }).kind)}`,
-      durationMs: Date.now() - startedAt,
-    };
-  }
-
-  // Abort check before we do any work. Cheap to bail here.
+  // Abort check before we do any work
   if (job.abortSignal?.aborted) {
     return {
       ok: false,
@@ -43,41 +30,149 @@ export async function executeDecisionJob(
     };
   }
 
-  try {
-    // `getMarketDecisionFor` already implements:
-    //   - in-fingerprint cache (90s for LLM, 20s for local fallback)
-    //   - prefilter that emits synthetic HOLD on flat snapshots
-    //   - tier-aware provider chain (cheap-first or premium-first)
-    //   - local-fallback engine when every provider fails
-    // We compose, don't reimplement.
-    const cached = await getMarketDecisionFor(job.payload);
+  let attempt = 0;
+  const maxAttempts = 3;
+  let backoffMs = 2000;
+  let lastError: any = null;
 
-    if (!cached) {
+  while (attempt < maxAttempts) {
+    if (job.abortSignal?.aborted) {
       return {
         ok: false,
-        error: "Pipeline produced no decision (unexpected null)",
+        error: "Job aborted during execution",
+        source: "aborted",
         durationMs: Date.now() - startedAt,
       };
     }
 
-    // Final abort check — if the caller bailed while we were waiting,
-    // still return the decision (it's cached now, no waste) but mark the
-    // source so the caller can decide whether to use it.
-    return {
-      ok: true,
-      decision: cached,
-      source: cached.source,
-      durationMs: Date.now() - startedAt,
-    };
-  } catch (err) {
-    // Shouldn't normally throw — getMarketDecisionFor swallows internally
-    // — but we belt-and-suspender the boundary so a pipeline crash never
-    // takes the scheduler with it.
-    const message = err instanceof Error ? err.message : String(err);
+    // Resolve purpose model to select the best key
+    let purpose: "decision" | "thesis" | "news" = "decision";
+    if (job.kind === "thesis") purpose = "thesis";
+    if (job.kind === "news") purpose = "news";
+
+    const defaultModel =
+      purpose === "decision"
+        ? process.env.GROQ_MODEL_DECISION
+        : purpose === "thesis"
+        ? process.env.GROQ_MODEL_THESIS
+        : process.env.GROQ_MODEL_NEWS;
+    const model = defaultModel || process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+
+    const preferredAccountId = selectBestKey(model);
+
+    try {
+      if (job.kind === "decision") {
+        const cached = await getMarketDecisionFor(job.payload, preferredAccountId, false);
+        if (!cached) {
+          throw new Error("Pipeline returned empty decision");
+        }
+        return {
+          ok: true,
+          decision: cached,
+          source: cached.source,
+          durationMs: Date.now() - startedAt,
+        };
+      } else if (job.kind === "thesis") {
+        const cached = await getMarketThesisFor(job.payload, preferredAccountId, false);
+        if (!cached) {
+          throw new Error("Pipeline returned empty thesis");
+        }
+        return {
+          ok: true,
+          thesis: cached,
+          source: "llm",
+          durationMs: Date.now() - startedAt,
+        };
+      } else if (job.kind === "news") {
+        const verdicts = await classifyNewsItemsLLM(
+          job.symbol,
+          job.coinName,
+          job.items,
+          preferredAccountId,
+          false,
+        );
+        return {
+          ok: true,
+          verdicts: verdicts || [],
+          source: "llm",
+          durationMs: Date.now() - startedAt,
+        };
+      }
+    } catch (err: any) {
+      lastError = err;
+      const is429 =
+        err?.status === 429 ||
+        err?.message?.includes("rate limit") ||
+        err?.message?.includes("429") ||
+        err?.message?.includes("budget exhausted") ||
+        err?.message?.includes("Token budget exhausted");
+
+      if (is429) {
+        attempt++;
+        if (attempt < maxAttempts) {
+          console.warn(
+            `[orch/pipeline] Job ${job.kind} ${job.symbol} rate limited (429) — retrying attempt ${attempt}/${maxAttempts} in ${backoffMs}ms`,
+          );
+          scheduler.recordRetry();
+          await sleep(backoffMs);
+          backoffMs *= 2;
+          continue;
+        }
+      }
+      break;
+    }
+  }
+
+  // All attempts failed. Hand over to fallback engine (with fallback allowed = true)
+  console.warn(
+    `[orch/pipeline] Job ${job.kind} ${job.symbol} all attempts failed. Final error: ${
+      lastError instanceof Error ? lastError.message : String(lastError)
+    }. Executing fallback.`,
+  );
+
+  try {
+    if (job.kind === "decision") {
+      const fallback = await getMarketDecisionFor(job.payload, undefined, true);
+      return {
+        ok: true,
+        decision: fallback || undefined,
+        source: fallback?.source || "local-fallback",
+        durationMs: Date.now() - startedAt,
+      };
+    } else if (job.kind === "thesis") {
+      const fallback = await getMarketThesisFor(job.payload, undefined, true);
+      return {
+        ok: fallback != null,
+        thesis: fallback || undefined,
+        source: fallback ? "llm" : undefined,
+        durationMs: Date.now() - startedAt,
+      };
+    } else if (job.kind === "news") {
+      const fallback = await classifyNewsItemsLLM(
+        job.symbol,
+        job.coinName,
+        job.items,
+        undefined,
+        true,
+      );
+      return {
+        ok: true,
+        verdicts: fallback || [],
+        source: fallback ? "llm" : "prefilter",
+        durationMs: Date.now() - startedAt,
+      };
+    }
+  } catch (err: any) {
     return {
       ok: false,
-      error: `Pipeline threw: ${message}`,
+      error: `Fallback crashed: ${err instanceof Error ? err.message : String(err)}`,
       durationMs: Date.now() - startedAt,
     };
   }
+
+  return {
+    ok: false,
+    error: `Job execution failed: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
+    durationMs: Date.now() - startedAt,
+  };
 }

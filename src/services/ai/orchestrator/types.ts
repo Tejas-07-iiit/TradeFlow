@@ -1,30 +1,28 @@
 /**
  * Orchestrator types — the contract between event producers (subscribers,
  * server actions, event sources) and the scheduler / pipeline.
- *
- * Design intent: keep this layer free of provider-specific or LLM-specific
- * concerns. The orchestrator schedules generic `AnalysisJob`s; the pipeline
- * step decides what each kind of job actually means.
  */
 
 import type { CachedDecision } from "../reasoning/market-decision";
-import type { DecisionInput } from "../schemas";
+import type { CachedThesis } from "../reasoning/market-thesis";
+import type { DecisionInput, ThesisInput } from "../schemas";
+
+// News validation types copied/defined here to avoid circular imports.
+export interface LlmClassifierItem {
+  id: string;
+  title: string;
+  excerpt: string;
+}
+
+export interface LlmClassifierVerdict {
+  id: string;
+  class: string;
+  confidence: string | number;
+  reasoning: string;
+}
 
 /**
  * Priority levels, lowest number wins. Inside a bucket, jobs are FIFO.
- *
- *   EXECUTION_CRITICAL  — open position needs immediate decision (regime
- *                         flipped against the held side, stop-loss within
- *                         a fraction of ATR, etc.). Never delayed by other
- *                         priorities.
- *   POSITION_MGMT       — open position routine re-evaluation (cooldown'd
- *                         per symbol so we don't spam).
- *   ELITE_SETUP         — snapshot alignment ≥ 80; looks like an A/A+
- *                         candidate worth the premium-tier reasoning.
- *   NEW_SETUP           — snapshot alignment 50-79; tradeable but cheap-tier.
- *   ROUTINE_SCAN        — periodic watchlist sweep, no specific edge.
- *   RECHECK             — refresh a stale decision; lowest priority because
- *                         the cached value is still valid.
  */
 export enum JobPriority {
   EXECUTION_CRITICAL = 0,
@@ -44,14 +42,11 @@ export const PRIORITY_LABELS: Record<JobPriority, string> = {
   [JobPriority.RECHECK]: "RECHECK",
 };
 
-export type JobKind = "decision" | "thesis";
+export type JobKind = "decision" | "thesis" | "news";
 
 /**
  * Per-priority SLA in ms. If a job hasn't been dispatched within this
- * window, it's dropped from the queue. Prevents stale work from running
- * when conditions have moved on. Lower-priority jobs expire faster — if
- * a routine scan is waiting more than 15s, the next round-robin tick will
- * generate a fresher one anyway.
+ * window, it's dropped from the queue. Prevents stale work from running.
  */
 export const PRIORITY_SLA_MS: Record<JobPriority, number> = {
   [JobPriority.EXECUTION_CRITICAL]: 30_000,
@@ -62,12 +57,6 @@ export const PRIORITY_SLA_MS: Record<JobPriority, number> = {
   [JobPriority.RECHECK]: 10_000,
 };
 
-/**
- * A decision-kind job. `payload` is the already-validated `DecisionInput`
- * the pipeline will execute against. `dedupKey` collapses concurrent
- * submitters of the same logical work — the pipeline owns one in-flight
- * promise per key and all callers await it.
- */
 export interface DecisionJob {
   kind: "decision";
   symbol: string;
@@ -76,33 +65,71 @@ export interface DecisionJob {
   dedupKey: string;
   priority: JobPriority;
   enqueuedAt: number;
-  /** Wall-clock deadline after which the queue will drop this job. */
   expiresAt: number;
-  /** Caller cancellation. Pipeline checks between stages. */
   abortSignal?: AbortSignal;
 }
 
-/** Future-proofing — thesis/news jobs slot in alongside decision jobs. */
-export type AnalysisJob = DecisionJob;
+export interface ThesisJob {
+  kind: "thesis";
+  symbol: string;
+  timeframe: string;
+  payload: ThesisInput;
+  dedupKey: string;
+  priority: JobPriority;
+  enqueuedAt: number;
+  expiresAt: number;
+  abortSignal?: AbortSignal;
+}
+
+export interface NewsJob {
+  kind: "news";
+  symbol: string;
+  coinName: string;
+  items: LlmClassifierItem[];
+  dedupKey: string;
+  priority: JobPriority;
+  enqueuedAt: number;
+  expiresAt: number;
+  abortSignal?: AbortSignal;
+}
+
+export type AnalysisJob = DecisionJob | ThesisJob | NewsJob;
 
 /**
- * Result type emitted by the pipeline. The orchestrator forwards this
- * verbatim to the original submitter via the promise it returned.
+ * Result type emitted by the pipeline.
  */
 export interface JobResult {
   ok: boolean;
-  /** Present when `ok` is true. */
   decision?: CachedDecision;
-  /** Present when `ok` is false. */
+  thesis?: CachedThesis;
+  verdicts?: LlmClassifierVerdict[];
   error?: string;
-  /** Pipeline-level source — same vocabulary as `CachedDecision.source`. */
   source?: "llm" | "prefilter" | "local-fallback" | "cache" | "expired" | "aborted";
-  /** Total wallclock time from submit to settle. */
   durationMs: number;
 }
 
+export interface KeyLoadStats {
+  accountId: number;
+  activeCount: number;
+  requestsLastMin: number;
+  tokensLastMin: number;
+  cooldownLeftMs: number;
+  totalRequests: number;
+  total429s: number;
+  avgLatencyMs: number;
+}
+
+export interface RateLimitEvent {
+  timestamp: string;
+  accountId: number;
+  model: string;
+  retryAfterSec: number;
+  isTpd: boolean;
+  message: string;
+}
+
 /**
- * Lightweight stats for observability + ops dashboards.
+ * Stats for observability + ops dashboards.
  */
 export interface OrchestratorStats {
   queued: number;
@@ -112,4 +139,8 @@ export interface OrchestratorStats {
   totalDispatched: number;
   totalExpired: number;
   totalAborted: number;
+  totalRetries: number;
+  keys: KeyLoadStats[];
+  recentEvents: RateLimitEvent[];
 }
+

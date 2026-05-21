@@ -1,7 +1,8 @@
-import { LiveSignalsPage } from "@/features/signals/live-signals-page";
+import { XaiDashboard } from "@/features/signals/xai-dashboard";
 
 export const dynamic = "force-dynamic";
 
 export default function AISignalsPage() {
-  return <LiveSignalsPage />;
+  return <XaiDashboard />;
 }
+

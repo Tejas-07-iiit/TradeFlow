@@ -74,6 +74,14 @@ export interface SizingInput {
   };
   /** Max concurrent positions — caller decides; defaults to 3. */
   maxOpenPositions?: number;
+  /**
+   * Optional external risk multiplier applied to the final size after the
+   * full internal multiplier stack. Used by the news-validation layer to
+   * shrink (or modestly boost) a candidate based on coin-specific
+   * headlines. Range expected: [0, 1.15]. Values <= 0 are treated as a
+   * caller error and rejected.
+   */
+  externalSizeMultiplier?: number;
 }
 
 export type SizingRejection =
@@ -112,6 +120,11 @@ export interface SizingResult {
   /** One-line human-readable explanation. */
   rationale: string;
   rejection?: SizingRejection;
+  /**
+   * External size multiplier actually applied (echoed for logging /
+   * transparency). 1 means no external adjustment was supplied.
+   */
+  externalSizeMultiplier?: number;
 }
 
 /**
@@ -282,6 +295,18 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
   const riskAmount = totalEquity * (riskPct / 100);
   let notional = riskAmount / stopDistPct;
 
+  // External multiplier from news validation. Caller is responsible for
+  // bounds — we clamp defensively to [0, 1.3] so a runaway value can't
+  // double size. Zero short-circuits to a clean rejection.
+  const extM = clampExternal(input.externalSizeMultiplier);
+  if (extM === 0) {
+    return REJECT(
+      "zero_risk_budget",
+      "External size multiplier is zero (news layer rejected trade)",
+    );
+  }
+  notional *= extM;
+
   // Cap by single-trade equity %.
   const equityCapPct = maxEquityPctFromConfidence(confidence);
   const equityCapNotional = totalEquity * (equityCapPct / 100);
@@ -391,7 +416,15 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
       strategy: mS,
     },
     rationale,
+    externalSizeMultiplier: extM,
   };
+}
+
+/** Bound the news-layer multiplier defensively. Negative inputs are treated as zero. */
+function clampExternal(m: number | undefined): number {
+  if (m == null || !Number.isFinite(m)) return 1;
+  if (m <= 0) return 0;
+  return Math.min(1.3, m);
 }
 
 function buildRationale(p: {

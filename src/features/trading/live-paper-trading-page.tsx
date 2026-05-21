@@ -4,6 +4,7 @@ import {
   Activity,
   BrainCog,
   Cpu,
+  Newspaper,
   Zap,
 } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -21,6 +22,11 @@ import {
   usePositionMetrics,
 } from "@/hooks/use-position-metrics";
 import { cn, formatCurrency, formatPrice } from "@/lib/utils";
+import type {
+  NewsClass,
+  NewsValidationAction,
+  NewsValidationResult,
+} from "@/services/news/validator-types";
 import { useAiDecisionStore } from "@/store/ai-decision-store";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
@@ -186,6 +192,12 @@ export function LivePaperTradingPage() {
                       </li>
                     ))}
                   </ul>
+                  {llmDecisions[symbol]?.newsValidation ? (
+                    <NewsValidationRow
+                      news={llmDecisions[symbol]!.newsValidation!}
+                      expanded
+                    />
+                  ) : null}
                 </>
               )}
             </CardContent>
@@ -250,6 +262,9 @@ export function LivePaperTradingPage() {
                           ? `Rejected — ${e.rejectionReason ?? "no reason"}`
                           : e.headline || "Executed"}
                       </p>
+                      {e.newsValidation ? (
+                        <NewsValidationRow news={e.newsValidation} />
+                      ) : null}
                     </div>
                   ))}
                 </div>
@@ -681,6 +696,123 @@ function Metric({
       >
         {value}
       </div>
+    </div>
+  );
+}
+
+const NEWS_CLASS_TONE: Record<
+  NewsClass,
+  "bull" | "bear" | "muted" | "warn" | "accent"
+> = {
+  VERY_BULLISH: "bull",
+  BULLISH: "bull",
+  NEUTRAL: "muted",
+  RISK_WARNING: "warn",
+  BEARISH: "bear",
+  CRITICAL_RISK: "bear",
+};
+
+const NEWS_CLASS_LABEL: Record<NewsClass, string> = {
+  VERY_BULLISH: "Very Bullish",
+  BULLISH: "Bullish",
+  NEUTRAL: "Neutral",
+  RISK_WARNING: "Risk Warning",
+  BEARISH: "Bearish",
+  CRITICAL_RISK: "Critical Risk",
+};
+
+const NEWS_ACTION_LABEL: Record<NewsValidationAction, string> = {
+  ALLOW: "Allowed",
+  BOOST: "Confidence Boosted",
+  SHRINK: "Size Reduced",
+  TIGHTEN_SL: "Stop Tightened",
+  REQUIRE_CONFIRMATION: "Awaiting Confirmation",
+  REJECT: "Trade Rejected",
+};
+
+/**
+ * Compact (or expanded) inline panel rendering the news-validation
+ * verdict that drove an execution attempt or sits behind a live LLM
+ * decision. Kept inline so the existing single-feature page file owns
+ * the surface — no extra component import bloat for one render path.
+ */
+function NewsValidationRow({
+  news,
+  expanded = false,
+}: {
+  news: NewsValidationResult;
+  expanded?: boolean;
+}) {
+  if (news.status === "unavailable") {
+    return (
+      <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[var(--fg-subtle)]">
+        <Newspaper className="size-3" />
+        <span>News unavailable — trading on technicals only.</span>
+      </div>
+    );
+  }
+  if (news.status === "no_coverage") {
+    return (
+      <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[var(--fg-subtle)]">
+        <Newspaper className="size-3" />
+        <span>No coin-specific news in the last 24h.</span>
+      </div>
+    );
+  }
+
+  const cls = news.aggregateClass;
+  const scoreText =
+    news.score === 0
+      ? "0"
+      : news.score > 0
+        ? `+${news.score}`
+        : `${news.score}`;
+
+  return (
+    <div className="pt-1.5 space-y-1 border-t border-[var(--border)]/60">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Newspaper className="size-3 text-[var(--accent)] shrink-0" />
+          <Badge
+            variant={NEWS_CLASS_TONE[cls]}
+            className="text-[9px] h-4 px-1.5"
+          >
+            {NEWS_CLASS_LABEL[cls]}
+          </Badge>
+          <span className="text-[10px] text-[var(--fg-muted)] shrink-0">
+            {NEWS_ACTION_LABEL[news.action]}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 text-[10px] text-[var(--fg-subtle)] shrink-0">
+          <span>
+            score{" "}
+            <span className="font-mono text-[var(--fg)]">{scoreText}</span>
+          </span>
+          {news.llmEnrichmentUsed ? (
+            <Badge variant="muted" className="text-[8px] h-3.5 px-1">
+              LLM
+            </Badge>
+          ) : null}
+        </div>
+      </div>
+      <p className="text-[10.5px] text-[var(--fg-muted)] leading-snug">
+        {news.rationale}
+      </p>
+      {expanded && news.items.length > 0 ? (
+        <ul className="space-y-0.5 pt-0.5">
+          {news.items.slice(0, 3).map((it) => (
+            <li
+              key={it.id}
+              className="text-[10px] text-[var(--fg-subtle)] leading-snug"
+            >
+              <span className="font-mono mr-1">
+                {NEWS_CLASS_LABEL[it.class].slice(0, 4)}
+              </span>
+              <span className="text-[var(--fg-muted)]">{it.title}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

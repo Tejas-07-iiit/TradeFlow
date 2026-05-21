@@ -93,6 +93,17 @@ export class GroqProvider implements LlmProvider {
     const estimatedTotal = promptTokens + reservedOutput;
     const reservation = await budget.reserve(estimatedTotal);
 
+    const {
+      recordRequestStart,
+      recordRequestEnd,
+      recordRequestFailure,
+      record429Event,
+    } = require("../orchestrator/state");
+
+    recordRequestStart(this.accountId, estimatedTotal);
+    const startMs = Date.now();
+    let actualTokens: number | undefined;
+
     const attempt = async (msgs: ChatMessage[], retryCount = 0): Promise<string> => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -116,20 +127,9 @@ export class GroqProvider implements LlmProvider {
         if (!res.ok) {
           const text = await res.text().catch(() => "");
           if (res.status === 429) {
-            // Fail fast on rate limit. We used to retry up to 3× with
-            // ~30s sleeps each, which blocked the whole engine for
-            // 90+ seconds. Better to drop this call, let the round-robin
-            // cycle move on, and try the next symbol — by the time we
-            // revisit this one the bucket has refilled.
             const retryAfter = parseFloat(
               res.headers.get("retry-after") ?? "",
             );
-            // Persist a cooldown for THIS (account, model) so subsequent
-            // reservations fail fast instead of round-tripping a guaranteed-
-            // 429. Groq returns retry-after even for the daily (TPD) cap,
-            // which the sliding-60s TPM throttle alone cannot see. The
-            // cooldown is account-scoped so a 429 on key #1 does not lock
-            // key #2 out of the same model.
             if (Number.isFinite(retryAfter) && retryAfter > 0) {
               markModelCooldown(this.model, retryAfter, this.accountId);
             }
@@ -137,17 +137,22 @@ export class GroqProvider implements LlmProvider {
             console.warn(
               `[LLM] groq 429 on ${this.logLabel} — ${isTpd ? "daily quota" : "rate limit"}; cooldown ${Number.isFinite(retryAfter) ? `${retryAfter.toFixed(0)}s` : "unknown"}`,
             );
+            
+            // Record 429 event in tracker
+            record429Event(
+              this.accountId,
+              this.model,
+              Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60,
+              isTpd,
+              text.slice(0, 300) || "Rate limited",
+            );
+
             throw new LlmProviderError(
               `Groq rate limit on ${this.logLabel}`,
               { status: 429, retryAfterSec: retryAfter, body: text, tpd: isTpd, accountId: this.accountId },
               this.name,
             );
           }
-          // Groq returns 400 with code `json_validate_failed` when the
-          // model emitted text that parses as JSON-ish but isn't strict
-          // JSON (e.g. an arithmetic expression inside a number field).
-          // Surface a typed marker so the outer retry can repair it
-          // instead of bailing out to the next provider in the chain.
           const isJsonValidateFailed =
             res.status === 400 && /json_validate_failed/i.test(text);
           if (isJsonValidateFailed) {
@@ -191,12 +196,12 @@ export class GroqProvider implements LlmProvider {
             this.name,
           );
         }
-        // Calibrate the budget against actual token usage so future calls
-        // don't over-reserve on conservative estimates. Only on the first
-        // attempt — retries reuse the same reservation.
         const actual = json.usage?.total_tokens;
-        if (actual && retryCount === 0) {
-          budget.recordActual(reservation, actual);
+        if (actual) {
+          actualTokens = actual;
+          if (retryCount === 0) {
+            budget.recordActual(reservation, actual);
+          }
         }
         return content;
       } finally {
@@ -228,8 +233,12 @@ export class GroqProvider implements LlmProvider {
 
     try {
       const raw = await attempt(messages);
-      return parseAndValidate(raw);
+      const data = parseAndValidate(raw);
+      const duration = Date.now() - startMs;
+      recordRequestEnd(this.accountId, duration, actualTokens);
+      return data;
     } catch (err) {
+      recordRequestFailure(this.accountId);
       // 429s / network errors meant the call never produced billable
       // usage — release the reservation so the next attempt in the chain
       // doesn't see an inflated window.

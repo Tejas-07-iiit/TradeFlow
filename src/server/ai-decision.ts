@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { submitDecisionJob } from "@/services/ai/orchestrator";
+import { submitDecisionJob, getOrchestratorStats } from "@/services/ai/orchestrator";
 import {
   type CandlestickIntelligenceInput,
   DecisionInputSchema,
@@ -15,6 +15,8 @@ import {
 import type { CandlestickIntelligence } from "@/lib/candlestick";
 import { runStrategyPipeline } from "@/strategy-core";
 import type { StrategySnapshot } from "@/strategy-core/types";
+import { validateNewsForTrade } from "@/services/news/validator";
+import type { NewsValidationResult } from "@/services/news/validator-types";
 
 export interface DecisionResponse {
   ok: boolean;
@@ -37,6 +39,7 @@ export interface DecisionResponse {
    * Lets the UI surface a badge and lets ops measure each path's hit rate.
    */
   source?: "llm" | "prefilter" | "local-fallback";
+  newsValidation?: NewsValidationResult;
 }
 
 /**
@@ -178,6 +181,16 @@ export async function getStrategyDecision(
   }
 
   const llmResult = jobResult.decision;
+
+  let newsValidation: NewsValidationResult | undefined;
+  try {
+    const decisionText = llmResult.decision.decision;
+    const side = decisionText === "BUY" ? "LONG" : decisionText === "SELL" ? "SHORT" : "NONE";
+    newsValidation = await validateNewsForTrade(symbol as any, side);
+  } catch (err) {
+    console.error(`[getStrategyDecision] news validation error for ${symbol}:`, err);
+  }
+
   return {
     ok: true,
     generatedAt: llmResult.generatedAt,
@@ -187,6 +200,7 @@ export async function getStrategyDecision(
     decision: llmResult.decision,
     strategySnapshot: decisionInput.strategySnapshot,
     source: llmResult.source,
+    newsValidation,
   };
 }
 
@@ -291,4 +305,8 @@ function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotI
     }),
     relatedPrinciples: [],
   };
+}
+
+export async function getLiveOrchestratorStats(model?: string) {
+  return getOrchestratorStats(model);
 }

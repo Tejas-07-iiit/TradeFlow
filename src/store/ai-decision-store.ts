@@ -4,6 +4,7 @@ import { create } from "zustand";
 
 import type { MarketDecision } from "@/services/ai/schemas";
 import type { Grade } from "@/lib/trade-quality/types";
+import type { NewsValidationResult } from "@/services/news/validator-types";
 
 export interface DecisionEntry {
   decision: MarketDecision;
@@ -12,6 +13,13 @@ export interface DecisionEntry {
   model: string;
   /** Cache key from the reasoning layer, useful for change detection. */
   key: string;
+  /**
+   * News-aware risk validation result for this candidate. May be undefined
+   * on the legacy market-decision path; always populated by the strategy
+   * decision flow. `status === "unavailable"` is the fail-open marker —
+   * the engine treats it as "no adjustment, no rejection".
+   */
+  newsValidation?: NewsValidationResult;
 }
 
 /**
@@ -64,6 +72,12 @@ export interface ExecutionLogEntry {
   headline: string;
   /** Trade-quality snapshot (executed or rejected — always populated). */
   quality?: ExecutionQuality;
+  /**
+   * News validation snapshot for this attempt. Lets the UI render
+   * "size reduced due to bearish regulation news" or "rejected — exchange halt"
+   * without re-fetching anything.
+   */
+  newsValidation?: NewsValidationResult;
 }
 
 interface AiDecisionState {

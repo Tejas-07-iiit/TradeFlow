@@ -88,14 +88,19 @@ function formatProviderLabel(p: LlmProvider): string {
  */
 export async function getMarketThesisFor(
   input: ThesisInput,
+  preferredAccountId?: number,
+  allowFallback = true,
 ): Promise<CachedThesis | null> {
   const key = fingerprint(input);
   const cached = readCache(key);
   if (cached) return cached;
 
-  const chain = getLlmProviderChain({ purpose: "thesis" });
+  const chain = getLlmProviderChain({ purpose: "thesis", preferredAccountId });
   if (chain.length === 0) {
     console.error("[ai/market-thesis] no provider configured for thesis");
+    if (!allowFallback) {
+      throw new Error("No provider configured for thesis");
+    }
     return null;
   }
 
@@ -127,13 +132,21 @@ export async function getMarketThesisFor(
       const more = i < chain.length - 1;
       const msg = err instanceof Error ? err.message : String(err);
       console.warn(
-        `[ai/market-thesis] ${formatProviderLabel(provider)} failed${more ? " — trying next fallback" : ""}: ${msg}`,
+        `[ai/market-thesis] ${formatProviderLabel(provider)} failed${
+          more ? " — trying next fallback" : ""
+        }: ${msg}`,
       );
     }
   }
 
   console.error(
-    `[ai/market-thesis] all providers failed. lastErr=${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+    `[ai/market-thesis] all providers failed. lastErr=${
+      lastErr instanceof Error ? lastErr.message : String(lastErr)
+    }`,
   );
+
+  if (!allowFallback) {
+    throw lastErr || new Error("All thesis providers failed");
+  }
   return null;
 }

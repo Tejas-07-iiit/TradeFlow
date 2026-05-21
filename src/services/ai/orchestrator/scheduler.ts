@@ -1,49 +1,39 @@
 /**
- * Scheduler — owns the global LLM concurrency budget.
- *
- * Why concurrency cap = 2? With 5 watchlist symbols on a 96s round-robin
- * plus on-demand triggers + thesis traffic, the system naturally produces
- * bursts. A hard cap of 2 in-flight LLM jobs has three benefits:
- *   1. We never push more than 2 parallel calls at a provider — the local
- *      token-bucket reservations remain accurate (vs. N parallel calls
- *      racing the budget check).
- *   2. Two slots are enough that EXEC_CRITICAL work and a routine scan
- *      can both progress; the next-prio job lands in the slot the first
- *      one vacates.
- *   3. Two slots give the priority queue meaningful work to do — with a
- *      cap of 8 there's never queue depth and priorities don't matter.
- *
- * The scheduler does NOT itself reserve tokens or call providers. It
- * dispatches `execute(job)`; the pipeline owns provider concerns. Keeping
- * scheduling separate from execution makes both testable in isolation.
+ * Scheduler — owns the global LLM concurrency budget and pacing.
  */
 
 import { PriorityQueue, type QueueEntry } from "./queue";
 import type { AnalysisJob, JobResult, OrchestratorStats } from "./types";
+import { getLiveKeysStats, getRecentRateLimitEvents } from "./state";
 
-const MAX_CONCURRENT = 2;
+const MAX_CONCURRENT = process.env.AI_ORCH_MAX_CONCURRENT
+  ? parseInt(process.env.AI_ORCH_MAX_CONCURRENT, 10)
+  : 2;
+
+const PACING_DELAY_MS = process.env.AI_ORCH_PACING_MS
+  ? parseInt(process.env.AI_ORCH_PACING_MS, 10)
+  : 2000;
 
 export class Scheduler {
   private queue = new PriorityQueue();
   private activeCount = 0;
   private totalDispatched = 0;
   private totalAborted = 0;
+  private totalRetries = 0;
+  private lastDispatchTime = 0;
+  private pacingTimer: NodeJS.Timeout | null = null;
 
   constructor(
-    private readonly execute: (job: AnalysisJob) => Promise<JobResult>,
+    private readonly execute: (job: AnalysisJob, scheduler: Scheduler) => Promise<JobResult>,
   ) {}
 
   /**
-   * Submit a job. The returned promise settles when the job completes
-   * (success), is expired by the queue (`source: "expired"`), or is
-   * aborted by the caller (`source: "aborted"`).
+   * Submit a job. The returned promise settles when the job completes.
    */
   submit(job: AnalysisJob): Promise<JobResult> {
     return new Promise<JobResult>((resolve, reject) => {
       const entry: QueueEntry = { job, resolve, reject };
 
-      // If the caller's AbortSignal fires while we're still queued,
-      // unhook us cleanly rather than letting the worker run a doomed job.
       if (job.abortSignal) {
         const onAbort = () => {
           if (this.queue.removeByKey(job.dedupKey, "Aborted by caller")) {
@@ -63,19 +53,41 @@ export class Scheduler {
   }
 
   /**
-   * Drain the queue up to the concurrency cap. Called whenever we enqueue
-   * and whenever a worker settles. Workers don't loop themselves — they
-   * call `tick()` on completion which is the cheapest way to chain.
+   * Record a retry event.
+   */
+  recordRetry() {
+    this.totalRetries++;
+  }
+
+  /**
+   * Drain the queue up to the concurrency cap, respecting pacing.
    */
   private tick(): void {
+    if (this.pacingTimer) return; // A pacing wait is already scheduled
+
+    const now = Date.now();
+    const timeSinceLast = now - this.lastDispatchTime;
+
+    if (timeSinceLast < PACING_DELAY_MS) {
+      const waitTime = PACING_DELAY_MS - timeSinceLast;
+      this.pacingTimer = setTimeout(() => {
+        this.pacingTimer = null;
+        this.tick();
+      }, waitTime);
+      return;
+    }
+
     while (this.activeCount < MAX_CONCURRENT) {
       const entry = this.queue.shift();
       if (!entry) return;
+
       this.activeCount++;
       this.totalDispatched++;
+      this.lastDispatchTime = Date.now();
       const startedAt = Date.now();
 
-      this.execute(entry.job)
+      // Trigger the execution
+      this.execute(entry.job, this)
         .then((result) => {
           entry.resolve({
             ...result,
@@ -83,9 +95,6 @@ export class Scheduler {
           });
         })
         .catch((err) => {
-          // The pipeline shouldn't throw — it should return a JobResult
-          // with ok:false. Catch anyway so a thrown pipeline doesn't
-          // wedge the scheduler.
           const message = err instanceof Error ? err.message : String(err);
           entry.resolve({
             ok: false,
@@ -97,10 +106,25 @@ export class Scheduler {
           this.activeCount--;
           this.tick();
         });
+
+      // Break loop to enforce pacing delay for next tick if MAX_CONCURRENT > 1
+      if (MAX_CONCURRENT > 1) {
+        const nextWait = PACING_DELAY_MS;
+        this.pacingTimer = setTimeout(() => {
+          this.pacingTimer = null;
+          this.tick();
+        }, nextWait);
+        return;
+      }
     }
   }
 
-  stats(extras: { inFlightKeys: string[] }): OrchestratorStats {
+  stats(extras: { inFlightKeys: string[]; model?: string }): OrchestratorStats {
+    const defaultModel =
+      process.env.GROQ_MODEL_DECISION?.trim() ||
+      process.env.GROQ_MODEL?.trim() ||
+      "llama-3.3-70b-versatile";
+
     return {
       queued: this.queue.size(),
       active: this.activeCount,
@@ -109,6 +133,10 @@ export class Scheduler {
       totalDispatched: this.totalDispatched,
       totalExpired: this.queue.expiredCount,
       totalAborted: this.totalAborted,
+      totalRetries: this.totalRetries,
+      keys: getLiveKeysStats(extras.model || defaultModel),
+      recentEvents: getRecentRateLimitEvents(),
     };
   }
 }
+

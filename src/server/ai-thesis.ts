@@ -1,6 +1,6 @@
 "use server";
 
-import { getMarketThesisFor } from "@/services/ai/reasoning/market-thesis";
+import { submitThesisJob } from "@/services/ai/orchestrator";
 import {
   ThesisInputSchema,
   type ThesisInput,
@@ -42,11 +42,15 @@ export async function getMarketThesis(
     return { ok: false, error: `Invalid input: ${parsed.error.message}` };
   }
 
-  const result = await getMarketThesisFor(parsed.data);
-  if (!result) {
-    return { ok: false, error: "LLM generation failed (see server logs)" };
+  const jobResult = await submitThesisJob(parsed.data);
+  if (!jobResult.ok || !jobResult.thesis) {
+    return {
+      ok: false,
+      error: jobResult.error ?? "LLM generation failed (see server logs)",
+    };
   }
 
+  const result = jobResult.thesis;
   return {
     ok: true,
     generatedAt: result.generatedAt,

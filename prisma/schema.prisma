@@ -236,3 +236,52 @@ model TradeHistory {
   @@index([symbol])
   @@index([positionId])
 }
+
+model ExplainableSignal {
+  id               String   @id @default(cuid())
+  symbol           String
+  side             String   // "LONG" or "SHORT"
+  timestamp        DateTime @default(now())
+  status           String   // "ACCEPTED" | "REJECTED" | "MODIFIED" | "SHADOW_ACCEPTED"
+  confidence       Int
+  finalAction      String   // "BUY" | "SELL"
+  executionResult  String?  // e.g. orderId, veto reasons, sizing error message, etc.
+  
+  // Technical Analysis
+  emaAlignment     String   // e.g. "Bullish (EMA50 > EMA200)", "Bearish (EMA50 < EMA200)", etc.
+  rsi              Float?
+  macd             Json?    // { macd, signalLine, histogram }
+  vwap             Float?
+  volatility       Float?   // ATR% snapshot
+  trendRegime      String   // regime (e.g. Trending, Choppy, etc.)
+  supportPrice     Float?   // 30-bar low
+  resistancePrice  Float?   // 30-bar high
+  momentumAnalysis String?  // ADX description
+
+  // Candlestick Patterns
+  candlestickPatterns Json? // detected patterns array, interpretations
+
+  // News Validation
+  newsValidation Json? // headlines, sentiment, risk index, score, action
+
+  // AI Reasoning
+  reasoning Json? // array of reasoning points from LLM
+
+  // Risk Engine
+  slPrice             Float?
+  tpPrice             Float?
+  riskRewardRatio     Float?
+  leverageAdjustment  String?
+  sizeAdjustment      String?
+  positionSizing      Json?   // risk amount, notional, equity %, multiples
+
+  // Execution Validator
+  entryDrift         Float?   // drift percentage (0% to 100%)
+  spreadValidation   String?
+  liquidityChecks    String?
+  newsVetoResult     String?
+
+  @@index([symbol])
+  @@index([timestamp])
+  @@index([status])
+}
