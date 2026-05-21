@@ -77,25 +77,28 @@ export function PriceChart({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    const styles = getComputedStyle(document.documentElement);
+    const get = (v: string) => styles.getPropertyValue(v).trim();
+
     const chart = createChart(containerRef.current, {
       layout: {
         background: { color: "transparent" },
-        textColor: "#8A9BB5",
+        textColor: get('--chart-text'),
         fontFamily: "Satoshi, sans-serif",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: "rgba(255,255,255,0.02)" },
-        horzLines: { color: "rgba(255,255,255,0.02)" },
+        vertLines: { color: get('--chart-grid') },
+        horzLines: { color: get('--chart-grid') },
       },
       rightPriceScale: {
-        borderColor: "rgba(255,255,255,0.06)",
+        borderColor: get('--chart-border'),
         scaleMargins: { top: 0.1, bottom: 0.15 },
         autoScale: true,
         alignLabels: true,
       },
       timeScale: {
-        borderColor: "rgba(255,255,255,0.06)",
+        borderColor: get('--chart-border'),
         timeVisible: true,
         secondsVisible: false,
         rightOffset: 20,
@@ -110,12 +113,12 @@ export function PriceChart({
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-          color: "rgba(0,212,255,0.3)",
-          labelBackgroundColor: "#00D4FF",
+          color: get('--chart-crosshair'),
+          labelBackgroundColor: get('--chart-crosshair-label'),
         },
         horzLine: {
-          color: "rgba(0,212,255,0.3)",
-          labelBackgroundColor: "#00D4FF",
+          color: get('--chart-crosshair'),
+          labelBackgroundColor: get('--chart-crosshair-label'),
         },
       },
       autoSize: true,
@@ -162,21 +165,32 @@ export function PriceChart({
   useEffect(() => {
     if (!chartRef.current) return;
     
-    const isDark = resolvedTheme !== "light";
+    const styles = getComputedStyle(document.documentElement);
+    const get = (v: string) => styles.getPropertyValue(v).trim();
     
     chartRef.current.applyOptions({
       layout: {
-        textColor: isDark ? "#8A9BB5" : "#64748b",
+        textColor: get('--chart-text'),
       },
       grid: {
-        vertLines: { color: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.05)" },
-        horzLines: { color: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.05)" },
+        vertLines: { color: get('--chart-grid') },
+        horzLines: { color: get('--chart-grid') },
       },
       rightPriceScale: {
-        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.1)",
+        borderColor: get('--chart-border'),
       },
       timeScale: {
-        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.1)",
+        borderColor: get('--chart-border'),
+      },
+      crosshair: {
+        vertLine: {
+          color: get('--chart-crosshair'),
+          labelBackgroundColor: get('--chart-crosshair-label'),
+        },
+        horzLine: {
+          color: get('--chart-crosshair'),
+          labelBackgroundColor: get('--chart-crosshair-label'),
+        },
       },
     });
   }, [resolvedTheme]);
@@ -307,5 +321,5 @@ export function PriceChart({
     }
   }, [liveCandle]);
 
-  return <div ref={containerRef} className="absolute inset-0" />;
+  return <div ref={containerRef} className="absolute inset-0" data-no-transition />;
 }

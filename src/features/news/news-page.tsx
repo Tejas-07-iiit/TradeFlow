@@ -171,7 +171,7 @@ export function NewsPage() {
 
       {/* Horizontal Scrolling Marquee */}
       {feed && marqueeItems.length > 0 && (
-        <div className="relative overflow-hidden flex items-center bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl py-3 mt-2">
+        <div className="relative overflow-hidden flex items-center bg-[var(--card)] border border-[var(--border)] rounded-xl py-3 mt-2">
            <div className="absolute left-0 w-16 h-full bg-gradient-to-r from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
            <div className="absolute right-0 w-16 h-full bg-gradient-to-l from-[var(--color-bg)] to-transparent z-10 pointer-events-none" />
            <div className="flex whitespace-nowrap animate-marquee hover:[animation-play-state:paused] w-max">
@@ -285,7 +285,7 @@ function RedditRow({ item }: { item: FeedItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] hover:bg-[var(--accent-soft)] hover:border-[var(--accent)]/30 overflow-hidden transition-all duration-200 group min-h-[160px]"
+      className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--card-hover)] hover:border-[var(--accent)]/30 overflow-hidden transition-all duration-200 group min-h-[160px]"
     >
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div className="flex items-center justify-between gap-3">
@@ -336,7 +336,7 @@ function NewsRow({ item }: { item: FeedItem }) {
       href={item.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] hover:bg-[var(--accent-soft)] hover:border-[var(--accent)]/30 overflow-hidden transition-all duration-200 group min-h-[220px]"
+      className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] hover:bg-[var(--card-hover)] hover:border-[var(--accent)]/30 overflow-hidden transition-all duration-200 group min-h-[220px]"
     >
       {item.imageUrl ? (
         <div className="w-full h-40 overflow-hidden shrink-0 border-b border-[var(--border)] bg-[var(--color-bg)]">
@@ -404,8 +404,8 @@ function FilterChip({
         active
           ? "bg-[var(--accent-soft)] border-[var(--accent)]/40 text-[var(--fg)]"
           : dim
-            ? "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-subtle)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg-muted)]"
-            : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:bg-[var(--bg-elevated)] hover:text-[var(--fg)]",
+            ? "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--fg-subtle)] hover:bg-[var(--card-hover)] hover:text-[var(--fg-muted)]"
+            : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--fg-muted)] hover:bg-[var(--card-hover)] hover:text-[var(--fg)]",
       )}
     >
       <span>{label}</span>
@@ -438,7 +438,7 @@ function SourceTab({
         "px-3 h-7 text-[11px] font-medium rounded-md border transition-colors",
         active
           ? "bg-[var(--accent-soft)] border-[var(--accent)]/40 text-[var(--fg)]"
-          : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)] hover:text-[var(--fg)]",
+          : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--fg-muted)] hover:text-[var(--fg)]",
       )}
     >
       {label}
@@ -452,13 +452,13 @@ function SkeletonRows() {
       {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
         <div
           key={i}
-          className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-elevated)] overflow-hidden h-[240px]"
+          className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] overflow-hidden h-[240px]"
         >
-          <div className="w-full h-32 bg-[var(--bg-elevated)] animate-pulse shrink-0 border-b border-[var(--border)]" />
+          <div className="w-full h-32 bg-[var(--surface-elevated)] animate-pulse shrink-0 border-b border-[var(--border)]" />
           <div className="p-4 space-y-3 flex-1">
-            <div className="h-4 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
-            <div className="h-3 w-4/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
-            <div className="h-3 w-1/3 rounded bg-[var(--bg-elevated)] animate-pulse mt-auto" />
+            <div className="h-4 w-5/6 rounded bg-[var(--surface-elevated)] animate-pulse" />
+            <div className="h-3 w-4/6 rounded bg-[var(--surface-elevated)] animate-pulse" />
+            <div className="h-3 w-1/3 rounded bg-[var(--surface-elevated)] animate-pulse mt-auto" />
           </div>
         </div>
       ))}

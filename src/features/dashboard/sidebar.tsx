@@ -46,7 +46,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "shrink-0 sticky top-0 h-screen flex flex-col border-r border-[var(--border)] bg-[var(--card)]/40 backdrop-blur transition-[width] duration-200",
+        "shrink-0 sticky top-0 h-screen flex flex-col border-r border-[var(--border)] bg-[var(--sidebar-bg)] transition-[width] duration-200",
         collapsed ? "w-[68px]" : "w-[232px]",
       )}
     >
@@ -58,7 +58,7 @@ export function Sidebar() {
             style={{
               background:
                 "conic-gradient(from 220deg at 50% 50%, #00d4ff, #00e676, #00d4ff)",
-              boxShadow: "0 0 16px -4px rgba(0,212,255,0.55)",
+              boxShadow: "var(--logo-glow)",
             }}
           />
           {!collapsed ? (
@@ -71,7 +71,7 @@ export function Sidebar() {
           type="button"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           onClick={() => setCollapsed((v) => !v)}
-          className="grid place-items-center size-7 rounded-md text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--card-hover)] transition-colors"
+          className="grid place-items-center size-7 rounded-md text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--sidebar-hover-bg)] transition-colors"
         >
           <ChevronsLeft
             className={cn(
@@ -92,16 +92,16 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "group relative flex items-center gap-3 rounded-md px-2.5 h-10 text-[13px] transition-all duration-200",
+                "group relative flex items-center gap-3 rounded-lg px-2.5 h-10 text-[13px] transition-all duration-200",
                 active
-                  ? "bg-[var(--accent-soft)] text-[var(--accent)] font-medium"
-                  : "text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--card-hover)]",
+                  ? "bg-[var(--sidebar-active-bg)] text-[var(--fg)] font-semibold shadow-[var(--sidebar-active-glow)]"
+                  : "text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--sidebar-hover-bg)]",
               )}
             >
               {active ? (
                 <span
-                  className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r bg-[var(--accent)]"
-                  style={{ boxShadow: "0 0 10px var(--accent)" }}
+                  className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r bg-[var(--sidebar-active-border)]"
+                  style={{ boxShadow: "var(--sidebar-active-glow)" }}
                 />
               ) : null}
               <Icon
@@ -127,7 +127,7 @@ export function Sidebar() {
 
       <div
         className={cn(
-          "m-2.5 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] p-3",
+          "m-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-3",
           collapsed && "hidden",
         )}
       >
@@ -144,7 +144,7 @@ export function Sidebar() {
       </div>
 
       {collapsed ? (
-        <div className="m-2.5 grid place-items-center size-9 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--accent)]">
+        <div className="m-2.5 grid place-items-center size-9 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--accent)]">
           <Wallet className="size-4" />
         </div>
       ) : null}

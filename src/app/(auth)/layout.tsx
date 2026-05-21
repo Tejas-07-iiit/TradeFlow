@@ -8,8 +8,8 @@ export default function AuthLayout({
   return (
     <div className="relative min-h-screen flex">
       {/* Left brand panel */}
-      <aside className="relative hidden lg:flex w-[44%] xl:w-[40%] flex-col justify-between p-10 border-r border-[var(--border)] bg-[var(--color-card)]/40 grid-bg overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none [background:radial-gradient(800px_400px_at_10%_10%,rgba(0,212,255,0.18),transparent_60%),radial-gradient(800px_400px_at_90%_90%,rgba(0,230,118,0.08),transparent_60%)]" />
+      <aside className="relative hidden lg:flex w-[44%] xl:w-[40%] flex-col justify-between p-10 border-r border-[var(--border)] bg-[var(--sidebar-bg)] grid-bg overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none [background:radial-gradient(800px_400px_at_10%_10%,rgba(0,212,255,0.08),transparent_60%),radial-gradient(800px_400px_at_90%_90%,rgba(0,230,118,0.04),transparent_60%)]" />
         <Link href="/" className="relative flex items-center gap-2.5 z-10">
           <span
             aria-hidden
@@ -17,7 +17,7 @@ export default function AuthLayout({
             style={{
               background:
                 "conic-gradient(from 220deg at 50% 50%, #00d4ff, #00e676, #00d4ff)",
-              boxShadow: "0 0 24px -6px rgba(0,212,255,0.6)",
+              boxShadow: "var(--logo-glow)",
             }}
           />
           <span className="text-sm font-semibold tracking-[0.18em] uppercase text-[var(--fg)]">
@@ -46,7 +46,7 @@ export default function AuthLayout({
             ].map((s) => (
               <div
                 key={s.k}
-                className="rounded-lg border border-[var(--border)] bg-[var(--color-bg-elevated)]/60 px-3 py-2.5"
+                className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2.5"
               >
                 <div className="text-[10px] uppercase tracking-wide text-[var(--fg-subtle)]">
                   {s.k}

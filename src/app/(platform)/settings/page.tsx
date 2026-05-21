@@ -92,7 +92,7 @@ function SettingsGrid({ start, end }: { start: number; end: number }) {
           </CardHeader>
           <CardContent className="space-y-3">
             {["Auth configured", "Paper wallet active", "Real trading disabled", "API keys not required"].map((item) => (
-              <div key={item} className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5">
+              <div key={item} className="flex items-center justify-between rounded-md bg-[var(--surface-elevated)] px-3 py-2.5">
                 <span className="text-sm text-[var(--fg-muted)]">{item}</span>
                 <StatusBadge tone={item.includes("disabled") || item.includes("not") ? "warn" : "bull"}>
                   {item.includes("disabled") || item.includes("not") ? "Safe" : "On"}

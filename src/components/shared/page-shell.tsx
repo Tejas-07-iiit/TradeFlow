@@ -82,7 +82,7 @@ export function MetricCard({
               tone === "warn" &&
                 "border-[var(--color-warn)]/20 bg-[var(--color-warn-soft)] text-[var(--color-warn)]",
               tone === "muted" &&
-                "border-[var(--color-border)] bg-white/[0.03] text-[var(--color-fg-muted)]",
+                "border-[var(--color-border)] bg-[var(--surface-elevated)] text-[var(--color-fg-muted)]",
             )}
           >
             <Icon className="size-4" />
@@ -153,7 +153,7 @@ export function EmptyState({
   description: string;
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] bg-white/[0.02] p-6 text-center">
+    <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] bg-[var(--surface-elevated)] p-6 text-center">
       <div className="text-sm font-medium text-[var(--color-fg)]">{title}</div>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[var(--color-fg-muted)]">
         {description}

@@ -62,7 +62,7 @@ export function LiveMarketsTable() {
           <select
             value={sort}
             onChange={(event) => setSort(event.target.value as SortKey)}
-            className="h-9 rounded-md border border-[var(--border)] bg-[var(--color-bg-elevated)] px-3 text-xs text-[var(--fg)] outline-none"
+            className="h-9 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 text-xs text-[var(--fg)] outline-none"
           >
             <option value="changePct">Sort: 24h Change</option>
             <option value="last">Sort: Price</option>
@@ -109,7 +109,7 @@ function MarketRow({ ticker, regime }: { ticker: Ticker24h; regime: string }) {
   );
 
   return (
-    <tr className="hover:bg-[var(--bg-elevated)]">
+    <tr className="hover:bg-[var(--card-hover)]">
       <td className="px-4 py-3">
         <div className="font-medium text-[var(--fg)]">{ticker.symbol}</div>
         <div className="text-xs text-[var(--fg-subtle)]">{SYMBOL_NAMES[ticker.symbol]}</div>

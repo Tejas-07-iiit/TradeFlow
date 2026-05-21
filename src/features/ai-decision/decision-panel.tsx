@@ -122,13 +122,13 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
         {/* Intraday Metrics */}
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+          <div className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
             <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">Setup Quality</div>
             <div className={cn("mt-1 text-xl font-bold", QUALITY_COLOR[decision.setupQuality])}>
               {decision.setupQuality}
             </div>
           </div>
-          <div className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+          <div className="flex flex-col rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
             <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">Risk/Reward</div>
             <div className="mt-1 text-xl font-mono text-[var(--fg)]">
               1:{decision.rrRatio?.toFixed(1) ?? "—"}
@@ -138,7 +138,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
 
         {/* Trade Levels */}
         {decision.signal !== "HOLD" && decision.entryPrice && (
-          <div className="grid grid-cols-3 gap-2 py-3 border-y border-[var(--border)] bg-[var(--bg-elevated)]">
+          <div className="grid grid-cols-3 gap-2 py-3 border-y border-[var(--border)] bg-[var(--surface-elevated)]">
             <TradeLevel label="Entry" value={decision.entryPrice} tone="muted" />
             <TradeLevel label="Stop Loss" value={decision.stopLoss} tone="bear" />
             <TradeLevel label="Take Profit" value={decision.takeProfit} tone="bull" />
@@ -155,7 +155,7 @@ export function DecisionPanel({ decision }: DecisionPanelProps) {
                   ? decision.signal === "BUY"
                     ? "border-[var(--color-bull)]/30 bg-[var(--color-bull-soft)] text-[var(--color-bull)]"
                     : "border-[var(--color-bear)]/30 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
-                  : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)]",
+                  : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--fg-muted)]",
               )}
             >
               {isAutoFired
@@ -253,7 +253,7 @@ function StatTile({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2">
       <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
@@ -322,7 +322,7 @@ function ConfidenceRing({ value }: { value: number }) {
           cx="30"
           cy="30"
           r={r}
-          stroke="rgba(255,255,255,0.08)"
+          stroke="var(--ring-track)"
           strokeWidth="5"
           fill="none"
         />

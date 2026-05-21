@@ -38,61 +38,169 @@
 }
 
 @layer base {
+  /*
+   * ═══════════════════════════════════════════════════
+   * LIGHT MODE — Linear / Stripe / Vercel aesthetic
+   *
+   * Key design principles:
+   *   - Warm off-white base (NOT pure white)
+   *   - Cards are white with subtle shadow for lift
+   *   - Elevated surfaces are slightly tinted
+   *   - Clear text hierarchy with high contrast
+   *   - Visible borders, not invisible
+   *   - Every surface layer is visually distinct
+   * ═══════════════════════════════════════════════════
+   */
   :root {
-    --bg: #f8fafc;
-    --bg-elevated: #ffffff;
-    --card: #ffffff;
-    --card-hover: #f1f5f9;
-    --border: #e2e8f0;
-    --border-strong: #cbd5e1;
-    --fg: #0f172a;
-    --fg-muted: #64748b;
-    --fg-subtle: #94a3b8;
-    --accent: #2563eb;
-    --accent-fg: #ffffff;
-    --accent-soft: rgba(37, 99, 235, 0.12);
-    --bull: #10b981;
-    --bull-fg: #ffffff;
-    --bull-soft: rgba(16, 185, 129, 0.12);
-    --bear: #ef4444;
-    --bear-fg: #ffffff;
-    --bear-soft: rgba(239, 68, 68, 0.12);
-    --warn: #f59e0b;
-    --warn-soft: rgba(245, 158, 11, 0.12);
+    /* ── Layered surfaces (each layer is visually distinct) ── */
+    --bg: #f0f2f5;                         /* warm gray page canvas */
+    --bg-elevated: #f7f8fa;                /* slightly lighter — inset panels, table rows */
+    --card: #ffffff;                        /* white cards with shadow for lift */
+    --card-hover: #f5f6f8;                 /* visible hover tint over white */
 
-    --shadow-card-val: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.02);
-    --shadow-glow-val: 0 0 0 1px rgba(37, 99, 235, 0.15), 0 8px 28px -10px rgba(37, 99, 235, 0.25);
+    /* ── Borders ── */
+    --border: #d8dce5;                     /* soft but visible */
+    --border-strong: #bfc6d2;              /* strong dividers, focus rings */
+
+    /* ── Text hierarchy (WCAG AA compliant) ── */
+    --fg: #111827;                         /* near-black primary text */
+    --fg-muted: #4b5563;                   /* readable secondary text */
+    --fg-subtle: #9ca3af;                  /* placeholders, labels */
+
+    /* ── Accent ── */
+    --accent: #2563eb;                     /* blue accent */
+    --accent-fg: #ffffff;                  /* white text on accent */
+    --accent-soft: rgba(37, 99, 235, 0.08);
+
+    /* ── Semantic colors ── */
+    --bull: #16a34a;
+    --bull-fg: #ffffff;
+    --bull-soft: rgba(22, 163, 74, 0.08);
+    --bear: #dc2626;
+    --bear-fg: #ffffff;
+    --bear-soft: rgba(220, 38, 38, 0.08);
+    --warn: #d97706;
+    --warn-soft: rgba(217, 119, 6, 0.08);
+
+    /* ── Sidebar ── */
+    --sidebar-bg: #f7f8fa;                 /* same as bg-elevated — distinct from canvas */
+    --sidebar-hover-bg: #ebedf2;           /* visible hover */
+    --sidebar-active-bg: rgba(37, 99, 235, 0.08);
+    --sidebar-active-border: #2563eb;
+    --sidebar-active-glow: 0 0 12px -3px rgba(37, 99, 235, 0.30);
+
+    /* ── Topbar ── */
+    --topbar-bg: rgba(255, 255, 255, 0.80);
+
+    /* ── Extended surfaces ── */
+    --surface-elevated: #eef0f4;           /* inset/nested panels — darker than card */
+    --progress-track: #e0e4eb;             /* progress bar bg */
+    --ring-track: #d8dce5;                 /* SVG ring bg */
+    --code-bg: #f0f2f5;
+
+    /* ── Chart ── */
+    --chart-grid: rgba(0, 0, 0, 0.04);
+    --chart-border: rgba(0, 0, 0, 0.10);
+    --chart-crosshair: rgba(37, 99, 235, 0.40);
+    --chart-crosshair-label: #2563eb;
+    --chart-text: #4b5563;
+
+    /* ── Shadows (critical for light mode card distinction) ── */
+    --shadow-card-val:
+      0 0 0 1px rgba(0, 0, 0, 0.03),
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.04);
+    --shadow-glow-val:
+      0 0 0 1px rgba(37, 99, 235, 0.15),
+      0 4px 16px -4px rgba(37, 99, 235, 0.20);
+
+    /* ── Logo ── */
+    --logo-glow: 0 0 16px -4px rgba(37, 99, 235, 0.35);
   }
 
+  /*
+   * ═══════════════════════════════════════════════════
+   * DARK MODE — TradingView / Vercel / Raycast aesthetic
+   *
+   * Key design principles:
+   *   - Deep navy base (NOT pure black)
+   *   - Layered card surfaces with subtle elevation
+   *   - Subtle white-tinted borders
+   *   - Restrained accent glow
+   *   - Cyan accent — institutional feel
+   * ═══════════════════════════════════════════════════
+   */
   .dark {
-    --bg: #060913;
-    --bg-elevated: #0c1222;
-    --card: #0c1222;
-    --card-hover: #111a2f;
-    --border: rgba(255, 255, 255, 0.06);
-    --border-strong: rgba(255, 255, 255, 0.12);
-    --fg: #f1f5f9;
-    --fg-muted: #8a9bb5;
-    --fg-subtle: #475569;
-    --accent: #00d4ff;
+    /* ── Layered surfaces ── */
+    --bg: #060913;                         /* deep navy canvas */
+    --bg-elevated: #0d1525;                /* elevated panels */
+    --card: #111b2e;                       /* cards — distinct from bg */
+    --card-hover: #162240;                 /* visible hover */
+
+    /* ── Borders ── */
+    --border: rgba(255, 255, 255, 0.07);
+    --border-strong: rgba(255, 255, 255, 0.14);
+
+    /* ── Text hierarchy ── */
+    --fg: #e8ecf4;                         /* bright but not harsh */
+    --fg-muted: #8494b2;                   /* readable secondary */
+    --fg-subtle: #4e5d78;                  /* labels, placeholders */
+
+    /* ── Accent ── */
+    --accent: #00d4ff;                     /* cyan accent */
     --accent-fg: #060913;
-    --accent-soft: rgba(0, 212, 255, 0.15);
+    --accent-soft: rgba(0, 212, 255, 0.10);
+
+    /* ── Semantic colors ── */
     --bull: #00e676;
     --bull-fg: #060913;
-    --bull-soft: rgba(0, 230, 118, 0.15);
+    --bull-soft: rgba(0, 230, 118, 0.10);
     --bear: #ff5252;
     --bear-fg: #060913;
-    --bear-soft: rgba(255, 82, 82, 0.15);
+    --bear-soft: rgba(255, 82, 82, 0.10);
     --warn: #ffb547;
-    --warn-soft: rgba(255, 181, 71, 0.15);
+    --warn-soft: rgba(255, 181, 71, 0.10);
 
-    --shadow-card-val: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 8px 24px -12px rgba(0, 0, 0, 0.7);
-    --shadow-glow-val: 0 0 0 1px rgba(0, 212, 255, 0.25), 0 8px 28px -10px rgba(0, 212, 255, 0.45);
+    /* ── Sidebar ── */
+    --sidebar-bg: #0a1120;                 /* slightly distinct from canvas */
+    --sidebar-hover-bg: rgba(255, 255, 255, 0.04);
+    --sidebar-active-bg: rgba(0, 212, 255, 0.08);
+    --sidebar-active-border: #00d4ff;
+    --sidebar-active-glow: 0 0 20px -4px rgba(0, 212, 255, 0.40);
+
+    /* ── Topbar ── */
+    --topbar-bg: rgba(13, 21, 37, 0.70);
+
+    /* ── Extended surfaces ── */
+    --surface-elevated: rgba(255, 255, 255, 0.03);
+    --progress-track: rgba(255, 255, 255, 0.06);
+    --ring-track: rgba(255, 255, 255, 0.08);
+    --code-bg: rgba(255, 255, 255, 0.04);
+
+    /* ── Chart ── */
+    --chart-grid: rgba(255, 255, 255, 0.07);
+    --chart-border: rgba(255, 255, 255, 0.10);
+    --chart-crosshair: rgba(0, 212, 255, 0.35);
+    --chart-crosshair-label: #00d4ff;
+    --chart-text: #8494b2;
+
+    /* ── Shadows ── */
+    --shadow-card-val:
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 2px 4px rgba(0, 0, 0, 0.30),
+      0 8px 24px -8px rgba(0, 0, 0, 0.50);
+    --shadow-glow-val:
+      0 0 0 1px rgba(0, 212, 255, 0.20),
+      0 4px 20px -6px rgba(0, 212, 255, 0.35);
+
+    /* ── Logo ── */
+    --logo-glow: 0 0 20px -4px rgba(0, 212, 255, 0.55);
   }
 
   * {
     border-color: var(--border);
   }
+
   html,
   body {
     background: var(--bg);
@@ -102,53 +210,66 @@
     text-rendering: optimizeLegibility;
     font-feature-settings: "cv11", "ss01", "ss03";
   }
+
+  /* Light mode: clean, no ambient gradients */
+  body {
+    background-image: none;
+  }
+
+  /* Dark mode: very subtle ambient glow */
   .dark body {
     background-image:
       radial-gradient(
         1200px 600px at 0% -10%,
-        rgba(0, 212, 255, 0.06),
+        rgba(0, 212, 255, 0.04),
         transparent 60%
       ),
       radial-gradient(
         900px 500px at 100% -20%,
-        rgba(0, 230, 118, 0.04),
+        rgba(0, 230, 118, 0.025),
         transparent 60%
       );
     background-attachment: fixed;
   }
-  body {
-    background-image:
-      radial-gradient(
-        1200px 600px at 0% -10%,
-        rgba(37, 99, 235, 0.03),
-        transparent 60%
-      ),
-      radial-gradient(
-        900px 500px at 100% -20%,
-        rgba(16, 185, 129, 0.02),
-        transparent 60%
-      );
-    background-attachment: fixed;
+
+  /* Smooth theme transitions */
+  body,
+  body * {
+    transition: background-color 150ms ease, border-color 150ms ease, color 80ms ease;
   }
+
+  /* Opt-out for elements that should NOT transition (charts, animations) */
+  [data-no-transition],
+  [data-no-transition] *,
+  canvas,
+  .animate-pulse,
+  .animate-spin,
+  .animate-ping,
+  .animate-marquee,
+  [data-state] {
+    transition: none !important;
+  }
+
   ::selection {
     background: var(--accent-soft);
     color: var(--fg);
   }
+
   ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: var(--border);
+    background: var(--border-strong);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: padding-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-strong);
+    background: var(--fg-subtle);
     background-clip: padding-box;
     border: 2px solid transparent;
   }
@@ -165,7 +286,7 @@
     transition:
       background 160ms ease,
       border-color 160ms ease,
-      transform 160ms ease;
+      box-shadow 160ms ease;
   }
   .panel-hover:hover {
     background: var(--color-card-hover);
@@ -177,8 +298,8 @@
   }
   .grid-bg {
     background-image:
-      linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      linear-gradient(var(--chart-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--chart-grid) 1px, transparent 1px);
     background-size: 32px 32px;
   }
   .pulse-dot::before {

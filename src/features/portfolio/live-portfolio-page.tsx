@@ -108,7 +108,7 @@ export function LivePortfolioPage({
             </StatusBadge>
           </CardHeader>
           <CardContent>
-            <div className="h-[280px] rounded-lg border border-[var(--border)] bg-[linear-gradient(180deg,rgba(0,212,255,0.08),transparent)] p-5">
+            <div className="h-[280px] rounded-lg border border-[var(--border)] bg-[linear-gradient(180deg,var(--accent-soft),transparent)] p-5">
               <div className="flex h-full items-end justify-between gap-2">
                 {[
                   { label: "Wallet", value: walletBalance },
@@ -147,7 +147,7 @@ export function LivePortfolioPage({
               <Badge variant="muted">Realtime</Badge>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex h-3 overflow-hidden rounded-full bg-[var(--bg-elevated)]">
+              <div className="flex h-3 overflow-hidden rounded-full bg-[var(--surface-elevated)]">
                 <span
                   className="bg-[var(--accent)]"
                   style={{ width: `${cashPct}%` }}
@@ -216,7 +216,7 @@ function AllocationRow({ label, value }: { label: string; value: number }) {
 
 function RiskRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5">
+    <div className="flex items-center justify-between rounded-md bg-[var(--surface-elevated)] px-3 py-2.5">
       <span className="text-sm text-[var(--fg-muted)]">{label}</span>
       <StatusBadge tone="muted">{value}</StatusBadge>
     </div>

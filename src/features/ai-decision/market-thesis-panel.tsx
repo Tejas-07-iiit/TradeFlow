@@ -123,7 +123,7 @@ const QUALITY_TONE: Record<SetupQuality, string> = {
 
 function Tile({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
       <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">{label}</div>
       <div className="mt-1">{children}</div>
     </div>
@@ -160,9 +160,9 @@ function Section({
 function SkeletonBody() {
   return (
     <div className="space-y-2">
-      <div className="h-3 w-2/3 rounded bg-[var(--bg-elevated)] animate-pulse" />
-      <div className="h-3 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
-      <div className="h-3 w-1/2 rounded bg-[var(--bg-elevated)] animate-pulse" />
+      <div className="h-3 w-2/3 rounded bg-[var(--surface-elevated)] animate-pulse" />
+      <div className="h-3 w-5/6 rounded bg-[var(--surface-elevated)] animate-pulse" />
+      <div className="h-3 w-1/2 rounded bg-[var(--surface-elevated)] animate-pulse" />
       <div className="text-[10px] text-[var(--fg-subtle)] pt-2">
         Generating thesis…
       </div>
@@ -206,7 +206,7 @@ function ConfidenceRing({ value }: { value: number }) {
   return (
     <div className="relative size-[64px] grid place-items-center">
       <svg viewBox="0 0 60 60" className="absolute inset-0 -rotate-90">
-        <circle cx="30" cy="30" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="5" fill="none" />
+        <circle cx="30" cy="30" r={r} stroke="var(--ring-track)" strokeWidth="5" fill="none" />
         <circle
           cx="30"
           cy="30"

@@ -71,7 +71,7 @@ function MetricCell({
           ? "border-[var(--color-bear)]/25 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
           : tone === "warn"
             ? "border-[var(--color-warn,var(--color-accent))]/25 bg-[var(--color-warn-soft,var(--color-accent-soft))] text-[var(--color-warn,var(--color-accent))]"
-            : "border-[var(--color-border)] bg-white/[0.03] text-[var(--color-fg-muted)]";
+            : "border-[var(--color-border)] bg-[var(--surface-elevated)] text-[var(--color-fg-muted)]";
 
   return (
     <div className="group flex items-start gap-3 px-4 py-3 first:pl-4 last:pr-4 min-w-0">
@@ -190,7 +190,7 @@ export function AccountSummary({ className }: { className?: string }) {
         />
       </div>
 
-      <div className="px-4 py-2.5 border-t border-[var(--color-border)] bg-white/[0.015]">
+      <div className="px-4 py-2.5 border-t border-[var(--color-border)] bg-[var(--surface-elevated)]">
         <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-wider text-[var(--color-fg-subtle)]">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1.5">
@@ -206,7 +206,7 @@ export function AccountSummary({ className }: { className?: string }) {
             Wallet composition · {account.currency}
           </span>
         </div>
-        <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-white/[0.04]">
+        <div className="mt-1.5 flex h-1.5 overflow-hidden rounded-full bg-[var(--progress-track)]">
           <span
             className="bg-[var(--color-accent)]"
             style={{ width: `${availablePct}%` }}

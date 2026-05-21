@@ -223,7 +223,7 @@ export function LivePaperTradingPage() {
                         "rounded-md border px-2.5 py-2 space-y-1",
                         e.outcome === "executed"
                           ? "border-[var(--accent)]/30 bg-[var(--accent-soft)]"
-                          : "border-[var(--border)] bg-[var(--bg-elevated)]",
+                          : "border-[var(--border)] bg-[var(--surface-elevated)]",
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
@@ -282,7 +282,7 @@ export function LivePaperTradingPage() {
                   }) => (
                     <div
                       key={position.id}
-                      className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3 space-y-2"
+                      className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3 space-y-2"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export function LivePaperTradingPage() {
                         const sizing = parseSizingMeta(position.decisionMeta);
                         if (!sizing) return null;
                         return (
-                          <div className="rounded border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-[10px] leading-tight text-[var(--fg-subtle)]">
+                          <div className="rounded border border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1.5 text-[10px] leading-tight text-[var(--fg-subtle)]">
                             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono tabular-nums">
                               <span>
                                 <span className="text-[var(--fg-subtle)]">EQUITY </span>
@@ -425,7 +425,7 @@ export function LivePaperTradingPage() {
                 pendingOrders.map((order) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5"
+                    className="flex items-center justify-between rounded-md bg-[var(--surface-elevated)] px-3 py-2.5"
                   >
                     <div className="flex gap-3 items-center">
                       <Badge
@@ -473,7 +473,7 @@ export function LivePaperTradingPage() {
                 tradeHistory.slice(0, 25).map((trade) => (
                   <div
                     key={trade.id}
-                    className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2 border border-[var(--border)]"
+                    className="flex items-center justify-between rounded-md bg-[var(--surface-elevated)] px-3 py-2 border border-[var(--border)]"
                   >
                     <div className="flex gap-3 items-center min-w-0">
                       <div
@@ -639,7 +639,7 @@ function SecondaryStat({
   detail?: string;
 }) {
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2.5">
       <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>
@@ -665,7 +665,7 @@ function Metric({
   tone?: "bull" | "bear";
 }) {
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-2">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-2">
       <div className="text-[9px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>

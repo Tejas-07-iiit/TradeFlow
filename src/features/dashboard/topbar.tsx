@@ -57,7 +57,7 @@ export function Topbar() {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-30 h-14 border-b border-[var(--border)] bg-[var(--bg-elevated)]/60 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-30 h-14 border-b border-[var(--border)] bg-[var(--topbar-bg)] backdrop-blur-xl shadow-sm">
       <div className="h-full flex items-center justify-between gap-4 px-5">
         {/* Left: ticker tape + Symbol Selector */}
         <div className="flex items-center gap-4 min-w-0">
@@ -109,7 +109,7 @@ export function Topbar() {
         </div>
 
         {/* Center: search */}
-        <div className="hidden lg:flex flex-1 max-w-md items-center gap-2 h-9 px-3 rounded-md border border-[var(--border)] bg-[var(--card)] shadow-inner text-[var(--fg-subtle)] focus-within:border-[var(--accent)] transition-colors">
+        <div className="hidden lg:flex flex-1 max-w-md items-center gap-2 h-9 px-3 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] shadow-inner text-[var(--fg-subtle)] focus-within:border-[var(--accent)] transition-colors">
           <Search className="size-3.5" />
           <input
             placeholder="Search symbols, strategies, signals…"
@@ -157,7 +157,7 @@ export function Topbar() {
             type="button"
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
             aria-label="Toggle theme"
-            className="grid place-items-center size-9 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)]/50 text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--card-hover)] transition-colors"
+            className="grid place-items-center size-9 rounded-md border border-[var(--border)] bg-[var(--card)] text-[var(--fg-muted)] hover:text-[var(--fg)] hover:bg-[var(--card-hover)] transition-colors"
           >
             <Sun className="size-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute size-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -167,7 +167,7 @@ export function Topbar() {
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)]/50 pl-1 pr-2 h-9 hover:bg-[var(--card-hover)] transition-colors"
+                className="flex items-center gap-2 rounded-md border border-[var(--border)] bg-[var(--card)] pl-1 pr-2 h-9 hover:bg-[var(--card-hover)] transition-colors"
               >
                 <Avatar className="size-7">
                   <AvatarFallback>{initials}</AvatarFallback>

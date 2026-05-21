@@ -85,7 +85,7 @@ export function LiveSignalsPage() {
               ) : null}
 
               {decision.signal !== "HOLD" && decision.entryPrice != null && (
-                <div className="grid grid-cols-3 gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+                <div className="grid grid-cols-3 gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
                   <SignalLevel label="Entry" value={decision.entryPrice} />
                   <SignalLevel label="Stop Loss" value={decision.stopLoss} tone="bear" />
                   <SignalLevel label="Take Profit" value={decision.takeProfit} tone="bull" />
@@ -99,7 +99,7 @@ export function LiveSignalsPage() {
                     ? decision.signal === "BUY"
                       ? "border-[var(--color-bull)]/30 bg-[var(--color-bull-soft)] text-[var(--color-bull)]"
                       : "border-[var(--color-bear)]/30 bg-[var(--color-bear-soft)] text-[var(--color-bear)]"
-                    : "border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--fg-muted)]",
+                    : "border-[var(--border)] bg-[var(--surface-elevated)] text-[var(--fg-muted)]",
                 )}
               >
                 {isAutoFired
@@ -129,7 +129,7 @@ export function LiveSignalsPage() {
               ) : (
                 <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
                   {signalHistory.map((s, i) => (
-                    <div key={`${s.generatedAt}-${i}`} className={cn("flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3", s.status === "EXPIRED" && "opacity-50")}>
+                    <div key={`${s.generatedAt}-${i}`} className={cn("flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3", s.status === "EXPIRED" && "opacity-50")}>
                       <div className="flex items-center gap-4">
                         <StatusBadge tone={s.signal === "BUY" ? "bull" : s.signal === "SELL" ? "bear" : "muted"}>
                           {s.signal}
@@ -182,7 +182,7 @@ export function LiveSignalsPage() {
                 ["Momentum", indicators.rsi14 ? indicators.rsi14 > 55 ? "Positive" : indicators.rsi14 < 45 ? "Negative" : "Neutral" : "Pending"],
                 ["Strength", indicators.adx14 ? indicators.adx14 > 20 ? "Confirmed" : "Weak" : "Pending"],
               ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between rounded-md bg-[var(--bg-elevated)] px-3 py-2.5">
+                <div key={label} className="flex items-center justify-between rounded-md bg-[var(--surface-elevated)] px-3 py-2.5">
                   <span className="text-sm text-[var(--fg-muted)]">{label}</span>
                   <span className={cn("text-sm text-[var(--fg)]", value === "Bullish" || value === "Positive" || value === "Confirmed" ? "text-[var(--color-bull)]" : "")}>{value}</span>
                 </div>
@@ -197,7 +197,7 @@ export function LiveSignalsPage() {
 
 function SignalStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
       <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">{label}</div>
       <div className="mt-1 text-mono-tabular text-sm font-semibold text-[var(--fg)]">{value}</div>
     </div>

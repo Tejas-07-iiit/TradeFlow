@@ -127,7 +127,7 @@ export function NewsWidget() {
                       href={it.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block px-2 py-1.5 rounded-md hover:bg-[var(--bg-elevated)] transition-colors"
+                      className="block px-2 py-1.5 rounded-md hover:bg-[var(--card-hover)] transition-colors"
                     >
                       <p className="text-[11.5px] leading-snug text-[var(--fg)] line-clamp-2">
                         {it.title}
@@ -170,7 +170,7 @@ function PulseCell({
   icon: React.ElementType;
 }) {
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-2">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-2">
       <div className="flex items-center gap-1 text-[9px] uppercase tracking-wider text-[var(--fg-subtle)]">
         <Icon className="size-2.5" />
         {label}
@@ -190,8 +190,8 @@ function SkeletonRows() {
     <ul className="space-y-1">
       {[0, 1, 2].map((i) => (
         <li key={i} className="px-2 py-1.5">
-          <div className="h-3 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
-          <div className="h-2.5 w-1/2 rounded bg-[var(--bg-elevated)] animate-pulse mt-1.5" />
+          <div className="h-3 w-5/6 rounded bg-[var(--surface-elevated)] animate-pulse" />
+          <div className="h-2.5 w-1/2 rounded bg-[var(--surface-elevated)] animate-pulse mt-1.5" />
         </li>
       ))}
     </ul>

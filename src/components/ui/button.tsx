@@ -21,7 +21,7 @@ const buttonVariants = cva(
         bull: "bg-[var(--bull)] text-[var(--bull-fg)] hover:brightness-110",
         bear: "bg-[var(--bear)] text-[var(--bear-fg)] hover:brightness-110",
         secondary:
-          "bg-[var(--bg-elevated)] text-[var(--fg)] border border-[var(--border)] hover:bg-[var(--card-hover)]",
+          "bg-[var(--surface-elevated)] text-[var(--fg)] border border-[var(--border)] hover:bg-[var(--card-hover)]",
         link: "text-[var(--accent)] underline-offset-4 hover:underline",
       },
       size: {

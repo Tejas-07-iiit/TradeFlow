@@ -62,7 +62,7 @@ export default function ProfilePage() {
                   <p className="text-sm font-medium text-[var(--fg)]">Password</p>
                   <p className="text-xs text-[var(--fg-muted)]">Last changed 30 days ago</p>
                 </div>
-                <button className="text-xs px-3 py-1.5 bg-[var(--card-hover)] border border-[var(--border)] rounded text-[var(--fg)] hover:bg-[var(--border)] transition-colors">
+                <button className="text-xs px-3 py-1.5 bg-[var(--surface-elevated)] border border-[var(--border)] rounded text-[var(--fg)] hover:bg-[var(--card-hover)] transition-colors">
                   Update
                 </button>
               </div>
@@ -72,7 +72,7 @@ export default function ProfilePage() {
                   <p className="text-sm font-medium text-[var(--fg)]">Two-Factor Authentication</p>
                   <p className="text-xs text-[var(--fg-muted)]">Enhance security with 2FA</p>
                 </div>
-                <button className="text-xs px-3 py-1.5 bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/20 rounded hover:bg-[var(--accent)] hover:text-[var(--fg)] transition-colors">
+                <button className="text-xs px-3 py-1.5 bg-[var(--accent-soft)] text-[var(--accent)] border border-[var(--accent)]/20 rounded hover:bg-[var(--accent)] hover:text-[var(--accent-fg)] transition-colors">
                   Enable
                 </button>
               </div>

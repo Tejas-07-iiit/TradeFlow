@@ -139,7 +139,7 @@ export function RegisterForm() {
           </div>
         ) : null}
 
-        <div className="flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] px-3 py-2.5 text-[11px] text-[var(--fg-muted)]">
+        <div className="flex items-start gap-2 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] px-3 py-2.5 text-[11px] text-[var(--fg-muted)]">
           <Wallet className="size-3.5 mt-0.5 text-[var(--accent)]" />
           <span>
             Your paper wallet is provisioned automatically during signup. All

@@ -36,7 +36,7 @@ export function LiveAutoExecFeed() {
       <CardContent className="flex-1 overflow-y-auto min-h-0 pt-0">
         {liveTrades.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="size-10 rounded-full bg-[var(--bg-elevated)] border border-[var(--border)] grid place-items-center mb-3">
+            <div className="size-10 rounded-full bg-[var(--surface-elevated)] border border-[var(--border)] grid place-items-center mb-3">
               <Zap className="size-5 text-[var(--fg-muted)]" />
             </div>
             <p className="text-xs text-[var(--fg-subtle)]">
@@ -48,7 +48,7 @@ export function LiveAutoExecFeed() {
             {liveTrades.map((event, i) => (
               <div
                 key={`${event.symbol}:${event.executedAt}:${i}`}
-                className="flex items-center justify-between gap-3 p-2.5 rounded-md border border-[var(--border)] bg-[var(--bg-elevated)]"
+                className="flex items-center justify-between gap-3 p-2.5 rounded-md border border-[var(--border)] bg-[var(--surface-elevated)]"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">

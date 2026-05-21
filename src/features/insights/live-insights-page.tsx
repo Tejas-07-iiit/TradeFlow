@@ -65,7 +65,7 @@ export function LiveInsightsPage() {
               <Badge variant="muted">{interval.toUpperCase()} {symbol}</Badge>
             </CardHeader>
             <CardContent>
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--color-bg-elevated)]/60 p-5">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] p-5">
                 <p className="max-w-4xl text-sm leading-7 text-[var(--fg-muted)]">
                   {decision.verdict} {decision.warnings.length > 0 ? decision.warnings.join(" ") : "No elevated indicator warnings are currently active."}
                 </p>
@@ -82,7 +82,7 @@ export function LiveInsightsPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {decision.reasons.map((reason) => (
-                <article key={reason} className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
+                <article key={reason} className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
                   <div className="text-[10px] uppercase tracking-wider text-[var(--accent)]">Live indicator</div>
                   <p className="mt-2 text-xs leading-5 text-[var(--fg-muted)]">{reason}</p>
                 </article>
@@ -131,7 +131,7 @@ function TradeParam({
 }) {
   if (!value) return null;
   return (
-    <div className="rounded-md border border-[var(--border)] bg-[var(--color-bg)]/40 p-3">
+    <div className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3">
       <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">
         {label}
       </div>

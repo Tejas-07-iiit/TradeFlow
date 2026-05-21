@@ -48,7 +48,7 @@ export function LiveMarketMetrics() {
           return (
             <div
               key={metric.label}
-              className="rounded-md border border-[var(--border)] bg-[var(--bg-elevated)] p-3"
+              className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3"
             >
               <Icon className="mb-2 size-4 text-[var(--accent)]" />
               <div className="text-[10px] uppercase tracking-wider text-[var(--fg-subtle)]">

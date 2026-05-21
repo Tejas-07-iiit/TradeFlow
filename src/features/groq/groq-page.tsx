@@ -319,9 +319,9 @@ function Section({
 function Skeleton() {
   return (
     <div className="space-y-2">
-      <div className="h-3 w-2/3 rounded bg-[var(--bg-elevated)] animate-pulse" />
-      <div className="h-3 w-5/6 rounded bg-[var(--bg-elevated)] animate-pulse" />
-      <div className="h-3 w-1/2 rounded bg-[var(--bg-elevated)] animate-pulse" />
+      <div className="h-3 w-2/3 rounded bg-[var(--surface-elevated)] animate-pulse" />
+      <div className="h-3 w-5/6 rounded bg-[var(--surface-elevated)] animate-pulse" />
+      <div className="h-3 w-1/2 rounded bg-[var(--surface-elevated)] animate-pulse" />
       <div className="text-[10px] text-[var(--fg-subtle)] pt-2">Generating thesis…</div>
     </div>
   );
@@ -351,7 +351,7 @@ function ConfidenceRing({ value }: { value: number }) {
   return (
     <div className="relative size-[52px] grid place-items-center">
       <svg viewBox="0 0 48 48" className="absolute inset-0 -rotate-90">
-        <circle cx="24" cy="24" r={r} stroke="rgba(255,255,255,0.08)" strokeWidth="4" fill="none" />
+        <circle cx="24" cy="24" r={r} stroke="var(--ring-track)" strokeWidth="4" fill="none" />
         <circle
           cx="24"
           cy="24"
