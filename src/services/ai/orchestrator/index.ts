@@ -113,8 +113,20 @@ export function submitThesisJob(
   };
 
   const promise = scheduler.submit(job).then((result) => {
+    const tag =
+      result.source === "local-fallback"
+        ? "FALLBACK"
+        : result.source === "prefilter"
+          ? "PREFILTER"
+          : result.source === "expired"
+            ? "EXPIRED"
+            : result.source === "aborted"
+              ? "ABORTED"
+              : result.ok
+                ? "LLM"
+                : "FAILED";
     console.info(
-      `[orch] THESIS ${input.symbol} → ${result.ok ? "LLM" : "FAILED"} in ${result.durationMs}ms (queued ${scheduler.stats({ inFlightKeys: [] }).queued} active ${scheduler.stats({ inFlightKeys: [] }).active})`,
+      `[orch] THESIS ${input.symbol} → ${tag} in ${result.durationMs}ms (queued ${scheduler.stats({ inFlightKeys: [] }).queued} active ${scheduler.stats({ inFlightKeys: [] }).active})`,
     );
     return result;
   });
@@ -152,8 +164,20 @@ export function submitNewsJob(
   };
 
   const promise = scheduler.submit(job).then((result) => {
+    const tag =
+      result.source === "local-fallback"
+        ? "FALLBACK"
+        : result.source === "prefilter"
+          ? "PREFILTER"
+          : result.source === "expired"
+            ? "EXPIRED"
+            : result.source === "aborted"
+              ? "ABORTED"
+              : result.ok
+                ? "LLM"
+                : "FAILED";
     console.info(
-      `[orch] NEWS ${symbol} → ${result.ok ? "LLM" : "FAILED"} in ${result.durationMs}ms (queued ${scheduler.stats({ inFlightKeys: [] }).queued} active ${scheduler.stats({ inFlightKeys: [] }).active})`,
+      `[orch] NEWS ${symbol} → ${tag} in ${result.durationMs}ms (queued ${scheduler.stats({ inFlightKeys: [] }).queued} active ${scheduler.stats({ inFlightKeys: [] }).active})`,
     );
     return result;
   });

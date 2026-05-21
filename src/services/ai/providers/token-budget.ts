@@ -245,7 +245,7 @@ export class BudgetExhaustedError extends Error {
     readonly wouldWaitMs: number,
   ) {
     super(
-      `Token budget exhausted on ${model} (${usedTokens}/${capTokens} tpm)`,
+      `Upstream rate limit cooldown active on ${model} (${Math.ceil(wouldWaitMs / 1000)}s remaining; token budget exhausted)`,
     );
     this.name = "BudgetExhaustedError";
   }
