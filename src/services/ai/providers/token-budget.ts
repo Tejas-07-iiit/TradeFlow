@@ -57,7 +57,10 @@ function tpmMapFromEnv(): Record<string, number> {
 function defaultTpmBudget(): number {
   const raw = process.env.LLM_TPM_DEFAULT?.trim();
   const n = raw ? parseFloat(raw) : NaN;
-  return Number.isFinite(n) && n > 0 ? n : 11_000;
+  // Default high so the local budget never blocks. Groq's own 429 +
+  // retry-after header is the real rate limiter — no need for a local
+  // pre-filter that over-estimates and starves idle accounts.
+  return Number.isFinite(n) && n > 0 ? n : 500_000;
 }
 
 export function tpmBudgetFor(model: string): number {
