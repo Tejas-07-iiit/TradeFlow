@@ -82,6 +82,25 @@ function collectGroqAccounts(): GroqAccount[] {
 }
 
 /**
+ * Round-robin counter for distributing load across Groq accounts.
+ * Incremented on every chain/provider call so consecutive requests
+ * start with alternating accounts instead of always hammering #1.
+ *
+ *   Call 1 → [#1, #2]   (counter=0, start=#1)
+ *   Call 2 → [#2, #1]   (counter=1, start=#2)
+ *   Call 3 → [#1, #2]   (counter=2, start=#1)
+ *   …
+ */
+let _rrCounter = 0;
+
+/** Rotate an array so the element at `offset % len` comes first. */
+function rotateAccounts(accounts: GroqAccount[]): GroqAccount[] {
+  if (accounts.length <= 1) return accounts;
+  const offset = _rrCounter++ % accounts.length;
+  return [...accounts.slice(offset), ...accounts.slice(0, offset)];
+}
+
+/**
  * Cold-start log: report how many Groq keys this process saw, so misconfigs
  * are obvious on boot rather than after the first rate limit. Logged once
  * per process via a side-effect-on-import sentinel.
@@ -153,7 +172,8 @@ export function getLlmProvider(opts: ProviderOptions = {}): LlmProvider {
       "groq",
     );
   }
-  const first = collectGroqAccounts()[0];
+  const accounts = rotateAccounts(collectGroqAccounts());
+  const first = accounts[0];
   if (!first) {
     throw new LlmProviderError("GROQ_API_KEY is not set", undefined, "groq");
   }
@@ -187,7 +207,7 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
   const chain: LlmProvider[] = [];
   const seen = new Set<string>();
 
-  const groqAccounts = collectGroqAccounts();
+  const groqAccounts = rotateAccounts(collectGroqAccounts());
 
   /** Push one Groq model once per available account. */
   const pushGroqAcrossAccounts = (model: string | undefined) => {

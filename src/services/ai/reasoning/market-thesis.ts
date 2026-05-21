@@ -1,4 +1,5 @@
-import { getLlmProvider } from "../providers";
+import { getLlmProviderChain } from "../providers";
+import type { LlmProvider } from "../providers";
 import { buildMarketThesisPrompt } from "../prompts/market-thesis";
 import {
   MarketThesisSchema,
@@ -67,7 +68,19 @@ function writeCache(key: string, value: CachedThesis) {
 }
 
 /**
+ * Compact provider label for logs.
+ */
+function formatProviderLabel(p: LlmProvider): string {
+  return p.accountId != null
+    ? `${p.name}#${p.accountId}/${p.model}`
+    : `${p.name}/${p.model}`;
+}
+
+/**
  * Generate (or return cached) market thesis for the given input.
+ *
+ * Uses the full provider chain so when Account #1 rate-limits, the call
+ * falls back to Account #2 instead of silently returning null.
  *
  * Returns null on provider/parse/validation failure — the caller is expected
  * to render a graceful empty state rather than crash the page. Errors are
@@ -80,24 +93,47 @@ export async function getMarketThesisFor(
   const cached = readCache(key);
   if (cached) return cached;
 
-  try {
-    const provider = getLlmProvider({ purpose: "thesis" });
-    const messages = buildMarketThesisPrompt(input);
-    const thesis = await provider.chatJson(messages, MarketThesisSchema, {
-      temperature: 0.2,
-      maxTokens: 600,
-      timeoutMs: 20_000,
-    });
-    const cacheEntry: CachedThesis = {
-      thesis,
-      generatedAt: new Date().toISOString(),
-      provider: provider.name,
-      model: provider.model,
-    };
-    writeCache(key, cacheEntry);
-    return cacheEntry;
-  } catch (err) {
-    console.error("[ai/market-thesis] generation failed:", err);
+  const chain = getLlmProviderChain({ purpose: "thesis" });
+  if (chain.length === 0) {
+    console.error("[ai/market-thesis] no provider configured for thesis");
     return null;
   }
+
+  let lastErr: unknown = null;
+  for (let i = 0; i < chain.length; i++) {
+    const provider = chain[i];
+    try {
+      const messages = buildMarketThesisPrompt(input);
+      const thesis = await provider.chatJson(messages, MarketThesisSchema, {
+        temperature: 0.2,
+        maxTokens: 600,
+        timeoutMs: 20_000,
+      });
+      const cacheEntry: CachedThesis = {
+        thesis,
+        generatedAt: new Date().toISOString(),
+        provider: provider.name,
+        model: provider.model,
+      };
+      writeCache(key, cacheEntry);
+      if (i > 0) {
+        console.warn(
+          `[ai/market-thesis] served via fallback #${i}: ${formatProviderLabel(provider)}`,
+        );
+      }
+      return cacheEntry;
+    } catch (err) {
+      lastErr = err;
+      const more = i < chain.length - 1;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(
+        `[ai/market-thesis] ${formatProviderLabel(provider)} failed${more ? " — trying next fallback" : ""}: ${msg}`,
+      );
+    }
+  }
+
+  console.error(
+    `[ai/market-thesis] all providers failed. lastErr=${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+  );
+  return null;
 }
