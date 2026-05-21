@@ -1,12 +1,18 @@
 /**
  * Reddit r/CryptoCurrency — "what people are talking about right now".
  *
- * Endpoint: https://www.reddit.com/r/CryptoCurrency/hot.json
- * Public read access, no auth — but Reddit requires a sane User-Agent.
- * They will rate-limit (or 429) requests that look like default Node fetch.
- *
- * We cache for 5 minutes and soft-fail to the previous cache on errors.
+ * Public read access, no auth. If JSON endpoints fail (such as HTTP 403 blocks
+ * on cloud providers like AWS/GCP), this falls back to fetching the public
+ * RSS feed which is typically not blocked.
  */
+
+import { 
+  extractItems, 
+  extractTagContent, 
+  extractLinkHref, 
+  unescapeHtml, 
+  analyzeSentiment 
+} from "./rss-parser";
 
 export interface RedditPost {
   id: string;
@@ -58,10 +64,9 @@ const ENDPOINTS = [
   "https://old.reddit.com/r/CryptoCurrency/hot.json?limit=30",
   "https://www.reddit.com/r/CryptoCurrency/hot.json?limit=30",
 ];
+
 /**
- * Reddit requires a descriptive User-Agent for API access. Generic
- * "node-fetch" or empty UAs get 403/429 from all hosts. The Reddit
- * API docs recommend: `<platform>:<app ID>:<version> (by /u/<reddit username>)`
+ * Reddit requires a descriptive User-Agent for API access.
  */
 const USER_AGENT =
   process.env.REDDIT_USER_AGENT?.trim() ||
@@ -78,6 +83,71 @@ export interface RedditFetchResult {
 }
 
 let cache: { value: RedditPost[]; expiresAt: number } | null = null;
+
+/**
+ * Fetch and parse Reddit's public RSS feed.
+ */
+async function fetchRedditRss(): Promise<RedditPost[]> {
+  try {
+    const res = await fetch("https://www.reddit.com/r/CryptoCurrency/hot.rss", {
+      headers: {
+        "User-Agent": USER_AGENT,
+        "Accept": "application/xml, text/xml, */*"
+      },
+      next: { revalidate: 300 }
+    });
+    if (!res.ok) {
+      console.warn(`[news/reddit-rss] Failed to fetch Reddit RSS: HTTP ${res.status}`);
+      return [];
+    }
+    const xml = await res.text();
+    const entries = extractItems(xml, "entry");
+    
+    return entries.map((entryXml) => {
+      const idTag = extractTagContent(entryXml, "id");
+      // id tag usually looks like "t3_1tiigu5" or similar
+      const id = idTag.includes("_") ? idTag.split("_")[1] : idTag || Math.random().toString(36).substring(7);
+      
+      const title = unescapeHtml(extractTagContent(entryXml, "title"));
+      const permalink = extractLinkHref(entryXml).trim();
+      const contentHtml = extractTagContent(entryXml, "content");
+      const selftext = unescapeHtml(contentHtml).slice(0, 400);
+      
+      const updatedStr = extractTagContent(entryXml, "updated");
+      const createdAt = updatedStr ? Math.floor(Date.parse(updatedStr) / 1000) : Math.floor(Date.now() / 1000);
+      
+      // Calculate sentiment-based score & flair
+      const sentiment = analyzeSentiment(`${title} ${selftext}`);
+      let flair = "DISCUSSION";
+      if (sentiment > 0.3) {
+        flair = "BULLISH";
+      } else if (sentiment < -0.3) {
+        flair = "BEARISH";
+      } else {
+        const lower = `${title} ${selftext}`.toLowerCase();
+        if (lower.includes("news")) flair = "NEWS";
+        else if (lower.includes("advice") || lower.includes("help") || lower.includes("how to")) flair = "ADVICE";
+        else if (lower.includes("analysis") || lower.includes("chart") || lower.includes("technical")) flair = "ANALYSIS";
+      }
+      
+      return {
+        id,
+        title,
+        score: Math.max(1, Math.round(50 + sentiment * 50)),
+        numComments: 0,
+        createdAt,
+        flair,
+        selftext,
+        permalink,
+        url: permalink,
+        isStickied: false
+      };
+    });
+  } catch (err) {
+    console.warn(`[news/reddit-rss] Error fetching/parsing Reddit RSS:`, err);
+    return [];
+  }
+}
 
 /**
  * Detailed fetch — returns posts plus a diagnostic flag set so the
@@ -143,7 +213,18 @@ export async function getRedditHotDetailed(): Promise<RedditFetchResult> {
   }
 
   const combined = errors.join("; ");
-  console.warn(`[news/reddit] all endpoints failed: ${combined}`);
+  console.warn(`[news/reddit] all JSON endpoints failed: ${combined} — attempting RSS fallback`);
+  
+  try {
+    const rssPosts = await fetchRedditRss();
+    if (rssPosts.length > 0) {
+      cache = { value: rssPosts, expiresAt: Date.now() + TTL_MS };
+      return { posts: rssPosts };
+    }
+  } catch (rssErr) {
+    console.warn(`[news/reddit] RSS fallback failed: ${rssErr}`);
+  }
+
   if (cache) return { posts: cache.value, error: combined, stale: true };
   return { posts: [], error: combined };
 }

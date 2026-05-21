@@ -1,13 +1,21 @@
 /**
- * CryptoCompare News — free, no-auth professional crypto headlines.
+ * CryptoCompare News — professional crypto headlines.
  *
- * Endpoint: https://min-api.cryptocompare.com/data/v2/news/?lang=EN
- * Returns ~50 latest articles each call. We cache for 5 minutes per
- * `lang` since the feed itself updates every few minutes.
+ * Falls back to public Cointelegraph & CoinDesk RSS feeds if no API key is set
+ * or if the CryptoCompare API returns an authentication or rate limit error.
  */
 
+import { 
+  extractItems, 
+  extractTagContent, 
+  extractLinkHref, 
+  extractMediaUrl, 
+  unescapeHtml, 
+  analyzeSentiment 
+} from "./rss-parser";
+
 export interface CCNewsItem {
-  /** Stable id from CryptoCompare so the UI can dedupe. */
+  /** Stable id from CryptoCompare/RSS so the UI can dedupe. */
   id: string;
   title: string;
   /** Excerpt — sometimes empty; we still surface it when available. */
@@ -19,7 +27,7 @@ export interface CCNewsItem {
   imageUrl: string | null;
   /** Comma-separated category labels (e.g. "Bitcoin,Trading"). */
   categories: string;
-  /** -1..1 normalized from upvotes/downvotes. */
+  /** -1..1 normalized from upvotes/downvotes or sentiment scoring. */
   votes: number;
 }
 
@@ -59,12 +67,92 @@ function buildEndpoint(): string {
 }
 
 /**
+ * Aggregates RSS feeds from Cointelegraph and CoinDesk as a public fallback.
+ */
+async function fetchRssNews(): Promise<CCNewsItem[]> {
+  const feeds = [
+    { url: "https://cointelegraph.com/rss", source: "Cointelegraph" },
+    { url: "https://www.coindesk.com/arc/outboundfeeds/rss", source: "CoinDesk" }
+  ];
+  
+  const results = await Promise.all(
+    feeds.map(async (f) => {
+      try {
+        const res = await fetch(f.url, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/xml, text/xml, */*"
+          },
+          next: { revalidate: 300 }
+        });
+        if (!res.ok) {
+          console.warn(`[news/rss] Failed to fetch ${f.source} RSS: HTTP ${res.status}`);
+          return [];
+        }
+        const xml = await res.text();
+        const xmlItems = extractItems(xml, "item");
+        
+        return xmlItems.map((itemXml) => {
+          const title = unescapeHtml(extractTagContent(itemXml, "title"));
+          const link = extractLinkHref(itemXml).trim();
+          const description = unescapeHtml(extractTagContent(itemXml, "description"));
+          const pubDateStr = extractTagContent(itemXml, "pubDate");
+          const publishedAt = pubDateStr ? Math.floor(Date.parse(pubDateStr) / 1000) : Math.floor(Date.now() / 1000);
+          const imageUrl = extractMediaUrl(itemXml) || null;
+          const categories = extractTagContent(itemXml, "category");
+          
+          // Calculate sentiment votes score
+          const sentiment = analyzeSentiment(`${title} ${description}`);
+          
+          // Generate a stable id from url or guid
+          let rawId = extractTagContent(itemXml, "guid");
+          if (!rawId) {
+            rawId = link || title;
+          }
+          const id = rawId.replace(/[^a-zA-Z0-9]/g, "-");
+          
+          return {
+            id,
+            title,
+            body: description.slice(0, 400),
+            url: link,
+            source: f.source,
+            publishedAt,
+            imageUrl,
+            categories,
+            votes: sentiment
+          };
+        });
+      } catch (err) {
+        console.warn(`[news/rss] Error fetching/parsing ${f.source} RSS:`, err);
+        return [];
+      }
+    })
+  );
+  
+  return results.flat().sort((a, b) => b.publishedAt - a.publishedAt);
+}
+
+/**
  * Detailed fetch — returns items plus a diagnostic so the aggregator can
- * surface "CryptoCompare unavailable" in the UI instead of silently
- * pretending the feed is empty.
+ * surface status in the UI.
  */
 export async function getCryptoCompareNewsDetailed(): Promise<CCFetchResult> {
   if (cache && cache.expiresAt > Date.now()) return { items: cache.value };
+
+  const key = process.env.CRYPTOCOMPARE_API_KEY?.trim();
+  if (!key) {
+    // No API key -> use RSS fallback immediately
+    try {
+      const items = await fetchRssNews();
+      cache = { value: items, expiresAt: Date.now() + TTL_MS };
+      return { items };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "RSS fetch error";
+      if (cache) return { items: cache.value, error: msg, stale: true };
+      return { items: [], error: msg };
+    }
+  }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -72,26 +160,27 @@ export async function getCryptoCompareNewsDetailed(): Promise<CCFetchResult> {
     const res = await fetch(buildEndpoint(), {
       headers: {
         Accept: "application/json",
-        "User-Agent":
-          "tradeflow:news-aggregator:1.0 (paper-trading simulator)",
+        "User-Agent": "tradeflow:news-aggregator:1.0 (paper-trading simulator)",
       },
       signal: controller.signal,
       next: { revalidate: 300 },
     });
     if (!res.ok) {
       const err = `HTTP ${res.status}`;
-      console.warn(`[news/cryptocompare] ${err}`);
-      if (cache) return { items: cache.value, error: err, stale: true };
-      return { items: [], error: err };
+      console.warn(`[news/cryptocompare] ${err} — falling back to RSS`);
+      const items = await fetchRssNews();
+      cache = { value: items, expiresAt: Date.now() + TTL_MS };
+      return { items };
     }
     const json = (await res.json()) as CCResponse;
     // CryptoCompare sometimes returns Data as {} or "Success" instead of
     // an array — guard with Array.isArray to prevent .map() crash.
     if (!json.Data || !Array.isArray(json.Data)) {
       const err = json.Message ?? `unexpected Data shape: ${typeof json.Data}`;
-      console.warn(`[news/cryptocompare] ${err}`);
-      if (cache) return { items: cache.value, error: err, stale: true };
-      return { items: [], error: err };
+      console.warn(`[news/cryptocompare] ${err} — falling back to RSS`);
+      const items = await fetchRssNews();
+      cache = { value: items, expiresAt: Date.now() + TTL_MS };
+      return { items };
     }
 
     const items: CCNewsItem[] = json.Data
@@ -121,9 +210,15 @@ export async function getCryptoCompareNewsDetailed(): Promise<CCFetchResult> {
     return { items };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "fetch error";
-    console.warn(`[news/cryptocompare] ${msg}`);
-    if (cache) return { items: cache.value, error: msg, stale: true };
-    return { items: [], error: msg };
+    console.warn(`[news/cryptocompare] ${msg} — falling back to RSS`);
+    try {
+      const items = await fetchRssNews();
+      cache = { value: items, expiresAt: Date.now() + TTL_MS };
+      return { items };
+    } catch (rssErr) {
+      if (cache) return { items: cache.value, error: msg, stale: true };
+      return { items: [], error: msg };
+    }
   } finally {
     clearTimeout(timer);
   }
