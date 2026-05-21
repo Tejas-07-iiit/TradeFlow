@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TradeFlow — How a Trade Decision Is Made</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --panel: #11141b;
+    --panel-2: #161a23;
+    --border: #232936;
+    --text: #e6e8ef;
+    --muted: #8b93a7;
+    --accent: #6aa9ff;
+    --accent-2: #9ef0c1;
+    --warn: #f5b657;
+    --bad: #f06464;
+    --good: #6fdc8c;
+    --pill: #1b2230;
+    --ok: #1f3024;
+    --fallback: #3a2f1a;
+    --error: #3a1f1f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .container {
+    max-width: 1200px; margin: 0 auto; padding: 32px 24px 80px;
+  }
+  h1 { font-size: 28px; margin: 0 0 8px; letter-spacing: -0.01em; }
+  h2 { font-size: 18px; margin: 36px 0 12px; color: var(--accent); letter-spacing: 0.02em; text-transform: uppercase; font-weight: 600; }
+  h3 { font-size: 15px; margin: 0 0 8px; }
+  p { margin: 0 0 12px; color: var(--text); }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); text-decoration: none; }
+  code, kbd {
+    font: 12.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--pill); padding: 1px 6px; border-radius: 4px; color: #d8e2ff;
+  }
+  pre {
+    font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--pill); border: 1px solid var(--border);
+    padding: 12px 14px; border-radius: 8px; color: #d8e2ff; overflow-x: auto; margin: 0 0 12px;
+  }
+  .lead {
+    background: var(--panel-2); border: 1px solid var(--border);
+    padding: 18px 20px; border-radius: 10px; color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .lead strong { color: var(--text); }
+
+  /* Top architecture diagram */
+  .arch {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px; margin: 16px 0 28px;
+  }
+  .arch-row { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 12px; align-items: stretch; }
+  .arch-side {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .arch-side h4 { margin: 0; font-size: 13px; color: var(--accent-2); letter-spacing: 0.04em; text-transform: uppercase; }
+  .arch-side .item { background: var(--pill); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; }
+  .arch-side .item code { background: transparent; padding: 0; color: #b6c2dd; }
+  .arch-arrow { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 22px; }
+
+  /* Stage card grid */
+  .stages {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;
+    margin-top: 8px;
+  }
+  @media (max-width: 760px) { .stages { grid-template-columns: 1fr; } }
+  .stage {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .stage-head {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .stage-num {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #234074, #1d2436);
+    border: 1px solid #2a4071; color: #cfe0ff;
+    font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .stage h3 { margin: 0; }
+  .stage .where { font-size: 11.5px; color: var(--muted); margin-left: auto; }
+  .stage .io { display: grid; grid-template-columns: 70px 1fr; gap: 6px 10px; font-size: 12.5px; }
+  .stage .io b { color: var(--accent-2); font-weight: 600; }
+  .stage .files {
+    background: var(--pill); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 10px; font-size: 11.5px; color: #b6c2dd;
+    font-family: ui-monospace, monospace; word-break: break-all;
+  }
+  .stage .fallback {
+    border-left: 3px solid var(--warn);
+    background: var(--fallback);
+    padding: 6px 10px; border-radius: 4px; font-size: 12px;
+  }
+  .stage.error-stage { border-color: #5a2a2a; }
+  .stage.candle-stage .stage-num { background: linear-gradient(135deg, #5a3e1a, #2a2117); border-color: #6e521e; }
+  .stage.ai-stage .stage-num { background: linear-gradient(135deg, #693a87, #2a1a32); border-color: #8b4ea6; }
+  .stage.risk-stage .stage-num { background: linear-gradient(135deg, #6a3640, #2a181c); border-color: #963d4f; }
+  .stage.exec-stage .stage-num { background: linear-gradient(135deg, #1f6a4d, #102e23); border-color: #2c8a64; }
+
+  /* Pills + tags */
+  .tag {
+    display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--pill); border: 1px solid var(--border); color: #c2cbe0;
+    margin-right: 4px;
+  }
+  .tag.client { background: #1c2742; border-color: #2c3e6c; color: #b9c9ee; }
+  .tag.server { background: #1f3024; border-color: #2c5a3e; color: #b9eecc; }
+  .tag.optional { background: #2a2418; border-color: #5a4a2a; color: #e8d39a; }
+  .tag.required { background: #2a1c20; border-color: #5a2c34; color: #f4b6c0; }
+
+  /* Flow rail (arrows between stages) */
+  .rail {
+    position: relative; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; overflow-x: auto;
+  }
+  .rail svg { display: block; min-width: 1100px; }
+
+  /* Fallback table */
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+  th { background: var(--panel-2); color: var(--accent-2); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+  tr:last-child td { border-bottom: 0; }
+  td code { font-size: 11.5px; }
+
+  details {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 0 16px;
+    margin-bottom: 10px;
+  }
+  details summary { cursor: pointer; padding: 12px 0; font-weight: 600; color: var(--text); }
+  details[open] { padding-bottom: 14px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 18px; font-size: 12px; color: var(--muted); }
+  .legend .sw { display: inline-flex; align-items: center; gap: 6px; }
+  .sw .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .dot.ok { background: var(--good); }
+  .dot.fallback { background: var(--warn); }
+  .dot.error { background: var(--bad); }
+  .dot.optional { background: #c2a87a; }
+  .dot.required { background: #d96b80; }
+
+  .callout {
+    background: linear-gradient(180deg, #18222e, #131923); border: 1px solid #29405d;
+    padding: 14px 18px; border-radius: 10px; color: #cde0fa; margin: 16px 0;
+  }
+  .callout b { color: #fff; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>TradeFlow — How a Trade Decision Is Made</h1>
+  <p class="muted">A walk-through of the existing decision flow, from a Binance WebSocket tick all the way to a paper order. Built by inspecting the code in <code>src/</code>.</p>
+
+  <div class="lead">
+    The system is a <strong>14-stage pipeline</strong>, but the stages are not in one file — they're spread across client React effects, server actions, and the AI orchestrator. This doc lays them out in execution order with the file you'll find each stage in, plus what it produces and what happens when it fails.
+  </div>
+
+  <div class="legend">
+    <span class="sw"><span class="dot ok"></span> succeeded</span>
+    <span class="sw"><span class="dot fallback"></span> degraded / fallback</span>
+    <span class="sw"><span class="dot error"></span> aborts pipeline</span>
+    <span class="sw"><span class="dot required"></span> required stage</span>
+    <span class="sw"><span class="dot optional"></span> optional stage</span>
+  </div>
+
+  <!-- ─── 1. Architecture overview ─────────────────────────────────────── -->
+
+  <h2>1 · Architecture at a glance</h2>
+  <div class="arch">
+    <div class="arch-row">
+      <div class="arch-side">
+        <h4>Client (browser, React)</h4>
+        <div class="item"><code>useMarketStore</code> · Binance WebSocket → candles + tickers</div>
+        <div class="item"><code>AiDecisionSubscriber</code> · polls per symbol every ~96 s</div>
+        <div class="item"><code>AiExecutionEngine</code> · risk-gates and fires orders</div>
+        <div class="item"><code>useMatchingEngine</code> · monitors SL / TP / expiry</div>
+      </div>
+      <div class="arch-arrow">⇄</div>
+      <div class="arch-side">
+        <h4>Server (Next.js server actions)</h4>
+        <div class="item"><code>getStrategyDecision()</code> · runs the strategy pipeline + LLM</div>
+        <div class="item"><code>submitDecisionJob()</code> · AI orchestrator (priority queue + cache)</div>
+        <div class="item"><code>getSymbolSentiment()</code> · Fear &amp; Greed + news</div>
+        <div class="item"><code>createPaperOrder()</code> / <code>fillPaperOrder()</code> / <code>closePaperPosition()</code> · DB-atomic</div>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 12px; margin-bottom: 0;">
+      The <strong>browser tab is the heartbeat</strong>: nothing happens if no one has the page open. There is no server-side cron and no background worker.
+    </p>
+  </div>
+
+  <!-- ─── 2. The 14 stages ────────────────────────────────────────────── -->
+
+  <h2>2 · The 14 stages, in order</h2>
+
+  <div class="stages">
+
+    <!-- Stage 1 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">1</div>
+        <h3>Market data ingestion</h3>
+        <span class="where">client</span>
+      </div>
+      <div><span class="tag client">client</span><span class="tag required">required</span></div>
+      <p class="muted">Binance public WebSocket pushes klines + 24 h tickers for every symbol on the watchlist. Candles land in the Zustand <code>marketStore</code> keyed by <code>symbol:timeframe</code>. Tickers feed the matching engine + live price.</p>
+      <div class="io">
+        <b>Input</b><div>WebSocket frame</div>
+        <b>Output</b><div>candles[] + tickers</div>
+      </div>
+      <div class="files">src/services/binance/market-stream.ts · src/components/providers/market-data-provider.tsx · src/store/market-store.ts</div>
+      <div class="fallback"><b>Fallback:</b> auto-reconnect on WS close. No client = no data.</div>
+    </div>
+
+    <!-- Stage 2 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">2</div>
+        <h3>Preprocess &amp; window</h3>
+        <span class="where">client → server</span>
+      </div>
+      <div><span class="tag client">client</span><span class="tag required">required</span></div>
+      <p class="muted"><code>AiDecisionSubscriber</code> picks the last 300 candles, drops anything stale, and ships them to the server with the timeframe + sentiment + portfolio context. Cold-start retries up to 5× while WS warms up.</p>
+      <div class="io">
+        <b>Input</b><div>marketStore candles</div>
+        <b>Output</b><div>Trimmed payload to <code>getStrategyDecision()</code></div>
+      </div>
+      <div class="files">src/components/providers/ai-decision-subscriber.tsx</div>
+      <div class="fallback"><b>Fallback:</b> if &lt; 30 bars, retry; the server-side Zod validator also enforces the minimum.</div>
+    </div>
+
+    <!-- Stage 3 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">3</div>
+        <h3>Indicator engine</h3>
+        <span class="where">server</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag required">required</span></div>
+      <p class="muted">Computes one <code>IndicatorContext</code> per tick: EMA 20 / 50 / 200, RSI 14, ATR 14, ADX 14, Bollinger Bands, MACD, 12-bar momentum, 52-bar range, realised vol. Strategies all read this <em>same</em> object — they never recompute.</p>
+      <div class="io">
+        <b>Input</b><div>candle window</div>
+        <b>Output</b><div>IndicatorContext</div>
+      </div>
+      <div class="files">src/strategy-core/regime/indicator-context.ts · src/lib/indicators/calculations.ts</div>
+      <div class="fallback"><b>Fallback:</b> none — corrupt indicators corrupt every strategy.</div>
+    </div>
+
+    <!-- Stage 4 -->
+    <div class="stage candle-stage">
+      <div class="stage-head">
+        <div class="stage-num">4</div>
+        <h3>Candlestick patterns</h3>
+        <span class="where">server</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag optional">optional context</span></div>
+      <p class="muted">Runs all ~61 TA-Lib pattern detectors (Engulfing, Hammer, Morning Star, Doji…) against the last closed bar, scores each with trend / volume / HTF / regime confirmations, then aggregates into <code>CandlestickIntelligence</code> with <code>netBias</code> and a narrative.</p>
+      <div class="io">
+        <b>Input</b><div>candles + indicators</div>
+        <b>Output</b><div>CandlestickIntelligence (or undefined)</div>
+      </div>
+      <div class="files">src/lib/candlestick/engine.ts · detectors/* · confidence.ts</div>
+      <div class="fallback"><b>Fallback:</b> on engine error → <code>undefined</code>. Pipeline continues; patterns are context, never a trigger.</div>
+    </div>
+
+    <!-- Stage 5 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">5</div>
+        <h3>Market-regime classifier</h3>
+        <span class="where">server</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag required">required</span></div>
+      <p class="muted">Tags the market: Trending Up/Down, Sideways, Choppy, Breakout, Reversal, High/Low Volatility. Drives which strategies get amplified vs damped in the next stage.</p>
+      <div class="io">
+        <b>Input</b><div>IndicatorContext</div>
+        <b>Output</b><div>MarketRegime enum</div>
+      </div>
+      <div class="files">src/strategy-core/regime/classifier.ts</div>
+      <div class="fallback"><b>Fallback:</b> defaults to <code>Sideways</code> when nothing matches — neutral regime, all strategies allowed.</div>
+    </div>
+
+    <!-- Stage 6 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">6</div>
+        <h3>Run every strategy</h3>
+        <span class="where">server</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag required">required</span></div>
+      <p class="muted">All 12 registered strategies run with the same <code>StrategyContext</code>: momentum (×3), mean-reversion (×2), trend-following (×2), breakout, volatility, sentiment, market-structure, candlestick-intel. Each returns a <code>StrategyOutput</code> (signal + confidence + reasoning). A single strategy throwing is caught and logged as <em>skipped</em>; the rest run.</p>
+      <div class="io">
+        <b>Input</b><div>StrategyContext</div>
+        <b>Output</b><div>StrategyOutput[] + skipped[]</div>
+      </div>
+      <div class="files">src/strategy-core/evaluator/index.ts · src/strategies/**</div>
+      <div class="fallback"><b>Fallback:</b> per-strategy try/catch. Pipeline aborts only if every strategy short-circuits (cold-start candle deficit).</div>
+    </div>
+
+    <!-- Stage 7 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">7</div>
+        <h3>Rank + fuse</h3>
+        <span class="where">server</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag required">required</span></div>
+      <p class="muted">Per-strategy confidence × regime-suitability weight → <code>weightedScore</code>. Sum of signed weighted scores → <code>netDirection</code> (-100…+100). Share of actionable strategies agreeing → <code>alignmentScore</code> (0-100). Plus aggregate momentum / trend / vol readings and Quantpedia-principle lookup.</p>
+      <div class="io">
+        <b>Input</b><div>StrategyOutput[] + regime</div>
+        <b>Output</b><div>StrategySnapshot</div>
+      </div>
+      <div class="files">src/strategy-core/ranking/index.ts · fusion/index.ts · registry/quantpedia-loader.ts</div>
+      <div class="fallback"><b>Fallback:</b> Quantpedia disk read may fail → snapshot ships without principles. Fusion itself is pure math, never throws.</div>
+    </div>
+
+    <!-- Stage 8 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">8</div>
+        <h3>News &amp; sentiment</h3>
+        <span class="where">server</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag optional">optional</span></div>
+      <p class="muted">Fetched <em>in parallel</em> with the strategy pipeline. Crypto Fear &amp; Greed Index + headline sentiment (CryptoPanic) + optional Reddit/CryptoCompare. Aggregates into <code>SentimentInput</code> (FGI 0-100, label, top headlines).</p>
+      <div class="io">
+        <b>Input</b><div>symbol</div>
+        <b>Output</b><div>SentimentInput (or undefined)</div>
+      </div>
+      <div class="files">src/server/sentiment.ts · src/services/sentiment/* · src/services/news/*</div>
+      <div class="fallback"><b>Fallback:</b> any source down → that field is omitted. All sources down → <code>sentiment: undefined</code>; the LLM gets a degradation note.</div>
+    </div>
+
+    <!-- Stage 9 -->
+    <div class="stage ai-stage">
+      <div class="stage-head">
+        <div class="stage-num">9</div>
+        <h3>LLM coordinator</h3>
+        <span class="where">server (AI)</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag required">required</span></div>
+      <p class="muted">The snapshot + indicators + sentiment + portfolio context (NOT raw candles) goes through the global AI orchestrator. It dedups by fingerprint, prefilters flat snapshots (synthetic HOLD = 0 tokens), tier-routes (premium 70 B for elite alignment ≥ 70, otherwise cheap 8 B), and runs Groq → OpenRouter → local fallback engine. Returns a <code>MarketDecision</code> with entry / SL / TP / setup-quality / confidence.</p>
+      <div class="io">
+        <b>Input</b><div>DecisionInput (snapshot + ctx)</div>
+        <b>Output</b><div>MarketDecision · source: <code>llm</code> | <code>prefilter</code> | <code>local-fallback</code></div>
+      </div>
+      <div class="files">src/services/ai/orchestrator/* · ai/reasoning/market-decision.ts · ai/providers/* · ai/prompts/market-decision.ts</div>
+      <div class="fallback"><b>Fallback chain:</b> Groq primary → Groq cheap → OpenRouter primary → OpenRouter fallbacks → deterministic local engine. The system <em>never</em> blocks on a dead LLM.</div>
+    </div>
+
+    <!-- Stage 10 -->
+    <div class="stage risk-stage">
+      <div class="stage-head">
+        <div class="stage-num">10</div>
+        <h3>Risk + position sizing</h3>
+        <span class="where">client</span>
+      </div>
+      <div><span class="tag client">client</span><span class="tag required">required</span></div>
+      <p class="muted">Builds a <code>TradeProposal</code> (LLM decision + live price + ATR% + book state) and runs it through <code>assessTradeQuality</code> (validators: min RR, min confidence, max drift, vol ceiling, cooldown, book full) + <code>computeRiskAdjustedSize</code> (risk-of-equity formula clamped by single-trade %, per-symbol exposure, total book exposure, leverage, absolute notional bounds). Produces a grade A+ → D and a notional in USD.</p>
+      <div class="io">
+        <b>Input</b><div>MarketDecision + live state</div>
+        <b>Output</b><div>TradeAssessment + SizingResult</div>
+      </div>
+      <div class="files">src/components/providers/ai-execution-engine.tsx · src/lib/trade-quality/* · src/lib/trading/position-sizing.ts</div>
+      <div class="fallback"><b>Fallback:</b> any validator or sizer rejection → trade dropped, <code>appendLog()</code> records the reason for the UI.</div>
+    </div>
+
+    <!-- Stage 11 -->
+    <div class="stage exec-stage">
+      <div class="stage-head">
+        <div class="stage-num">11</div>
+        <h3>Order execution</h3>
+        <span class="where">client → server</span>
+      </div>
+      <div><span class="tag client">client</span><span class="tag server">server</span></div>
+      <p class="muted">Only fires if <code>NEXT_PUBLIC_AI_AUTONOMY === "on"</code>. Calls <code>createPaperOrder</code> server action (creates a PENDING <code>PaperOrder</code>). The matching engine then fills MARKET orders immediately or LIMIT orders when price crosses. Fill is atomic (CAS on PENDING) and reserves margin (<code>usedMargin += notional/leverage</code>); wallet balance does <em>not</em> move until close.</p>
+      <div class="io">
+        <b>Input</b><div>quantity, side, SL, TP</div>
+        <b>Output</b><div>PaperOrder → PaperPosition</div>
+      </div>
+      <div class="files">src/server/trading.ts · src/hooks/use-matching-engine.ts</div>
+      <div class="fallback"><b>Fallback:</b> insufficient margin → order auto-rejected; <code>blockIfAlreadyOpen</code> guards against duplicate entries.</div>
+    </div>
+
+    <!-- Stage 12 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">12</div>
+        <h3>Position monitoring</h3>
+        <span class="where">client</span>
+      </div>
+      <div><span class="tag client">client</span></div>
+      <p class="muted">For each open position, every WebSocket tick: re-mark unrealized PnL, check if SL or TP touched, scan recent candles for missed touches during disconnects (backfill). LLM-owned positions also subscribe to the latest <code>useAiDecisionStore</code> entry so a flip-decision can soft-exit.</p>
+      <div class="io">
+        <b>Input</b><div>positions + live ticks</div>
+        <b>Output</b><div>SL/TP-hit events or flip signal</div>
+      </div>
+      <div class="files">src/hooks/use-matching-engine.ts · src/hooks/use-position-metrics.ts</div>
+      <div class="fallback"><b>Fallback:</b> backfill catches up if the user reopens the tab after a disconnect.</div>
+    </div>
+
+    <!-- Stage 13 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">13</div>
+        <h3>Exit decision</h3>
+        <span class="where">client → server</span>
+      </div>
+      <div><span class="tag client">client</span><span class="tag server">server</span></div>
+      <p class="muted">Hard exits (SL / TP / expiry) → <code>closePaperPosition</code> with the right <code>CloseReason</code>. Soft exits (only for LLM-owned positions): setup graded <em>Avoid</em>, LLM flipped to opposite side at confidence ≥ 60, LLM upgraded to AVOID at ≥ 65, or persistent HOLD at ≥ 75 after &gt; 30 min. 60 s per-symbol cooldown prevents thrash.</p>
+      <div class="io">
+        <b>Input</b><div>position + new decision</div>
+        <b>Output</b><div>closePaperPosition()</div>
+      </div>
+      <div class="files">src/components/providers/ai-execution-engine.tsx → <code>evaluateExit()</code> · src/server/trading.ts</div>
+      <div class="fallback"><b>Fallback:</b> CAS on (id, status, quantity) — multiple callers racing on the same row cannot double-credit PnL.</div>
+    </div>
+
+    <!-- Stage 14 -->
+    <div class="stage">
+      <div class="stage-head">
+        <div class="stage-num">14</div>
+        <h3>Analytics &amp; learning</h3>
+        <span class="where">server (db)</span>
+      </div>
+      <div><span class="tag server">server</span><span class="tag optional">read-only today</span></div>
+      <p class="muted">On every settle, a <code>TradeHistory</code> row is written: symbol, side, quantity, entry, exit, PnL, close reason, decision source, duration, RR. The Live Paper Trading page derives win rate from these. There is no separate strategy-performance table — that's a gap.</p>
+      <div class="io">
+        <b>Input</b><div>closed position</div>
+        <b>Output</b><div>TradeHistory row</div>
+      </div>
+      <div class="files">prisma/schema.prisma → <code>TradeHistory</code> · src/features/trading/live-paper-trading-page.tsx</div>
+      <div class="fallback"><b>Fallback:</b> write happens inside the close transaction; never partial.</div>
+    </div>
+  </div>
+
+  <!-- ─── 3. Flow rail (single big diagram) ───────────────────────────── -->
+
+  <h2>3 · One-page flow rail</h2>
+  <p class="muted">Every box is a stage. Solid arrows are required edges; dashed arrows are optional context that the next stage tolerates being missing.</p>
+  <div class="rail">
+    <svg viewBox="0 0 1180 360" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#6aa9ff"/>
+        </marker>
+        <marker id="arr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#8b93a7"/>
+        </marker>
+      </defs>
+
+      <!-- Helper: stage box -->
+      <!-- Row 1: 1 → 2 → 3 -->
+      <g font-family="ui-sans-serif" font-size="12" fill="#e6e8ef">
+        <g transform="translate(20,30)">
+          <rect width="160" height="60" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">1 · Ingest</text>
+          <text x="12" y="42" fill="#8b93a7">Binance WebSocket</text>
+        </g>
+        <g transform="translate(220,30)">
+          <rect width="160" height="60" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">2 · Preprocess</text>
+          <text x="12" y="42" fill="#8b93a7">Trim window, retry</text>
+        </g>
+        <g transform="translate(420,30)">
+          <rect width="160" height="60" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">3 · Indicators</text>
+          <text x="12" y="42" fill="#8b93a7">EMA/RSI/ATR/MACD…</text>
+        </g>
+        <g transform="translate(620,30)">
+          <rect width="160" height="60" rx="8" fill="#1c1815" stroke="#3a3220"/>
+          <text x="12" y="22" font-weight="700" fill="#f5d394">4 · Candlestick</text>
+          <text x="12" y="42" fill="#8b93a7">TA-Lib patterns</text>
+        </g>
+        <g transform="translate(820,30)">
+          <rect width="160" height="60" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">5 · Regime</text>
+          <text x="12" y="42" fill="#8b93a7">Trend/Chop/Vol</text>
+        </g>
+        <g transform="translate(1020,30)">
+          <rect width="140" height="60" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">6 · Strategies</text>
+          <text x="12" y="42" fill="#8b93a7">12 in parallel</text>
+        </g>
+
+        <!-- arrows row 1 -->
+        <line x1="180" y1="60" x2="220" y2="60" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="380" y1="60" x2="420" y2="60" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="580" y1="60" x2="620" y2="60" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="780" y1="60" x2="820" y2="60" stroke="#8b93a7" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arr-d)"/>
+        <line x1="980" y1="60" x2="1020" y2="60" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- Row 2: 7 → 9 (and 8 feeds in from left) -->
+        <g transform="translate(1020,120)">
+          <rect width="140" height="60" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">7 · Fusion</text>
+          <text x="12" y="42" fill="#8b93a7">netDir + alignment</text>
+        </g>
+
+        <g transform="translate(820,120)">
+          <rect width="160" height="60" rx="8" fill="#1c1718" stroke="#3a2024"/>
+          <text x="12" y="22" font-weight="700" fill="#f4b6c0">8 · Sentiment</text>
+          <text x="12" y="42" fill="#8b93a7">FGI + news (parallel)</text>
+        </g>
+
+        <g transform="translate(580,120)">
+          <rect width="200" height="60" rx="8" fill="#1d1828" stroke="#4a2c5c"/>
+          <text x="12" y="22" font-weight="700" fill="#d3b7eb">9 · LLM coordinator</text>
+          <text x="12" y="42" fill="#8b93a7">Groq → OpenRouter → local</text>
+        </g>
+
+        <!-- arrows row 1→2 -->
+        <line x1="1090" y1="90" x2="1090" y2="120" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="900" y1="90" x2="900" y2="120" stroke="#8b93a7" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arr-d)"/>
+
+        <!-- arrows feeding LLM -->
+        <line x1="1020" y1="150" x2="780" y2="150" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="820" y1="170" x2="780" y2="160" stroke="#8b93a7" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arr-d)"/>
+
+        <!-- Row 3 -->
+        <g transform="translate(380,210)">
+          <rect width="200" height="60" rx="8" fill="#1f1316" stroke="#5a2a30"/>
+          <text x="12" y="22" font-weight="700" fill="#f4b6c0">10 · Risk + sizing</text>
+          <text x="12" y="42" fill="#8b93a7">A+…D + USD notional</text>
+        </g>
+        <g transform="translate(180,210)">
+          <rect width="160" height="60" rx="8" fill="#14201a" stroke="#2c5a3e"/>
+          <text x="12" y="22" font-weight="700" fill="#9ef0c1">11 · Execute</text>
+          <text x="12" y="42" fill="#8b93a7">createPaperOrder</text>
+        </g>
+        <g transform="translate(20,210)">
+          <rect width="120" height="60" rx="8" fill="#14201a" stroke="#2c5a3e"/>
+          <text x="12" y="22" font-weight="700" fill="#9ef0c1">→ Position</text>
+          <text x="12" y="42" fill="#8b93a7">OPEN row in DB</text>
+        </g>
+
+        <line x1="680" y1="180" x2="500" y2="210" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="380" y1="240" x2="340" y2="240" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="180" y1="240" x2="140" y2="240" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+
+        <!-- Row 4 -->
+        <g transform="translate(20,300)">
+          <rect width="160" height="50" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">12 · Monitor</text>
+          <text x="12" y="40" fill="#8b93a7">tick / backfill</text>
+        </g>
+        <g transform="translate(220,300)">
+          <rect width="200" height="50" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">13 · Exit decision</text>
+          <text x="12" y="40" fill="#8b93a7">SL · TP · AI flip · expiry</text>
+        </g>
+        <g transform="translate(460,300)">
+          <rect width="200" height="50" rx="8" fill="#11141b" stroke="#232936"/>
+          <text x="12" y="22" font-weight="700">14 · TradeHistory</text>
+          <text x="12" y="40" fill="#8b93a7">PnL · RR · reason</text>
+        </g>
+
+        <line x1="80" y1="270" x2="80" y2="300" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="180" y1="325" x2="220" y2="325" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+        <line x1="420" y1="325" x2="460" y2="325" stroke="#6aa9ff" stroke-width="2" marker-end="url(#arr)"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ─── 4. The trigger schedule ─────────────────────────────────────── -->
+
+  <h2>4 · What triggers what, and when</h2>
+  <table>
+    <thead>
+      <tr><th>Trigger</th><th>Runs</th><th>Cadence</th><th>Source</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>WS kline</td><td>Stage 1 → marketStore</td><td>per Binance push</td><td><code>market-stream.ts</code></td></tr>
+      <tr><td>Initial page mount</td><td>Decision fan-out</td><td>staggered 15 s apart × 5 symbols</td><td><code>AiDecisionSubscriber</code></td></tr>
+      <tr><td>Round-robin timer</td><td>Stages 2 → 9 for one symbol</td><td>1 symbol every ~96 s</td><td><code>AiDecisionSubscriber</code></td></tr>
+      <tr><td>User changes symbol/timeframe</td><td>Immediate refresh for that symbol</td><td>on event</td><td><code>AiDecisionSubscriber</code></td></tr>
+      <tr><td>New decision in store</td><td>Stages 10 → 11 (or shadow log)</td><td>once per new decision key</td><td><code>AiExecutionEngine</code></td></tr>
+      <tr><td>WS ticker tick</td><td>Stages 12 → 13 (SL/TP scan)</td><td>per tick</td><td><code>useMatchingEngine</code></td></tr>
+    </tbody>
+  </table>
+  <div class="callout"><b>Nothing is server-driven.</b> If the browser tab is closed, no decision is taken, no order is placed, no SL is hit. This is the single biggest architectural constraint of the current system.</div>
+
+  <!-- ─── 5. The AI orchestrator -->
+
+  <h2>5 · The AI orchestrator (Stage 9 in depth)</h2>
+  <p class="muted">Every LLM-bound call in the system funnels through one in-process scheduler. The orchestrator's job is to share one TPM budget across all callers, dedup identical requests, and never block the trading loop when an LLM is down.</p>
+
+  <details>
+    <summary>Prefilter — skip the LLM entirely on flat snapshots</summary>
+    <p>If alignment score &lt; 30 AND |netDirection| &lt; 8 AND no open position → return a synthetic HOLD without burning any tokens. Marked <code>source: "prefilter"</code>.</p>
+  </details>
+  <details>
+    <summary>Tier routing — premium vs cheap model</summary>
+    <p>Alignment ≥ 70 → premium-tier model (e.g. 70 B). Otherwise the cheap-tier (8 B) handles the routine evaluation. Open-position re-evaluations also stay on cheap because they're fast SL/TP adjustments, not new theses.</p>
+  </details>
+  <details>
+    <summary>Dedup + priority queue</summary>
+    <p>Key = <code>symbol:timeframe:regime:priceBucket:alignment</code>. Concurrent submitters of the same key share one in-flight promise. The queue has 6 priority buckets (EXECUTION_CRITICAL → RECHECK) with FIFO inside each. SLAs prevent stale jobs from running (15-30 s).</p>
+  </details>
+  <details>
+    <summary>Provider fallback chain</summary>
+    <p>Configured primary (Groq or OpenRouter) → Groq cheap → OpenRouter primary → OpenRouter fallbacks (read from env) → <strong>local deterministic engine</strong>. The local engine reads the same snapshot and produces a defensively-sized decision, so trading keeps running in degraded mode.</p>
+  </details>
+  <details>
+    <summary>Cache (TTL fingerprint)</summary>
+    <p>Same fingerprint hits an in-memory cache: 90 s TTL for LLM answers, 20 s for fallback answers (so the chain retries sooner once provider cooldowns elapse). 64-entry LRU.</p>
+  </details>
+
+  <!-- ─── 6. Decision hierarchy + fallbacks -->
+
+  <h2>6 · Decision hierarchy and fallbacks</h2>
+  <table>
+    <thead><tr><th>If this fails</th><th>The system does this</th><th>Result for the symbol</th></tr></thead>
+    <tbody>
+      <tr><td>WebSocket disconnects</td><td>Auto-reconnect with backoff; resubscribe</td><td>Live ticks pause; positions re-mark when feed returns</td></tr>
+      <tr><td>Server-side Zod rejects the candle payload</td><td>Server action returns <code>{ ok:false, error }</code>; subscriber retries on next tick</td><td>No decision update this cycle</td></tr>
+      <tr><td>Quantpedia disk read</td><td>Snapshot ships without related principles</td><td>LLM still gets snapshot, minus the context library</td></tr>
+      <tr><td>Sentiment service</td><td>Field omitted from <code>DecisionInput</code></td><td>LLM gets a degradation note; confidence may drop</td></tr>
+      <tr><td>Primary LLM provider (Groq)</td><td>Try fallback chain: cheap Groq → OpenRouter → OpenRouter fallbacks</td><td>Decision lands, possibly slower</td></tr>
+      <tr><td>All LLM providers</td><td>Local deterministic engine reads the snapshot directly</td><td><code>source: "local-fallback"</code>; defensively sized; trading continues</td></tr>
+      <tr><td>Local fallback engine</td><td>Server action returns <code>{ ok:false }</code></td><td>No decision; UI shows error; subscriber retries</td></tr>
+      <tr><td>Risk gate (validator)</td><td>Log structured rejection, no order</td><td>Decision visible in UI; nothing placed</td></tr>
+      <tr><td>Position sizer (notional &lt; min, exposure cap)</td><td>Log <code>SizingRejection</code> reason</td><td>Decision visible in UI; nothing placed</td></tr>
+      <tr><td>createPaperOrder (insufficient margin)</td><td>Order auto-rejected, no position opened</td><td>Reason written to <code>PaperOrder.status = REJECTED</code></td></tr>
+      <tr><td>Two close-events race the same position</td><td>CAS on <code>(id, status, quantity)</code> — only first wins</td><td>No double-credit of PnL</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ─── 7. Key data structures -->
+
+  <h2>7 · Key data structures</h2>
+
+  <h3 style="margin-top: 16px;">StrategySnapshot — what the LLM reads</h3>
+<pre>{
+  symbol, timeframe, regime,
+  netDirection:    -100…+100,   // signed weighted vote
+  alignmentScore:  0…100,       // share of strategies agreeing
+  topStrategies:   [ {strategyName, signal, confidence, weightedScore, reasoning[1]} × 5 ],
+  conflictingStrategies: [ … × 3 ],
+  aggregateMomentumScore, aggregateTrendScore, aggregateVolatilityScore,
+  candlestickIntel?: { detections[], netBias, topConfidence, dominantCategory, narrative }
+}</pre>
+
+  <h3>MarketDecision — what the LLM returns</h3>
+<pre>{
+  decision: "BUY" | "SELL" | "HOLD" | "AVOID" | "BREAKOUT LONG" | "BREAKDOWN SHORT" | "PULLBACK LONG" | "REVERSAL LONG",
+  confidence:     0…100,
+  setupQuality:  "A+" | "A" | "B+" | "B" | "C" | "Avoid",
+  riskLevel:     "Low" | "Medium" | "High",
+  executeTrade:   bool,
+  positionSizePercent: 0…100,         // requested — the executor still caps
+  expectedHoldTimeMinutes: 5…240,
+  entryPrice, takeProfit, stopLoss,
+  reasoning: string[1..4],
+  warnings:  string[0..3],
+  marketSummary: string
+}</pre>
+
+  <h3>TradeAssessment — what the risk gate emits</h3>
+<pre>{
+  approved: bool,
+  rejections: [{ code, message }],    // e.g. min_rr, low_confidence, book_full
+  warnings:   [{ code, message }],
+  metrics:    { expectedProfitPercent, expectedLossPercent, riskRewardRatio,
+                entryDriftBps, volatilityScore },
+  score:      { value: 0…100, grade: "A+"|"A"|"B"|"C"|"D", factors[] }
+}</pre>
+
+  <!-- ─── 8. Where the seams hurt -->
+
+  <h2>8 · The seams (where today's flow is fragile)</h2>
+  <table>
+    <thead><tr><th>Seam</th><th>What's there today</th><th>What's missing</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>One canonical pipeline runner</td>
+        <td>Stages live in 3+ places (subscriber → server action → execution engine → matching engine)</td>
+        <td>No single function you can call to run all 14 stages with explicit logging per stage</td>
+      </tr>
+      <tr>
+        <td>Server-side autonomy</td>
+        <td>Browser must be open to decide or execute anything</td>
+        <td>No scheduler / cron / background worker</td>
+      </tr>
+      <tr>
+        <td>Position management beyond hard SL/TP</td>
+        <td>Soft-exit on AI flip is in <code>evaluateExit()</code>, client-side only</td>
+        <td>No trailing stops, no breakeven-after-1R, no regime-flip auto-exit, no time-decay exit</td>
+      </tr>
+      <tr>
+        <td>Stage-14 analytics</td>
+        <td><code>TradeHistory</code> exists; win rate is computed in the UI</td>
+        <td>No per-strategy / per-regime / per-AI-source win-rate tables. Decision attribution is buried in <code>decisionMeta</code> JSON</td>
+      </tr>
+      <tr>
+        <td>Per-stage audit trail</td>
+        <td>Console logs only</td>
+        <td>No DB row per pipeline execution; can't query "how often did sentiment fall back last week"</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="muted" style="margin-top: 28px; font-size: 11.5px;">Generated from a read-only audit of <code>src/</code> on the current branch · Open this file directly in a browser; no build step required.</p>
+
+</div>
+</body>
+</html>
