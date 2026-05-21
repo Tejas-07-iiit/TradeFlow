@@ -239,6 +239,8 @@ export async function fillPaperOrder(orderId: string, fillPrice: number) {
         entryPrice: fillPrice,
         takeProfit: order.takeProfit,
         stopLoss: order.stopLoss,
+        originalTakeProfit: order.takeProfit,
+        originalStopLoss: order.stopLoss,
         leverage,
         marginUsed: marginRequired,
         liquidationPrice: Number.isFinite(liquidationPrice)
@@ -445,4 +447,163 @@ export async function resetPaperAccount() {
   console.info(`${LOG_PREFIX} RESET account ${userId}`);
   revalidateTradingPaths();
   return { ok: true as const };
+}
+
+export async function updatePositionLevels(
+  positionId: string,
+  data: {
+    takeProfit: number | null;
+    stopLoss: number | null;
+    currentTakeProfit: number | null;
+    currentStopLoss: number | null;
+    managementMeta?: any;
+    healthScore?: number;
+  }
+) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const userId = session.user.id;
+
+  return prisma.$transaction(async (tx) => {
+    // Get the current position
+    const position = await tx.paperPosition.findFirst({
+      where: {
+        id: positionId,
+        userId,
+        status: { in: ["OPEN", "PARTIALLY_CLOSED"] },
+      },
+    });
+
+    if (!position) {
+      console.warn(`[TRADE-MGMT] Position ${positionId} not found or not open for updatePositionLevels`);
+      return null;
+    }
+
+    const side = position.side;
+    const currentSL = position.stopLoss ? Number(position.stopLoss) : null;
+    const currentTP = position.takeProfit ? Number(position.takeProfit) : null;
+
+    // Verify CAS values if provided
+    if (data.currentStopLoss !== undefined && data.currentStopLoss !== currentSL) {
+      console.warn(`[TRADE-MGMT] CAS mismatch for SL on ${positionId}: expected ${data.currentStopLoss}, db has ${currentSL}`);
+      return null;
+    }
+    if (data.currentTakeProfit !== undefined && data.currentTakeProfit !== currentTP) {
+      console.warn(`[TRADE-MGMT] CAS mismatch for TP on ${positionId}: expected ${data.currentTakeProfit}, db has ${currentTP}`);
+      return null;
+    }
+
+    // Safety validation: Monotonic stop loss tightening only
+    if (data.stopLoss !== undefined && data.stopLoss !== null) {
+      if (currentSL !== null) {
+        if (side === "LONG" && data.stopLoss < currentSL) {
+          console.warn(`[TRADE-MGMT] Rejecting SL widening for LONG position ${positionId}: new ${data.stopLoss} < current ${currentSL}`);
+          return null;
+        }
+        if (side === "SHORT" && data.stopLoss > currentSL) {
+          console.warn(`[TRADE-MGMT] Rejecting SL widening for SHORT position ${positionId}: new ${data.stopLoss} > current ${currentSL}`);
+          return null;
+        }
+      }
+    }
+
+    // Perform update using updateMany with CAS fields
+    const updateQuery: any = {
+      id: positionId,
+      userId,
+      status: position.status,
+    };
+    if (currentSL !== null) updateQuery.stopLoss = position.stopLoss;
+    if (currentTP !== null) updateQuery.takeProfit = position.takeProfit;
+
+    const updateData: any = {
+      takeProfit: data.takeProfit,
+      stopLoss: data.stopLoss,
+    };
+    if (data.managementMeta !== undefined) {
+      updateData.managementMeta = data.managementMeta;
+    }
+    if (data.healthScore !== undefined) {
+      updateData.tradeHealthScore = data.healthScore;
+    }
+
+    const result = await tx.paperPosition.updateMany({
+      where: updateQuery,
+      data: updateData,
+    });
+
+    if (result.count === 0) {
+      console.warn(`[TRADE-MGMT] CAS update failed for ${positionId}`);
+      return null;
+    }
+
+    console.info(
+      `[TRADE-MGMT] UPDATED ${positionId} levels: TP ${currentTP}→${data.takeProfit}, SL ${currentSL}→${data.stopLoss}`
+    );
+
+    revalidateTradingPaths();
+    return { ok: true };
+  });
+}
+
+export async function updatePositionHealthScore(
+  positionId: string,
+  healthScore: number,
+  managementMeta?: any
+) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  const userId = session.user.id;
+
+  const updateData: any = {
+    tradeHealthScore: healthScore,
+  };
+  if (managementMeta !== undefined) {
+    updateData.managementMeta = managementMeta;
+  }
+
+  const result = await prisma.paperPosition.updateMany({
+    where: {
+      id: positionId,
+      userId,
+      status: { in: ["OPEN", "PARTIALLY_CLOSED"] },
+    },
+    data: updateData,
+  });
+
+  if (result.count > 0) {
+    revalidateTradingPaths();
+  }
+
+  return { ok: result.count > 0 };
+}
+
+export async function createManagementEvent(data: {
+  positionId: string;
+  type: string;
+  oldValue?: number | null;
+  newValue?: number | null;
+  healthScore: number;
+  confidence: number;
+  reason: string;
+  indicators?: any;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  const event = await prisma.tradeManagementEvent.create({
+    data: {
+      positionId: data.positionId,
+      type: data.type,
+      oldValue: data.oldValue,
+      newValue: data.newValue,
+      healthScore: data.healthScore,
+      confidence: data.confidence,
+      reason: data.reason,
+      indicators: data.indicators || {},
+    },
+  });
+
+  revalidateTradingPaths();
+  return { id: event.id };
 }

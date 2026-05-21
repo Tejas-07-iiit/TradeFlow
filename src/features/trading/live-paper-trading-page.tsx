@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import {
   Activity,
   BrainCog,
   Cpu,
   Newspaper,
   Zap,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 
@@ -31,6 +34,7 @@ import { useAiDecisionStore } from "@/store/ai-decision-store";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
 import type { CloseReasonView, DecisionSourceView } from "@/types/portfolio";
+import { TradeManagementPanel } from "./trade-management-panel";
 
 const CLOSE_REASON_LABEL: Record<CloseReasonView, string> = {
   MANUAL: "Manual",
@@ -39,6 +43,7 @@ const CLOSE_REASON_LABEL: Record<CloseReasonView, string> = {
   EXPIRED: "Expired",
   LIQUIDATED: "Liquidated",
   AI_EXIT: "AI Exit",
+  AI_EARLY_EXIT: "AI Early Exit",
 };
 
 const CLOSE_REASON_TONE: Record<CloseReasonView, "bull" | "bear" | "muted" | "accent"> = {
@@ -48,6 +53,7 @@ const CLOSE_REASON_TONE: Record<CloseReasonView, "bull" | "bear" | "muted" | "ac
   EXPIRED: "muted",
   LIQUIDATED: "bear",
   AI_EXIT: "accent",
+  AI_EARLY_EXIT: "accent",
 };
 
 const SOURCE_LABEL: Record<DecisionSourceView, string> = {
@@ -66,6 +72,8 @@ const AUTONOMY_ON = process.env.NEXT_PUBLIC_AI_AUTONOMY === "on";
 
 export function LivePaperTradingPage() {
   const symbol = useMarketStore((s) => s.symbol);
+
+  const [expandedPositionId, setExpandedPositionId] = useState<string | null>(null);
 
   const positions = usePortfolioStore((s) => s.positions);
   const orders = usePortfolioStore((s) => s.orders);
@@ -297,10 +305,25 @@ export function LivePaperTradingPage() {
                   }) => (
                     <div
                       key={position.id}
-                      className="rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3 space-y-2"
+                      className={cn(
+                        "rounded-md border border-[var(--border)] bg-[var(--surface-elevated)] p-3 space-y-2 transition-all duration-200",
+                        position.decisionSource === "LLM" && "hover:border-[var(--accent)]/40"
+                      )}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div
+                        className={cn(
+                          "flex items-center justify-between",
+                          position.decisionSource === "LLM" && "cursor-pointer select-none"
+                        )}
+                        onClick={() => {
+                          if (position.decisionSource === "LLM") {
+                            setExpandedPositionId(
+                              expandedPositionId === position.id ? null : position.id
+                            );
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-semibold text-[var(--fg)]">
                             {position.symbol}
                           </span>
@@ -321,20 +344,68 @@ export function LivePaperTradingPage() {
                           >
                             {SOURCE_LABEL[position.decisionSource]}
                           </Badge>
-                        </div>
-                        <div
-                          className={cn(
-                            "text-right text-sm font-mono tabular-nums leading-tight",
-                            pnl >= 0
-                              ? "text-[var(--color-bull)]"
-                              : "text-[var(--color-bear)]",
+
+                          {/* Trade Health Badge */}
+                          {position.decisionSource === "LLM" && position.tradeHealthScore !== undefined && position.tradeHealthScore !== null && (
+                            <Badge
+                              variant={
+                                position.tradeHealthScore >= 70
+                                  ? "bull"
+                                  : position.tradeHealthScore >= 40
+                                    ? "warn"
+                                    : "bear"
+                              }
+                              className="text-[10px]"
+                            >
+                              Health: {position.tradeHealthScore}
+                            </Badge>
                           )}
-                        >
-                          {formatCurrency(pnl)}
-                          <span className="block text-[10px] text-[var(--fg-subtle)]">
-                            {unrealizedPnlPct >= 0 ? "+" : ""}
-                            {unrealizedPnlPct.toFixed(2)}% ROE
-                          </span>
+
+                          {/* Active Rules Badges */}
+                          {position.decisionSource === "LLM" && position.managementMeta && (
+                            <>
+                              {(position.managementMeta as any).trailingStopActive && (
+                                <Badge variant="accent" className="text-[9px] h-4 px-1.5 font-bold">
+                                  TS
+                                </Badge>
+                              )}
+                              {(position.managementMeta as any).breakEvenTriggered && (
+                                <Badge variant="bull" className="text-[9px] h-4 px-1.5 font-bold">
+                                  BE
+                                </Badge>
+                              )}
+                              {(position.managementMeta as any).partialExitsDone > 0 && (
+                                <Badge variant="warn" className="text-[9px] h-4 px-1.5 font-bold">
+                                  Scale Out
+                                </Badge>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={cn(
+                              "text-right text-sm font-mono tabular-nums leading-tight",
+                              pnl >= 0
+                                ? "text-[var(--color-bull)]"
+                                : "text-[var(--color-bear)]",
+                            )}
+                          >
+                            {formatCurrency(pnl)}
+                            <span className="block text-[10px] text-[var(--fg-subtle)]">
+                              {unrealizedPnlPct >= 0 ? "+" : ""}
+                              {unrealizedPnlPct.toFixed(2)}% ROE
+                            </span>
+                          </div>
+                          {position.decisionSource === "LLM" && (
+                            <div className="text-[var(--fg-subtle)]">
+                              {expandedPositionId === position.id ? (
+                                <ChevronUp className="size-4" />
+                              ) : (
+                                <ChevronDown className="size-4" />
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8 text-[11px]">
@@ -365,9 +436,41 @@ export function LivePaperTradingPage() {
                         />
                         <Cell
                           label="TP / SL"
-                          value={`${position.takeProfit ? formatPrice(position.takeProfit) : "—"} / ${
-                            position.stopLoss ? formatPrice(position.stopLoss) : "—"
-                          }`}
+                          value={
+                            <span className="flex items-center gap-1 flex-wrap">
+                              {position.takeProfit ? (
+                                <span className="flex flex-col leading-none">
+                                  <span className="text-[var(--color-bull)] font-mono">
+                                    {formatPrice(position.takeProfit)}
+                                  </span>
+                                  {position.originalTakeProfit &&
+                                    position.takeProfit !== position.originalTakeProfit && (
+                                      <span className="text-[9px] text-[var(--fg-subtle)] line-through leading-none mt-0.5">
+                                        {formatPrice(position.originalTakeProfit)}
+                                      </span>
+                                    )}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
+                              <span className="text-[var(--fg-subtle)] mx-0.5">/</span>
+                              {position.stopLoss ? (
+                                <span className="flex flex-col leading-none">
+                                  <span className="text-[var(--color-bear)] font-mono">
+                                    {formatPrice(position.stopLoss)}
+                                  </span>
+                                  {position.originalStopLoss &&
+                                    position.stopLoss !== position.originalStopLoss && (
+                                      <span className="text-[9px] text-[var(--fg-subtle)] line-through leading-none mt-0.5">
+                                        {formatPrice(position.originalStopLoss)}
+                                      </span>
+                                    )}
+                                </span>
+                              ) : (
+                                "—"
+                              )}
+                            </span>
+                          }
                         />
                         <Cell label="Held" value={formatDuration(durationMs)} />
                         <Cell
@@ -418,6 +521,12 @@ export function LivePaperTradingPage() {
                           </div>
                         );
                       })()}
+
+                      {expandedPositionId === position.id && position.decisionSource === "LLM" && (
+                        <div className="pt-2 mt-2 border-t border-[var(--border)]">
+                          <TradeManagementPanel position={position} livePrice={mark} />
+                        </div>
+                      )}
                     </div>
                   ),
                 )
@@ -620,7 +729,7 @@ function Cell({
   tone,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   tone?: "bull" | "bear";
 }) {
   return (

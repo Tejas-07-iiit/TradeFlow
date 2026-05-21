@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-
 import { auth } from "@/lib/auth";
 
 const PUBLIC_PREFIXES = ["/login", "/register", "/api/auth"];
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
   const isPublic = PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -31,6 +30,8 @@ export default auth((req) => {
 
   return NextResponse.next();
 });
+
+export default proxy;
 
 export const config = {
   matcher: [

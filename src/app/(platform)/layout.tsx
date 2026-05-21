@@ -5,6 +5,7 @@ import { AiExecutionEngine } from "@/components/providers/ai-execution-engine";
 import { AiSignalEngine } from "@/components/providers/ai-signal-engine";
 import { AiThesisSubscriber } from "@/components/providers/ai-thesis-subscriber";
 import { NewsSubscriber } from "@/components/providers/news-subscriber";
+import { AiTradeManager } from "@/components/providers/ai-trade-manager";
 import { MarketDataProvider } from "@/components/providers/market-data-provider";
 import { MatchingEngineSubscriber } from "@/components/providers/matching-engine-provider";
 import { PortfolioProvider } from "@/components/providers/portfolio-provider";
@@ -95,6 +96,10 @@ export default async function PlatformLayout({
     closeReason: p.closeReason,
     decisionSource: p.decisionSource,
     decisionMeta: p.decisionMeta,
+    originalTakeProfit: p.originalTakeProfit ? Number(p.originalTakeProfit) : null,
+    originalStopLoss: p.originalStopLoss ? Number(p.originalStopLoss) : null,
+    tradeHealthScore: p.tradeHealthScore,
+    managementMeta: p.managementMeta as any,
     createdAt: p.createdAt.toISOString(),
     closedAt: p.closedAt ? p.closedAt.toISOString() : null,
   }));
@@ -154,6 +159,7 @@ export default async function PlatformLayout({
               <AiThesisSubscriber />
               <AiDecisionSubscriber />
               <AiExecutionEngine />
+              <AiTradeManager />
               <NewsSubscriber />
               <Topbar />
               <main className="flex-1 p-4 lg:p-5">{children}</main>

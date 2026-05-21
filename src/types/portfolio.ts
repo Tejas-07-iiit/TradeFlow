@@ -1,3 +1,5 @@
+import type { TradeManagementMeta } from "./trade-management";
+
 export type PositionStatusView =
   | "OPEN"
   | "PARTIALLY_CLOSED"
@@ -13,7 +15,8 @@ export type CloseReasonView =
   | "TAKE_PROFIT"
   | "EXPIRED"
   | "LIQUIDATED"
-  | "AI_EXIT";
+  | "AI_EXIT"
+  | "AI_EARLY_EXIT";
 
 export type OrderStatusView = "PENDING" | "FILLED" | "CANCELLED" | "REJECTED";
 
@@ -40,6 +43,10 @@ export type PaperPositionView = {
   closeReason?: CloseReasonView | null;
   decisionSource: DecisionSourceView;
   decisionMeta?: string | null;
+  originalTakeProfit?: number | null;
+  originalStopLoss?: number | null;
+  tradeHealthScore?: number | null;
+  managementMeta?: TradeManagementMeta | null;
   createdAt: string;
   closedAt?: string | null;
 };

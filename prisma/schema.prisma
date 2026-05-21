@@ -113,6 +113,7 @@ enum CloseReason {
   EXPIRED
   LIQUIDATED
   AI_EXIT
+  AI_EARLY_EXIT
 }
 
 enum DecisionSource {
@@ -161,11 +162,20 @@ model PaperPosition {
   decisionSource        DecisionSource @default(MANUAL)
   /// Free-form audit trail: LLM model name, rule signal type, etc.
   decisionMeta          String?
+  /// Original TP/SL snapshot — captured at fill so the management engine
+  /// knows the initial intent even after dynamic adjustments.
+  originalTakeProfit    Decimal?       @db.Decimal(20, 8)
+  originalStopLoss      Decimal?       @db.Decimal(20, 8)
+  /// Live trade health score computed by the trade manager (0-100).
+  tradeHealthScore      Int?
+  /// Ephemeral management state: health history, cooldowns, partial exits.
+  managementMeta        Json?
   createdAt             DateTime       @default(now())
   closedAt              DateTime?
 
-  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  history TradeHistory[]
+  user             User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history          TradeHistory[]
+  managementEvents TradeManagementEvent[]
 
   @@index([userId, status])
   @@index([symbol])
@@ -284,4 +294,24 @@ model ExplainableSignal {
   @@index([symbol])
   @@index([timestamp])
   @@index([status])
+}
+
+/// Audit trail for every dynamic trade management action. Each time the
+/// trade manager adjusts TP/SL, triggers a partial exit, or records a
+/// health score update, a row lands here for full explainability.
+model TradeManagementEvent {
+  id            String   @id @default(cuid())
+  positionId    String
+  type          String   // TP_ADJUSTED | SL_ADJUSTED | SL_TRAILED | SL_BREAKEVEN | PARTIAL_EXIT | EARLY_EXIT | HEALTH_UPDATE
+  oldValue      Float?
+  newValue      Float?
+  healthScore   Int
+  confidence    Float
+  reason        String
+  indicators    Json?    // snapshot of key indicators at time of action
+  createdAt     DateTime @default(now())
+
+  position PaperPosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+
+  @@index([positionId, createdAt])
 }
