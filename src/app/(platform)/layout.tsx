@@ -1,14 +1,12 @@
 import { redirect } from "next/navigation";
 
-import { AiDecisionSubscriber } from "@/components/providers/ai-decision-subscriber";
-import { AiExecutionEngine } from "@/components/providers/ai-execution-engine";
 import { AiSignalEngine } from "@/components/providers/ai-signal-engine";
 import { AiThesisSubscriber } from "@/components/providers/ai-thesis-subscriber";
 import { NewsSubscriber } from "@/components/providers/news-subscriber";
-import { AiTradeManager } from "@/components/providers/ai-trade-manager";
 import { MarketDataProvider } from "@/components/providers/market-data-provider";
-import { MatchingEngineSubscriber } from "@/components/providers/matching-engine-provider";
 import { PortfolioProvider } from "@/components/providers/portfolio-provider";
+import { PortfolioPoller } from "@/components/providers/portfolio-poller";
+import { AiDecisionProvider } from "@/components/providers/ai-decision-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Sidebar } from "@/features/dashboard/sidebar";
 import { Topbar } from "@/features/dashboard/topbar";
@@ -154,15 +152,14 @@ export default async function PlatformLayout({
               orders={ordersView}
               tradeHistory={historyView}
             >
-              <MatchingEngineSubscriber />
-              <AiSignalEngine />
-              <AiThesisSubscriber />
-              <AiDecisionSubscriber />
-              <AiExecutionEngine />
-              <AiTradeManager />
-              <NewsSubscriber />
-              <Topbar />
-              <main className="flex-1 p-4 lg:p-5">{children}</main>
+              <PortfolioPoller />
+              <AiDecisionProvider>
+                <AiSignalEngine />
+                <AiThesisSubscriber />
+                <NewsSubscriber />
+                <Topbar />
+                <main className="flex-1 p-4 lg:p-5">{children}</main>
+              </AiDecisionProvider>
             </PortfolioProvider>
           </MarketDataProvider>
         </div>

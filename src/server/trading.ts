@@ -9,6 +9,7 @@ import type {
 } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_WALLET_BALANCE } from "./wallet";
 
 /**
  * Server actions for the paper-trading engine. The accounting model here is
@@ -74,7 +75,7 @@ function liquidationPriceFor(
   return side === "LONG" ? entry - move : entry + move;
 }
 
-export async function createPaperOrder(data: {
+export async function createPaperOrderInternal(userId: string, data: {
   symbol: string;
   side: OrderSide;
   type: OrderType;
@@ -84,22 +85,10 @@ export async function createPaperOrder(data: {
   stopLoss?: number;
   leverage?: number;
   expiresAt?: Date;
-  /** Where the decision came from. Defaults to MANUAL for human-initiated flows. */
   decisionSource?: DecisionSource;
-  /** Free-form audit text (e.g. LLM model + confidence + setup quality). */
   decisionMeta?: string;
-  /**
-   * When true (the autonomous engines pass this), the server hard-rejects
-   * any new order if the symbol already has an OPEN/PARTIALLY_CLOSED
-   * position or another PENDING order. Manual entries bypass the check —
-   * users can still pyramid by hand if they want to.
-   */
   blockIfAlreadyOpen?: boolean;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const userId = session.user.id;
-
   if (data.blockIfAlreadyOpen) {
     const [openPos, pendingOrder] = await Promise.all([
       prisma.paperPosition.findFirst({
@@ -145,22 +134,35 @@ export async function createPaperOrder(data: {
   });
 
   revalidateTradingPaths();
-  // Never return the raw Prisma row from a server action: its Decimal columns
-  // are not serializable across the RSC boundary. Return only the id.
   return { id: order.id };
 }
 
-export async function cancelPaperOrder(
+export async function createPaperOrder(data: {
+  symbol: string;
+  side: OrderSide;
+  type: OrderType;
+  quantity: number;
+  price?: number;
+  takeProfit?: number;
+  stopLoss?: number;
+  leverage?: number;
+  expiresAt?: Date;
+  decisionSource?: DecisionSource;
+  decisionMeta?: string;
+  blockIfAlreadyOpen?: boolean;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return createPaperOrderInternal(session.user.id, data);
+}
+
+export async function cancelPaperOrderInternal(
+  userId: string,
   orderId: string,
   reason: "MANUAL" | "EXPIRED" = "MANUAL",
 ) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
-  // Atomic transition out of PENDING — if another caller already cancelled or
-  // filled this order, count will be 0 and we no-op cleanly.
   const result = await prisma.paperOrder.updateMany({
-    where: { id: orderId, userId: session.user.id, status: "PENDING" },
+    where: { id: orderId, userId, status: "PENDING" },
     data: { status: reason === "EXPIRED" ? "REJECTED" : "CANCELLED" },
   });
   if (result.count === 0) return { ok: false as const };
@@ -169,21 +171,17 @@ export async function cancelPaperOrder(
   return { ok: true as const };
 }
 
-/**
- * Fill a PENDING order at `fillPrice`. Atomic transition: PENDING → FILLED
- * happens via `updateMany`, so a re-tick by the matching engine cannot fill
- * the same order twice. We then reserve margin and create the position in
- * the same transaction; if margin is insufficient the order rolls back to
- * REJECTED rather than half-filling.
- */
-export async function fillPaperOrder(orderId: string, fillPrice: number) {
+export async function cancelPaperOrder(
+  orderId: string,
+  reason: "MANUAL" | "EXPIRED" = "MANUAL",
+) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
-  const userId = session.user.id;
+  return cancelPaperOrderInternal(session.user.id, orderId, reason);
+}
 
+export async function fillPaperOrderInternal(userId: string, orderId: string, fillPrice: number) {
   return prisma.$transaction(async (tx) => {
-    // CAS: atomically claim the order. If another tick already filled it the
-    // count is 0 and we exit. This is the primary double-fill guard.
     const claim = await tx.paperOrder.updateMany({
       where: { id: orderId, userId, status: "PENDING" },
       data: {
@@ -211,8 +209,6 @@ export async function fillPaperOrder(orderId: string, fillPrice: number) {
     const available = walletBalance - usedMargin;
 
     if (marginRequired > available + 1e-8) {
-      // Roll the order back so the user can see why it didn't fill. We
-      // intentionally do NOT throw — this is a *risk-managed* rejection.
       await tx.paperOrder.update({
         where: { id: order.id },
         data: { status: "REJECTED", filledAt: null, filledPrice: null },
@@ -270,32 +266,22 @@ export async function fillPaperOrder(orderId: string, fillPrice: number) {
   });
 }
 
-/**
- * Close a position fully or partially. Settlement is single-shot: the
- * conditional `updateMany` either claims the position (count===1) or aborts
- * (count===0), so callers racing on the same row cannot double-credit
- * realizedPnL.
- *
- * @param exitPrice - mark used for the slice. For TP/SL the matching engine
- *   passes the current tick; for AI exits the LLM trigger price.
- * @param options.quantity - slice size. Omitting (or >= remaining) closes
- *   fully.
- * @param options.reason - drives the terminal status (MANUAL→CLOSED,
- *   STOP_LOSS→STOP_LOSS_HIT, etc.) and is recorded on TradeHistory.
- */
-export async function closePaperPosition(
+export async function fillPaperOrder(orderId: string, fillPrice: number) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return fillPaperOrderInternal(session.user.id, orderId, fillPrice);
+}
+
+export async function closePaperPositionInternal(
+  userId: string,
   positionId: string,
   exitPrice: number,
   options: { quantity?: number; reason?: CloseReason; closedAt?: number } = {},
 ) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const userId = session.user.id;
   const reason: CloseReason = options.reason ?? "MANUAL";
   const nowMs = options.closedAt ?? Date.now();
 
   return prisma.$transaction(async (tx) => {
-    // Read inside the transaction so we see the latest committed quantity.
     const position = await tx.paperPosition.findFirst({
       where: {
         id: positionId,
@@ -316,8 +302,6 @@ export async function closePaperPosition(
     const priorRealized = Number(position.realizedPnl);
 
     const slicePnl = pnlFor(position.side, closeQty, entry, exitPrice);
-    // Release margin in proportion to the closed quantity. The remaining
-    // open quantity keeps its share locked.
     const releasedMargin = isFullClose
       ? totalMargin
       : totalMargin * (closeQty / remaining);
@@ -335,9 +319,6 @@ export async function closePaperPosition(
       riskReward = risk > 0 ? reward / risk : null;
     }
 
-    // CAS: settle exactly once. The (status, quantity) tuple is the row's
-    // version — if another caller mutated either, we re-read on retry. Here
-    // we just abort: callers already see "no return value" as a no-op.
     const claim = await tx.paperPosition.updateMany({
       where: {
         id: position.id,
@@ -361,9 +342,6 @@ export async function closePaperPosition(
             marginUsed: remainingMargin,
             status: "PARTIALLY_CLOSED",
             realizedPnl: newRealized,
-            // unrealizedPnl is a snapshot — recompute for the remaining slice
-            // at the exit-price mark so analytics queries on the row are
-            // self-consistent.
             unrealizedPnl: pnlFor(
               position.side,
               remaining - closeQty,
@@ -373,8 +351,6 @@ export async function closePaperPosition(
           },
     });
     if (claim.count === 0) {
-      // Another close beat us to it. Silent no-op — TradeHistory + wallet
-      // mutation already happened in that other transaction.
       console.info(
         `${LOG_PREFIX} CLOSE ${position.id} skipped — already settled by another caller`,
       );
@@ -400,10 +376,6 @@ export async function closePaperPosition(
       },
     });
 
-    // Single wallet mutation per settlement: release the proportional margin
-    // and credit/debit realized PnL once. This is the line the user noticed
-    // was firing multiple times under the old code path; the CAS above is
-    // what makes it impossible now.
     await tx.paperWallet.update({
       where: { userId },
       data: {
@@ -423,24 +395,24 @@ export async function closePaperPosition(
   });
 }
 
-/**
- * Dev-only: wipe positions/orders/history and reset the wallet to its
- * initial balance with zero usedMargin. Intentionally exposed as a server
- * action so the in-app reset button can call it; the auth check ensures only
- * the signed-in user resets their own state.
- */
-export async function resetPaperAccount() {
+export async function closePaperPosition(
+  positionId: string,
+  exitPrice: number,
+  options: { quantity?: number; reason?: CloseReason; closedAt?: number } = {},
+) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Unauthorized");
-  const userId = session.user.id;
+  return closePaperPositionInternal(session.user.id, positionId, exitPrice, options);
+}
 
+export async function resetPaperAccountInternal(userId: string) {
   await prisma.$transaction(async (tx) => {
     await tx.tradeHistory.deleteMany({ where: { userId } });
     await tx.paperOrder.deleteMany({ where: { userId } });
     await tx.paperPosition.deleteMany({ where: { userId } });
     await tx.paperWallet.update({
       where: { userId },
-      data: { balance: 60_000, usedMargin: 0 },
+      data: { balance: DEFAULT_WALLET_BALANCE, usedMargin: 0 },
     });
   });
 
@@ -449,7 +421,14 @@ export async function resetPaperAccount() {
   return { ok: true as const };
 }
 
-export async function updatePositionLevels(
+export async function resetPaperAccount() {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return resetPaperAccountInternal(session.user.id);
+}
+
+export async function updatePositionLevelsInternal(
+  userId: string,
   positionId: string,
   data: {
     takeProfit: number | null;
@@ -460,12 +439,7 @@ export async function updatePositionLevels(
     healthScore?: number;
   }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const userId = session.user.id;
-
   return prisma.$transaction(async (tx) => {
-    // Get the current position
     const position = await tx.paperPosition.findFirst({
       where: {
         id: positionId,
@@ -483,7 +457,6 @@ export async function updatePositionLevels(
     const currentSL = position.stopLoss ? Number(position.stopLoss) : null;
     const currentTP = position.takeProfit ? Number(position.takeProfit) : null;
 
-    // Verify CAS values if provided
     if (data.currentStopLoss !== undefined && data.currentStopLoss !== currentSL) {
       console.warn(`[TRADE-MGMT] CAS mismatch for SL on ${positionId}: expected ${data.currentStopLoss}, db has ${currentSL}`);
       return null;
@@ -493,7 +466,6 @@ export async function updatePositionLevels(
       return null;
     }
 
-    // Safety validation: Monotonic stop loss tightening only
     if (data.stopLoss !== undefined && data.stopLoss !== null) {
       if (currentSL !== null) {
         if (side === "LONG" && data.stopLoss < currentSL) {
@@ -507,7 +479,6 @@ export async function updatePositionLevels(
       }
     }
 
-    // Perform update using updateMany with CAS fields
     const updateQuery: any = {
       id: positionId,
       userId,
@@ -546,15 +517,28 @@ export async function updatePositionLevels(
   });
 }
 
-export async function updatePositionHealthScore(
+export async function updatePositionLevels(
+  positionId: string,
+  data: {
+    takeProfit: number | null;
+    stopLoss: number | null;
+    currentTakeProfit: number | null;
+    currentStopLoss: number | null;
+    managementMeta?: any;
+    healthScore?: number;
+  }
+) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return updatePositionLevelsInternal(session.user.id, positionId, data);
+}
+
+export async function updatePositionHealthScoreInternal(
+  userId: string,
   positionId: string,
   healthScore: number,
   managementMeta?: any
 ) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-  const userId = session.user.id;
-
   const updateData: any = {
     tradeHealthScore: healthScore,
   };
@@ -578,7 +562,17 @@ export async function updatePositionHealthScore(
   return { ok: result.count > 0 };
 }
 
-export async function createManagementEvent(data: {
+export async function updatePositionHealthScore(
+  positionId: string,
+  healthScore: number,
+  managementMeta?: any
+) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return updatePositionHealthScoreInternal(session.user.id, positionId, healthScore, managementMeta);
+}
+
+export async function createManagementEventInternal(data: {
   positionId: string;
   type: string;
   oldValue?: number | null;
@@ -588,9 +582,6 @@ export async function createManagementEvent(data: {
   reason: string;
   indicators?: any;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) throw new Error("Unauthorized");
-
   const event = await prisma.tradeManagementEvent.create({
     data: {
       positionId: data.positionId,
@@ -606,4 +597,19 @@ export async function createManagementEvent(data: {
 
   revalidateTradingPaths();
   return { id: event.id };
+}
+
+export async function createManagementEvent(data: {
+  positionId: string;
+  type: string;
+  oldValue?: number | null;
+  newValue?: number | null;
+  healthScore: number;
+  confidence: number;
+  reason: string;
+  indicators?: any;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("Unauthorized");
+  return createManagementEventInternal(data);
 }

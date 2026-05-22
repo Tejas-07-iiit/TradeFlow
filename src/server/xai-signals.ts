@@ -153,3 +153,43 @@ export async function getExplainableSignalById(id: string) {
     return { ok: false, error: error instanceof Error ? error.message : String(error), signal: null };
   }
 }
+
+/**
+ * Fetch both the latest 50 logs and the single latest decision per active symbol
+ * for client-side state hydration and synchronization.
+ */
+export async function getRecentExecutionLogs() {
+  try {
+    const recentLogs = await prisma.explainableSignal.findMany({
+      orderBy: {
+        timestamp: "desc",
+      },
+      take: 50,
+    });
+
+    const activeSymbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"];
+    const latestDecisions = await Promise.all(
+      activeSymbols.map(async (symbol) => {
+        return prisma.explainableSignal.findFirst({
+          where: { symbol },
+          orderBy: { timestamp: "desc" },
+        });
+      })
+    );
+
+    return {
+      ok: true,
+      recentLogs,
+      latestDecisions: latestDecisions.filter((s): s is NonNullable<typeof s> => s !== null),
+    };
+  } catch (error) {
+    console.error("[XAI-FETCH-ERROR] Failed to retrieve recent execution logs:", error);
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+      recentLogs: [],
+      latestDecisions: [],
+    };
+  }
+}
+
