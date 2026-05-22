@@ -132,6 +132,21 @@ export function AiTradeManager() {
           const unrealizedPnl = (livePrice - entry) * qty * direction;
           const unrealizedPnlPct = (unrealizedPnl / (entry * qty)) * 100;
 
+          // Parse pos.decisionMeta to extract setupQuality and qualityScore
+          let setupQuality: string | undefined = undefined;
+          let qualityScore: number | undefined = undefined;
+          if (pos.decisionMeta) {
+            try {
+              const parsedMeta = JSON.parse(pos.decisionMeta);
+              setupQuality = parsedMeta.setupQuality;
+              if (parsedMeta.quality && typeof parsedMeta.quality.score === "number") {
+                qualityScore = parsedMeta.quality.score;
+              }
+            } catch (e) {
+              console.warn(`Failed to parse decisionMeta for position ${pos.id}`, e);
+            }
+          }
+
           const context: ManagedPositionContext = {
             id: pos.id,
             symbol: pos.symbol,
@@ -150,10 +165,15 @@ export function AiTradeManager() {
             livePrice,
             unrealizedPnl,
             unrealizedPnlPct,
+            setupQuality,
+            qualityScore,
           };
 
+          // Extract closed candles
+          const closedCandles = candles.slice(0, -1);
+
           // 4. Evaluate position actions
-          const { action, updatedMeta } = evaluatePosition(context, mIndicators);
+          const { action, updatedMeta } = evaluatePosition(context, mIndicators, closedCandles, interval);
 
           // ─── Execute Actions ───
 
@@ -187,6 +207,9 @@ export function AiTradeManager() {
             }
           } 
           else if (action.type === "PARTIAL_EXIT") {
+            if (action.reason.includes("Confidence-based")) {
+              updatedMeta.confidencePartialExitDone = true;
+            }
             if (autonomyOn && action.quantity) {
               console.info(`[TRADE-MGMT] Triggering partial exit for ${symbol} closeQty=${action.quantity} @ ${livePrice}. Reason: ${action.reason}`);
               const res = await closePaperPosition(pos.id, livePrice, {

@@ -2,6 +2,8 @@ import type {
   ManagedPositionContext,
   ManagementIndicators,
 } from "@/types/trade-management";
+import type { Candle } from "@/types/market";
+import { calculateConsecutiveAdverseCandles, classifyTrendState } from "./health-scorer";
 
 interface ExitAssessment {
   triggerExit: boolean;
@@ -9,9 +11,20 @@ interface ExitAssessment {
   reason: string;
 }
 
+function isSystemUnstable(confidenceHistory?: number[]): boolean {
+  if (!confidenceHistory || confidenceHistory.length < 4) return false;
+  let diffSum = 0;
+  for (let i = 1; i < confidenceHistory.length; i++) {
+    diffSum += Math.abs(confidenceHistory[i] - confidenceHistory[i - 1]);
+  }
+  const avgDiff = diffSum / (confidenceHistory.length - 1);
+  return avgDiff > 15;
+}
+
 export function checkEarlyExit(
   position: ManagedPositionContext,
-  indicators: ManagementIndicators
+  indicators: ManagementIndicators,
+  closedCandles: Candle[]
 ): ExitAssessment {
   const isLong = position.side === "LONG";
   const livePrice = position.livePrice;
@@ -163,22 +176,64 @@ export function checkEarlyExit(
 
   // ─── News-Aware Exit Confidence Boost ──────────────
   let newsBoost = false;
-  if (indicators.newsClass === "CRITICAL_RISK" || 
+  const isCriticalNews = indicators.newsClass === "CRITICAL_RISK" || 
      (isLong && indicators.newsScore !== null && indicators.newsScore < -0.5) ||
-     (!isLong && indicators.newsScore !== null && indicators.newsScore > 0.5)) {
+     (!isLong && indicators.newsScore !== null && indicators.newsScore > 0.5);
+
+  if (isCriticalNews) {
     aggregateConfidence += 25;
     aggregateConfidence = Math.min(100, aggregateConfidence);
     newsBoost = true;
   }
 
   // Exit trigger threshold is 70
-  const triggerExit = aggregateConfidence >= 70;
+  let triggerExit = aggregateConfidence >= 70;
+
+  // ─── Candle Confirmation Gate ───
+  let gateReason = "";
+  if (triggerExit) {
+    // 1. Determine required confirmation candles
+    let requiredAdverse = 3;
+    const atrPct = indicators.atrPct ?? 1.5;
+    if (atrPct > 3.0) {
+      requiredAdverse = 2; // high volatility, exit faster
+    } else if (atrPct < 1.0) {
+      requiredAdverse = 4; // low volatility, wait for more confirmation
+    }
+
+    const confidenceHistory = position.managementMeta?.confidenceHistory;
+    if (isSystemUnstable(confidenceHistory)) {
+      requiredAdverse += 1; // slow decision-making when unstable
+    }
+
+    // 2. Check for emergency overrides (Liquidation state or critical news)
+    const trendState = position.managementMeta?.currentTrendState || classifyTrendState(position, indicators, closedCandles);
+    const isLiquidation = trendState === "LIQUIDATION_MOVE";
+    const isEmergency = isLiquidation || isCriticalNews;
+
+    if (!isEmergency) {
+      const consecutiveAdverse = position.managementMeta?.consecutiveAdverseCandles ?? calculateConsecutiveAdverseCandles(closedCandles, position.side);
+      if (consecutiveAdverse < requiredAdverse) {
+        triggerExit = false;
+        gateReason = `Exit pending candle confirmation: got ${consecutiveAdverse} of ${requiredAdverse} required (volatility: ${atrPct.toFixed(2)}%)`;
+      }
+    } else {
+      gateReason = isLiquidation 
+        ? "Emergency exit override: Liquidation move detected (bypassing confirmation)" 
+        : "Emergency exit override: Critical news detected (bypassing confirmation)";
+    }
+  }
 
   let reason = "";
   if (triggerExit) {
     const activeReasons = signals.map(s => s.name);
     if (newsBoost) activeReasons.push("Adverse high-impact news detected (+25% confidence boost)");
+    if (gateReason) activeReasons.push(gateReason);
     reason = `AI early exit triggered (confidence ${aggregateConfidence}%): ` + activeReasons.join("; ");
+  } else if (gateReason) {
+    reason = gateReason;
+  } else {
+    reason = "No exit signals active";
   }
 
   return {

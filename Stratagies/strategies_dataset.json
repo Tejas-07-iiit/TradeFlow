@@ -1,0 +1,172 @@
+[
+  {
+    "strategy_name": "Parabolic RSI Strategy [ChartPrime × PineIndicators]",
+    "indicators": ["RSI", "Parabolic SAR", "200 EMA"],
+    "timeframe": "15m, 1H, 4H",
+    "bullish_conditions": "RSI crosses above PSAR line AND Price > 200 EMA",
+    "bearish_conditions": "RSI crosses below PSAR line AND Price < 200 EMA",
+    "risk_level": "Medium",
+    "market_type": "Crypto (High Volatility)",
+    "description": "Momentum strategy applying PSAR logic to RSI values to catch early reversals."
+  },
+  {
+    "strategy_name": "Rally Base Drop SND Pivots Strategy [LuxAlgo X PineIndicators]",
+    "indicators": ["Supply & Demand Zones", "Pivot Points"],
+    "timeframe": "1H, 4H, 1D",
+    "bullish_conditions": "Price returns to Demand Zone (Drop-Base-Rally)",
+    "bearish_conditions": "Price returns to Supply Zone (Rally-Base-Drop)",
+    "risk_level": "Medium-High",
+    "market_type": "Crypto, Forex, Indices",
+    "description": "Supply and demand system identifying institutional pivot zones."
+  },
+  {
+    "strategy_name": "Fast v Slow Moving Averages Strategy (Variable)",
+    "indicators": ["Fast MA (SMA/EMA/WMA)", "Slow MA"],
+    "timeframe": "Any",
+    "bullish_conditions": "Fast MA crosses above Slow MA",
+    "bearish_conditions": "Fast MA crosses below Slow MA",
+    "risk_level": "Low-Medium",
+    "market_type": "Trending Markets",
+    "description": "Classic dual moving average crossover with customizable MA types."
+  },
+  {
+    "strategy_name": "Scalping The Bull - Two EMA Strategy",
+    "indicators": ["10 EMA", "60 EMA"],
+    "timeframe": "4H, 15m",
+    "bullish_conditions": "10 EMA crosses above 60 EMA",
+    "bearish_conditions": "10 EMA crosses below 60 EMA",
+    "risk_level": "Medium",
+    "market_type": "Bullish Crypto Markets",
+    "description": "Trend-following scalper designed for high-volatility bull runs."
+  },
+  {
+    "strategy_name": "ms hypersupertrend",
+    "indicators": ["3x Supertrend", "200 EMA"],
+    "timeframe": "5m, 15m, 1H",
+    "bullish_conditions": "Price > 200 EMA AND 2/3 Supertrends are Green",
+    "bearish_conditions": "Price < 200 EMA AND 2/3 Supertrends are Red",
+    "risk_level": "Medium",
+    "market_type": "Crypto (Medium Volatility)",
+    "description": "Aggressive trend system with multiple Supertrend confirmations."
+  },
+  {
+    "strategy_name": "WaveTrend Oscillator [WT] by LazyBear",
+    "indicators": ["WT1", "WT2"],
+    "timeframe": "Any",
+    "bullish_conditions": "WT1 crosses above WT2 in Oversold zone (< -60)",
+    "bearish_conditions": "WT1 crosses below WT2 in Overbought zone (> +60)",
+    "risk_level": "Medium",
+    "market_type": "All Markets",
+    "description": "Momentum oscillator identifying overextended price levels and reversals."
+  },
+  {
+    "strategy_name": "Lorentzian Classification (by jdehorty)",
+    "indicators": ["Lorentzian Classifier (ML)", "EMA", "ADX"],
+    "timeframe": "5m, 15m, 1H",
+    "bullish_conditions": "ML Prediction Score >= +6 with trend filters",
+    "bearish_conditions": "ML Prediction Score <= -6 with trend filters",
+    "risk_level": "High",
+    "market_type": "High-Volume Crypto",
+    "description": "Machine Learning strategy using distance classification for price prediction."
+  },
+  {
+    "strategy_name": "Squeeze Momentum Indicator [LazyBear]",
+    "indicators": ["Bollinger Bands", "Keltner Channels", "Momentum Histogram"],
+    "timeframe": "Any",
+    "bullish_conditions": "Squeeze releases (dots Green) AND Histogram > 0 and rising",
+    "bearish_conditions": "Squeeze releases AND Histogram < 0 and falling",
+    "risk_level": "Medium",
+    "market_type": "All (Breakout focused)",
+    "description": "Volatility-based strategy capturing explosive moves after consolidation."
+  },
+  {
+    "strategy_name": "Hash Ribbons",
+    "indicators": ["Hash Rate 30 SMA", "60 SMA", "Price Momentum"],
+    "timeframe": "1D",
+    "bullish_conditions": "Hash Rate 30 SMA crosses above 60 SMA AND Price Momentum Buy",
+    "bearish_conditions": "N/A (Long-only)",
+    "risk_level": "Low (Macro)",
+    "market_type": "Bitcoin (BTC)",
+    "description": "Macro indicator identifying generational BTC bottoms via miner hash rate."
+  },
+  {
+    "strategy_name": "Ichimoku Cloud",
+    "indicators": ["Tenkan-Sen", "Kijun-Sen", "Senkou Spans"],
+    "timeframe": "1H, 4H, 1D",
+    "bullish_conditions": "Price > Cloud AND TK Cross Up AND Chikou > Price",
+    "bearish_conditions": "Price < Cloud AND TK Cross Down AND Chikou < Price",
+    "risk_level": "Medium",
+    "market_type": "Trending Crypto",
+    "description": "All-in-one Japanese system for trend, momentum, and support/resistance."
+  },
+  {
+    "strategy_name": "Bollinger Bands Breakout",
+    "indicators": ["Bollinger Bands (20, 2)"],
+    "timeframe": "15m, 1H",
+    "bullish_conditions": "Price closes above Upper Band",
+    "bearish_conditions": "Price closes below Lower Band",
+    "risk_level": "High",
+    "market_type": "Volatility Breakout",
+    "description": "Simple volatility strategy trading the continuation of strong price moves."
+  },
+  {
+    "strategy_name": "Golden Cross / Death Cross",
+    "indicators": ["50 SMA", "200 SMA"],
+    "timeframe": "1D",
+    "bullish_conditions": "50 SMA crosses above 200 SMA",
+    "bearish_conditions": "50 SMA crosses below 200 SMA",
+    "risk_level": "Low",
+    "market_type": "Long-Term Trending",
+    "description": "Classic trend-following strategy using major moving average crossovers."
+  },
+  {
+    "strategy_name": "REAL STRATEGY : Dow_Factor_MFI/RSI_DVOG_Strategy",
+    "indicators": ["Dow Factor", "MFI", "RSI", "DVOG"],
+    "timeframe": "4H, 1D",
+    "bullish_conditions": "Positive Dow Factor + RSI > 50 + Increasing Volume",
+    "bearish_conditions": "Negative Dow Factor + RSI < 50 + Bearish Volume",
+    "risk_level": "Medium",
+    "market_type": "Volume/Momentum",
+    "description": "Multi-indicator strategy combining Dow Theory with volume oscillators."
+  },
+  {
+    "strategy_name": "Swing Surfing on Slow Heiken Ashi",
+    "indicators": ["Slow Heiken Ashi", "200 EMA"],
+    "timeframe": "3m, 15m, 1H",
+    "bullish_conditions": "Price > 200 EMA + Heiken Ashi Green",
+    "bearish_conditions": "Price < 200 EMA + Heiken Ashi Red",
+    "risk_level": "Medium",
+    "market_type": "Swing Trading",
+    "description": "Trend-following system using smoothed Heiken Ashi to reduce noise."
+  },
+  {
+    "strategy_name": "Zeiierman’s Volatility Strategy",
+    "indicators": ["AVSO", "Volatility Impulse"],
+    "timeframe": "Any",
+    "bullish_conditions": "AVSO Up + Impulse Green + Breakout",
+    "bearish_conditions": "AVSO Down + Impulse Red + Breakdown",
+    "risk_level": "High",
+    "market_type": "Volatility Expansion",
+    "description": "Focuses on catching explosive breakouts using adaptive oscillators."
+  },
+  {
+    "strategy_name": "T3 Nexus Plus",
+    "indicators": ["T3 Moving Average"],
+    "timeframe": "15m, 1H",
+    "bullish_conditions": "T3 line turns Green or Price crosses above T3",
+    "bearish_conditions": "T3 line turns Red or Price crosses below T3",
+    "risk_level": "Medium",
+    "market_type": "Trend Following",
+    "description": "Triple-smoothed EMA system designed for extremely smooth trend entries."
+  },
+  {
+    "strategy_name": "BEST Supertrend Strategy",
+    "indicators": ["3x Supertrend", "200 EMA"],
+    "timeframe": "Any",
+    "bullish_conditions": "Price > 200 EMA AND all 3 Supertrends are Green",
+    "bearish_conditions": "Price < 200 EMA AND all 3 Supertrends are Red",
+    "risk_level": "Medium",
+    "market_type": "Multi-Confirm Trend",
+    "description": "Uses three ATR sensitivities to confirm high-probability trend entries."
+  }
+]

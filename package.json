@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "db:up": "docker start tradeflow-db 2>/dev/null || docker run --name tradeflow-db -e POSTGRES_USER=tradeflow -e POSTGRES_PASSWORD=tradeflow -e POSTGRES_DB=tradeflow -p 5432:5432 -v tradeflow_pgdata:/var/lib/postgresql/data -d postgres:16-alpine",
+    "db:up": "docker start tradeflow-db 2>/dev/null || docker run --name tradeflow-db -e POSTGRES_USER=tradeflow -e POSTGRES_PASSWORD=tradeflow -e POSTGRES_DB=tradeflow -p 5433:5432 -v tradeflow_pgdata:/var/lib/postgresql/data -d postgres:16-alpine",
     "db:down": "docker stop tradeflow-db",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

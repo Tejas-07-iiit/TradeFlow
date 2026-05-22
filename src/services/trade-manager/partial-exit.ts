@@ -45,6 +45,18 @@ export function checkPartialExit(
     return null;
   }
 
+  // ─── Confidence-based Partial Exit (25% scale-out) ───
+  if (health.overall >= 50 && health.overall <= 59 && !(meta as any)?.confidencePartialExitDone) {
+    const qtyToClose = position.quantity * 0.25;
+    return {
+      triggerPartial: true,
+      quantityToClose: Math.min(qtyToClose, position.quantity),
+      reason: `Confidence-based 25% scale-out triggered due to confidence dropping to ${health.overall}%`,
+      nextPartialIndex: partialExitsDone + 1,
+      isConfidenceScaleOut: true,
+    } as any;
+  }
+
   // Max 2 partial exits
   if (partialExitsDone >= MANAGEMENT_CONSTANTS.MAX_PARTIAL_EXITS) {
     return null;

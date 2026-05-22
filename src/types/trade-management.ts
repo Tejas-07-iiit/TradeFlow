@@ -70,6 +70,15 @@ export interface TradeManagementMeta {
   trailingStopHighWater: number;
   /** Total number of management adjustments made on this position. */
   totalAdjustments: number;
+
+  // Adaptive TP/SL redesign tracking properties:
+  consecutiveAdverseCandles?: number;
+  lastActionCandleTime?: number;
+  currentTrendState?: string;
+  confidenceScore?: number;
+  confidenceHistory?: number[];
+  actionHistory?: string[];
+  confidencePartialExitDone?: boolean;
 }
 
 export const DEFAULT_MANAGEMENT_META: TradeManagementMeta = {
@@ -82,6 +91,13 @@ export const DEFAULT_MANAGEMENT_META: TradeManagementMeta = {
   trailingStopActive: false,
   trailingStopHighWater: 0,
   totalAdjustments: 0,
+  consecutiveAdverseCandles: 0,
+  lastActionCandleTime: 0,
+  currentTrendState: "STABLE_TREND",
+  confidenceScore: 100,
+  confidenceHistory: [],
+  actionHistory: [],
+  confidencePartialExitDone: false,
 };
 
 // ─── Management Event (DB view) ─────────────────────────────────────────────
@@ -127,6 +143,9 @@ export interface ManagedPositionContext {
   livePrice: number;
   unrealizedPnl: number;
   unrealizedPnlPct: number;
+  // Position Sizing / Quality inputs:
+  setupQuality?: string;
+  qualityScore?: number;
 }
 
 // ─── Indicator snapshot for management decisions ────────────────────────────
@@ -154,6 +173,7 @@ export interface ManagementIndicators {
   newsClass: string | null;
   /** News aggregate score. */
   newsScore: number | null;
+  newsTimestamp?: number | null;
 }
 
 // ─── Safety constants ───────────────────────────────────────────────────────

@@ -121,6 +121,44 @@ export function AiExecutionEngine() {
         continue;
       }
 
+      // 3) Exit cooldown entry check
+      const lastExit = stateRef.current.lastExitAt[symbol];
+      const setupQuality = entry.decision.setupQuality;
+      const isCooldownActive = lastExit && (Date.now() - lastExit < 10 * 60 * 1000);
+      const isHighQuality = setupQuality === "A" || setupQuality === "A+";
+
+      if (isCooldownActive && !isHighQuality) {
+        const cooldownRejection: TradeAssessment = {
+          approved: false,
+          rejections: [
+            {
+              code: "exit_cooldown_active",
+              message: `Symbol exited recently (cooldown active until ${new Date(lastExit + 10 * 60 * 1000).toLocaleTimeString()}) and setup quality is ${setupQuality} (requires A or A+)`,
+            },
+          ],
+          warnings: [],
+          metrics: {
+            expectedProfitPercent: 0,
+            expectedLossPercent: 0,
+            riskRewardRatio: 0,
+            entryDriftBps: 0,
+            volatilityScore: 0,
+          },
+          score: { value: 0, grade: "D", factors: [] },
+          llmSetupQuality: setupQuality,
+        };
+        logRejection(entry, symbol, cooldownRejection);
+        console.warn(
+          `[RISK] ${symbol} skipped — exit cooldown active and setup quality is ${setupQuality}`,
+        );
+        if (autonomyOn) {
+          toast.warning(
+            `Exit cooldown blocks ${symbol.replace("USDT", "")} (grade: ${setupQuality})`,
+          );
+        }
+        continue;
+      }
+
       const side = decisionSide(entry.decision.decision);
       if (!side) {
         // Non-directional decision — assessor will flag it, but we skip the

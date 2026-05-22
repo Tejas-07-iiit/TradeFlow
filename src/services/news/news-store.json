@@ -1,6 +1,61 @@
 {
   "items": [
     {
+      "id": "cc:94f90df2-4a7f-4d76-85f7-65698e2c3d2d",
+      "source": "cryptocompare",
+      "title": "It's not all HYPE: Privacy and quantum-resistant coins advance as bitcoin marks time",
+      "excerpt": "Your day-ahead look for May 21, 2026",
+      "url": "https://www.coindesk.com/daybook-us/2026/05/21/it-s-not-all-hype-privacy-and-quantum-resistant-coins-surge-as-bitcoin-marks-time",
+      "publishedAt": 1779362485,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/98c9b0d2ed0f668a8510ba5216d731e35c032f4f-1920x1080.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:2ba433af-c253-42ee-87bc-10073fcc9b4e",
+      "source": "cryptocompare",
+      "title": "The $6 billion expiration countdown: Traders pile into $82,000 bitcoin calls ahead of May 29 expiry",
+      "excerpt": "Deribit’s bitcoin open interest has overtaken BlackRock’s IBIT as traders brace for a showdown between $75K max pain and $80K call positioning.",
+      "url": "https://www.coindesk.com/markets/2026/05/21/bitcoin-caught-between-usd75-000-max-pain-and-usd80-000-call-wall-ahead-of-usd6-25-billion-expiry",
+      "publishedAt": 1779360785,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/09f6f8dd6ce70c60b94142414b39032f9427163a-2400x1200.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:9b86ba40-0fde-416f-9fb4-fbe44d75f68f",
+      "source": "cryptocompare",
+      "title": "HYPE leads crypto rebound as traders position for volatility breakout",
+      "excerpt": "Bitcoin and ether stabilized as derivatives activity rebounded, HYPE rose for a fifth straight day and options traders positioned for a breakout.",
+      "url": "https://www.coindesk.com/markets/2026/05/21/hype-leads-crypto-rebound-as-traders-position-for-volatility-breakout",
+      "publishedAt": 1779360777,
+      "mentions": [
+        "BTCUSDT",
+        "ETHUSDT"
+      ],
+      "score": 100,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/2045e4ff010e4337ea9b250d5969971fc8d04019-1862x1044.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-press-releases-osl-strengthens-asias-digital-asset-ecosystem-with-listing-of-state-supervised-gold-backed-stablecoin-usdkg",
+      "source": "cryptocompare",
+      "title": "OSL Strengthens Asia’s Digital Asset Ecosystem with Listing of State-Supervised Gold-Backed Stablecoin USDKG",
+      "excerpt": "OSL Group (863.HK) (OSL), a global stablecoin payment and trading platform, today announced that its Hong Kong-licensed digital asset exchange OSL HK has officially listed USDKG, the gold-backed stablecoin issued by the Kyrgyz Republic.",
+      "url": "https://cointelegraph.com/press-releases/osl-strengthens-asias-digital-asset-ecosystem-with-listing-of-state-supervised-gold-backed-stablecoin-usdkg?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779359300,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9wcmVzc3JlbGVhc2VwYXJ0aWNsZXMtMS5qcGc=.jpg"
+    },
+    {
       "id": "r:1tjfraz",
       "source": "reddit",
       "title": "Is BTC bottom in",
@@ -816,18 +871,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS10aGUtZ2VvcG9saXRpY2FsLXNpZ25pZmljYW5jZS1vZi1zdGFibGVjb2lucy1wZWdnZWQtdG8tZmlyZWJsb2Nrcy5qcGc=.jpg"
     },
     {
-      "id": "cc:78ff98a6-1e25-4d65-85ae-2cc6fb3ce54f",
-      "source": "cryptocompare",
-      "title": "CoinDesk 20 performance update: Uniswap (UNI), up 3.7%, leads index higher",
-      "excerpt": "Bittensor (TAO) gained 2.1%, joining Uniswap (UNI) as a top performer.",
-      "url": "https://www.coindesk.com/coindesk-indices/2026/05/20/coindesk-20-performance-update-uniswap-uni-up-3-7-leads-index-higher",
-      "publishedAt": 1779282950,
-      "mentions": [],
-      "score": 100,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/91b1935833322784aa23545ba2ca7a70e773cb17-640x480.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
       "id": "cc:https---cointelegraph-com-markets-this-bitcoin-price-model-targets-conservative-255k-by-year-end",
       "source": "cryptocompare",
       "title": "This Bitcoin price model targets ‘conservative’ $255K by year-end",
@@ -854,20 +897,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1kaWQteW91LWdldC1hLWxldHRlci1mcm9tLXRoZS1pcnMteW91LW1heS1oYXZlLW9ubHktYS1mZXctZGF5cy10by1yZXBseS5qcGc=.jpg"
     },
     {
-      "id": "cc:7f925cc6-5812-4ef8-9e12-ca70097ccae0",
-      "source": "cryptocompare",
-      "title": "These bitcoin metrics suggest February’s $60,000 selloff may have marked the bottom",
-      "excerpt": "Realized cap stabilization, historically elevated RHODL readings and deeply negative funding rates all point toward a potential cycle low for bitcoin forming earlier this year.",
-      "url": "https://www.coindesk.com/markets/2026/05/20/these-bitcoin-metrics-suggest-february-s-usd60-000-selloff-may-have-marked-the-bottom",
-      "publishedAt": 1779278220,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/b6a304aa69c276e86c4ddcc51b6613c0aa50c7e1-1926x974.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
       "id": "r:1tij7i1",
       "source": "reddit",
       "title": "Aave: Why does the USDC yield spike daily on a specific time?",
@@ -892,18 +921,6 @@
       "score": 40,
       "sourceLabel": "Cointelegraph",
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1jcnlwdG8tY2hhcnRzLTEwMS1ob3ctdG8tcmVhZC1jcnlwdG9jdXJyZW5jeS1jaGFydHMtYml0Y29pbi5qcGc=.jpg"
-    },
-    {
-      "id": "cc:4c66c708-b71c-44fc-badc-b4c91ee5fe2a",
-      "source": "cryptocompare",
-      "title": "Telegram group at center of Jane Street insider-trading allegations in Terra collapse",
-      "excerpt": "Newly unsealed filings detail a private chat dubbed ‘Bryce’s Secret’ that Terraform’s estate says gave Jane Street an informational edge before UST’s collapse.",
-      "url": "https://www.coindesk.com/policy/2026/05/20/telegram-group-at-center-of-jane-street-insider-trading-allegations-in-terra-collapse",
-      "publishedAt": 1779276988,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/fea65dc99def20191b23a682af569665a8aca37d-950x534.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
     },
     {
       "id": "cc:https---cointelegraph-com-news-south-carolina-governor-signs-bill-protecting-bitcoin-miners-banning-cbdc",
@@ -978,18 +995,6 @@
       "score": 100,
       "sourceLabel": "Cointelegraph",
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9tYW4td2l0aC1ob2xvLWdyYXBoaWNzLWJpdHdpc2UuanBn.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-trump-review-crypto-access-federal-reserve-payment-systems",
-      "source": "cryptocompare",
-      "title": "Trump orders review of fintech firms' access to Fed payment services",
-      "excerpt": "Financial regulators are also asked to review regulations that could be amended to streamline applications for eligible fintech firms seeking bank and credit union charters.",
-      "url": "https://cointelegraph.com/news/trump-review-crypto-access-federal-reserve-payment-systems?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779261628,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1kb25hbGQtdHJ1bXBzLWNhYmluZXQtcGlja3MtZm9yLTJuZC10ZXJtLWtleS1yb2xlcy1hbmQtcmVzcG9uc2liaWxpdGllczIuanBn.jpg"
     },
     {
       "id": "r:1ticclj",
@@ -1087,20 +1092,20 @@
   "trending": [
     {
       "symbol": "BTCUSDT",
-      "mentions": 27,
+      "mentions": 29,
       "recentTitles": [
-        "Is BTC bottom in",
-        "Tax evaders are trying ‘novel digital assets’ to dodge authorities: Chainalysis",
-        "Here's why bitcoin turned lower from the 200-day average"
+        "It's not all HYPE: Privacy and quantum-resistant coins advance as bitcoin marks time",
+        "The $6 billion expiration countdown: Traders pile into $82,000 bitcoin calls ahead of May 29 expiry",
+        "HYPE leads crypto rebound as traders position for volatility breakout"
       ]
     },
     {
       "symbol": "ETHUSDT",
-      "mentions": 8,
+      "mentions": 9,
       "recentTitles": [
+        "HYPE leads crypto rebound as traders position for volatility breakout",
         "Syndicate Labs winds down after 5 years, citing shrinking rollup market",
-        "South Korean Funeral Firm Loses $33 Million on BitMine Ethereum ETF",
-        "Price predictions 5/20: BTC, ETH, BNB, XRP, SOL, DOGE, HYPE, ADA, ZEC, BCH"
+        "South Korean Funeral Firm Loses $33 Million on BitMine Ethereum ETF"
       ]
     },
     {
@@ -1136,7 +1141,7 @@
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779362759,
+  "fetchedAt": 1779427133,
   "sources": [
     {
       "source": "cryptocompare",

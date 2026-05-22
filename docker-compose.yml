@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: tradeflow
       POSTGRES_DB: tradeflow
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - tradeflow_pgdata:/var/lib/postgresql/data
     healthcheck:
