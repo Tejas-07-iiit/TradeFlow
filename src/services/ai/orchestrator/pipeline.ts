@@ -42,7 +42,7 @@ export async function executeDecisionJob(
   let preferredAccountId: number | undefined;
 
   // 1. Strict JSON Enforcement
-  if ((purpose === "decision" || purpose === "news") && !modelCap.supportsJson) {
+  if ((purpose === "decision" || purpose === "news" || purpose === "thesis") && !modelCap.supportsJson) {
     const jsonModel = process.env.GROQ_MODEL_DECISION || "qwen/qwen3-32b";
     console.warn(`[orch/pipeline] Model ${model} lacks JSON capability. Rerouting to ${jsonModel}`);
     model = jsonModel;
@@ -50,11 +50,12 @@ export async function executeDecisionJob(
     job.modelOverride = model;
   }
 
-  // 2. Execution Budget Awareness (Don't use premium for weak priorities)
-  const tier = getJobTier(job);
-  if (modelCap.tier === "premium" && tier === "lightweight") {
+  // 2. Execution Budget Awareness (Strict Hierarchy Enforcement)
+  // Premium models must ONLY be used for ELITE_SETUP or EXECUTION_CRITICAL
+  const isPremiumAllowed = job.priority === 0 || job.priority === 2; // EXECUTION_CRITICAL(0) or ELITE_SETUP(2)
+  if (modelCap.tier === "premium" && !isPremiumAllowed) {
     const midModel = "qwen/qwen3-32b";
-    console.warn(`[orch/pipeline] Budget Protection: Downgrading lightweight job from premium ${model} to ${midModel}`);
+    console.warn(`[orch/pipeline] Budget Protection: Downgrading priority ${job.priority} job from premium ${model} to ${midModel}`);
     model = midModel;
     modelCap = getModelCapability(model);
     job.modelOverride = model;
@@ -67,7 +68,7 @@ export async function executeDecisionJob(
   for (const candidate of fallbackChain) {
     // Re-verify json capability if degrading
     const cap = getModelCapability(candidate);
-    if ((purpose === "decision" || purpose === "news") && !cap.supportsJson) {
+    if ((purpose === "decision" || purpose === "news" || purpose === "thesis") && !cap.supportsJson) {
       continue; // Skip models that can't fulfill the contract
     }
 

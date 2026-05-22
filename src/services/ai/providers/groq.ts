@@ -77,6 +77,19 @@ export class GroqProvider implements LlmProvider {
     const timeoutMs = options.timeoutMs ?? 20_000;
     const maxTokens = options.maxTokens ?? 600;
 
+    // PREFLIGHT: Message validation
+    if (!messages || messages.length === 0) {
+      throw new LlmProviderError("Preflight failed: messages array is empty", undefined, this.name);
+    }
+    if (messages.some(m => !m.content || m.content.trim() === "")) {
+      throw new LlmProviderError("Preflight failed: one or more messages have empty content", undefined, this.name);
+    }
+
+    // PREFLIGHT: Capability Negotiation
+    const { getModelCapability } = require("../orchestrator/state");
+    const modelCap = getModelCapability(this.model);
+    const supportsJsonMode = modelCap.supportsJson;
+
     // Reserve against the per-model sliding-60s token bucket BEFORE we
     // open the HTTP socket. If the budget is exhausted, throw without
     // contacting Groq — saves the round trip and the 429 log noise.
@@ -119,7 +132,7 @@ export class GroqProvider implements LlmProvider {
             messages: msgs,
             temperature: options.temperature ?? 0.2,
             max_tokens: options.maxTokens ?? 600,
-            response_format: { type: "json_object" },
+            ...(supportsJsonMode ? { response_format: { type: "json_object" } } : {}),
           }),
           signal: controller.signal,
         });
@@ -171,10 +184,10 @@ export class GroqProvider implements LlmProvider {
             );
           }
           console.error(
-            `[LLM] groq HTTP ${res.status} on ${this.logLabel} — ${(text || res.statusText).slice(0, 400)}`,
+            `[LLM] groq HTTP ${res.status} on ${this.logLabel} — Full Body: ${text}`,
           );
           throw new LlmProviderError(
-            `Groq HTTP ${res.status} on ${this.logLabel}: ${(text || res.statusText).slice(0, 200)}`,
+            `Groq HTTP ${res.status} on ${this.logLabel}: ${text}`,
             { status: res.status, model: this.model, body: text, accountId: this.accountId },
             this.name,
           );
@@ -212,7 +225,10 @@ export class GroqProvider implements LlmProvider {
     const parseAndValidate = (raw: string) => {
       let parsed: unknown;
       try {
-        parsed = JSON.parse(raw);
+        // Aggressively strip markdown code blocks if present (e.g. ```json ... ```)
+        const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+        const sanitizedRaw = jsonMatch ? jsonMatch[1].trim() : raw.trim();
+        parsed = JSON.parse(sanitizedRaw);
       } catch (err) {
         throw new LlmProviderError(
           "Groq returned non-JSON despite response_format=json_object",
