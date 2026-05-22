@@ -17,8 +17,33 @@ export const MarketBiasSchema = z.enum([
 ]);
 export type MarketBias = z.infer<typeof MarketBiasSchema>;
 
-export const SetupQualitySchema = z.enum(["A+", "A", "B+", "B", "C", "Avoid"]);
-export type SetupQuality = z.infer<typeof SetupQualitySchema>;
+/**
+ * Setup grade with tolerant normalisation.
+ *
+ * Smaller open-weight models (gpt-oss-20b, qwen3-32b) occasionally emit
+ * label variants — "AVOID", "a", "B-" — that fail a strict enum. We
+ * preprocess the value into the canonical 6-tuple before the enum check so
+ * those harmless typos don't bounce the entire decision into the local
+ * fallback path (which then triggers explainability spam and account #1
+ * idleness in production).
+ */
+const SETUP_QUALITY_CANONICAL = ["A+", "A", "B+", "B", "C", "Avoid"] as const;
+export const SetupQualitySchema = z.preprocess((raw) => {
+  if (typeof raw !== "string") return raw;
+  const trimmed = raw.trim();
+  if (!trimmed) return "C";
+  const upper = trimmed.toUpperCase();
+  if (upper === "AVOID" || upper === "F" || upper === "D") return "Avoid";
+  if (upper === "A+" || upper === "A PLUS") return "A+";
+  if (upper === "B+" || upper === "B PLUS") return "B+";
+  if (upper === "A" || upper === "A-") return "A";
+  if (upper === "B" || upper === "B-") return "B";
+  if (upper === "C" || upper === "C+" || upper === "C-") return "C";
+  // Unknown variant → coerce to the safest grade so the trade still
+  // reaches the risk gate (it'll likely be rejected, but cleanly).
+  return "C";
+}, z.enum(SETUP_QUALITY_CANONICAL));
+export type SetupQuality = (typeof SETUP_QUALITY_CANONICAL)[number];
 
 export const RiskLevelSchema = z.enum(["Low", "Medium", "High"]);
 export type RiskLevel = z.infer<typeof RiskLevelSchema>;

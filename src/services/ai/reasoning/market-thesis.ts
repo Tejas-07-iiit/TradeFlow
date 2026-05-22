@@ -100,11 +100,19 @@ export async function getMarketThesisFor(
     return null;
   }
 
-  // Symbol-level cooldown: if we generated a thesis for this (symbol,
-  // timeframe) very recently AND nothing material has changed (regime,
-  // volatility spike, position state), reuse the cache instead of paying
-  // for another LLM call. This is the single biggest source of token
-  // waste in the autonomous scanner.
+  // Symbol-level cooldown — informational only on the thesis path.
+  //
+  // The cache check above already short-circuits when the same fingerprint
+  // exists within the 3-minute TTL. If we're inside the symbol cooldown
+  // window but the cache missed (fingerprint changed: price ticked, regime
+  // flipped, etc.) we LET THE CALL THROUGH rather than returning null —
+  // because returning null here caused the pipeline to interpret the
+  // suppression as "Pipeline returned empty thesis" and trigger the local
+  // fallback storm seen in production.
+  //
+  // The recordSuccess call below still updates the cooldown snapshot so
+  // the decision path's cross-kind invalidation triggers (vol spike,
+  // regime change) work correctly.
   const cooldown = checkCooldown({
     kind: "thesis",
     symbol: input.symbol,
@@ -114,9 +122,8 @@ export async function getMarketThesisFor(
   });
   if (cooldown.suppress) {
     console.info(
-      `[ai/market-thesis] ${input.symbol} ${cooldown.reason} → suppressing LLM call.`,
+      `[ai/market-thesis] ${input.symbol} ${cooldown.reason} — cache miss, proceeding with call.`,
     );
-    return null;
   }
 
   // Thesis sits in the MID tier — strong enough for multi-indicator

@@ -165,11 +165,15 @@ export async function getMarketDecisionFor(
     }
   }
 
-  // Symbol-level decision cooldown — separate from the routine-scan
-  // cooldown above. Suppresses redundant LLM calls when the regime,
-  // volatility, and position state are all unchanged. Invalidation
-  // triggers (regime flip, vol spike, position open/close) bypass this
-  // check so the LLM gets called when something actually moves.
+  // Symbol-level decision cooldown — informational only.
+  //
+  // The cache check above + the routine-scan cooldown already short-circuit
+  // the common "same setup, same tick" case. If the cooldown window is
+  // active but the cache missed (regime change, vol spike, position
+  // flip — any of which BYPASSES checkCooldown anyway), we let the call
+  // proceed. Previously this returned null on cache miss, which caused
+  // pipeline-level "empty decision" failures and unnecessary local-fallback
+  // explainability spam.
   const decCooldown = checkCooldown({
     kind: "decision",
     symbol,
@@ -179,15 +183,18 @@ export async function getMarketDecisionFor(
     hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
   });
   if (decCooldown.suppress) {
-    console.info(
-      `[ai/market-decision] ${symbol} ${decCooldown.reason} → reuse cache.`,
-    );
     const cachedEntry = readCache(key);
-    if (cachedEntry) return cachedEntry;
-    // No cache yet within the cooldown window — return null so the
-    // caller treats it as "no decision this cycle", which is the safe
-    // no-op outcome.
-    return null;
+    if (cachedEntry) {
+      console.info(
+        `[ai/market-decision] ${symbol} ${decCooldown.reason} → reuse cache.`,
+      );
+      return cachedEntry;
+    }
+    // Cooldown thinks it should suppress but we have no cache to reuse —
+    // proceed with the call rather than return null and crash the caller.
+    console.info(
+      `[ai/market-decision] ${symbol} ${decCooldown.reason} — cache miss, proceeding with call.`,
+    );
   }
 
   const cached = readCache(key);
