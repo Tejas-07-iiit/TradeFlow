@@ -1,3 +1,4 @@
+import { checkCooldown, recordSuccess } from "../orchestrator/symbol-cooldown";
 import { getLlmProviderChain } from "../providers";
 import type { LlmProvider } from "../providers";
 import { buildMarketThesisPrompt } from "../prompts/market-thesis";
@@ -99,11 +100,30 @@ export async function getMarketThesisFor(
     return null;
   }
 
-  // Thesis is a routine summarisation task — pin to the cheap tier so it
-  // can never burn the premium (70B) quota that's reserved for elite
-  // decisions. Configured GROQ_MODEL_THESIS remains as the fallback if
-  // cheap is exhausted.
-  const chain = getLlmProviderChain({ purpose: "thesis", tier: "cheap", preferredAccountId });
+  // Symbol-level cooldown: if we generated a thesis for this (symbol,
+  // timeframe) very recently AND nothing material has changed (regime,
+  // volatility spike, position state), reuse the cache instead of paying
+  // for another LLM call. This is the single biggest source of token
+  // waste in the autonomous scanner.
+  const cooldown = checkCooldown({
+    kind: "thesis",
+    symbol: input.symbol,
+    timeframe: input.timeframe,
+    regime: input.marketRegime,
+    atrPct: input.indicators?.atrPct ?? null,
+  });
+  if (cooldown.suppress) {
+    console.info(
+      `[ai/market-thesis] ${input.symbol} ${cooldown.reason} → suppressing LLM call.`,
+    );
+    return null;
+  }
+
+  // Thesis sits in the MID tier — strong enough for multi-indicator
+  // synthesis but never reaches premium reasoning models. When every mid
+  // model is cooled we degrade to LIGHT (handled by getLlmProviderChain),
+  // not to premium.
+  const chain = getLlmProviderChain({ purpose: "thesis", tier: "mid", preferredAccountId });
   if (chain.length === 0) {
     console.error("[ai/market-thesis] no provider configured for thesis");
     if (!allowFallback) {
@@ -127,6 +147,13 @@ export async function getMarketThesisFor(
       model: provider.model,
     };
     writeCache(key, cacheEntry);
+    recordSuccess({
+      kind: "thesis",
+      symbol: input.symbol,
+      timeframe: input.timeframe,
+      regime: input.marketRegime,
+      atrPct: input.indicators?.atrPct ?? null,
+    });
     return cacheEntry;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

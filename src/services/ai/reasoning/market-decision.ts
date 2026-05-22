@@ -9,6 +9,7 @@ import {
 import { localFallbackDecision } from "./local-fallback";
 import { prefilterDecision } from "../orchestrator/prefilter";
 import type { DecisionPrefilter } from "../orchestrator/prefilter";
+import { checkCooldown, recordSuccess } from "../orchestrator/symbol-cooldown";
 
 export interface CachedDecision {
   decision: MarketDecision;
@@ -164,6 +165,31 @@ export async function getMarketDecisionFor(
     }
   }
 
+  // Symbol-level decision cooldown — separate from the routine-scan
+  // cooldown above. Suppresses redundant LLM calls when the regime,
+  // volatility, and position state are all unchanged. Invalidation
+  // triggers (regime flip, vol spike, position open/close) bypass this
+  // check so the LLM gets called when something actually moves.
+  const decCooldown = checkCooldown({
+    kind: "decision",
+    symbol,
+    timeframe: input.timeframe,
+    regime: input.marketRegime,
+    atrPct: input.indicators.atrPct,
+    hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
+  });
+  if (decCooldown.suppress) {
+    console.info(
+      `[ai/market-decision] ${symbol} ${decCooldown.reason} → reuse cache.`,
+    );
+    const cachedEntry = readCache(key);
+    if (cachedEntry) return cachedEntry;
+    // No cache yet within the cooldown window — return null so the
+    // caller treats it as "no decision this cycle", which is the safe
+    // no-op outcome.
+    return null;
+  }
+
   const cached = readCache(key);
   if (cached) return cached;
 
@@ -186,6 +212,14 @@ export async function getMarketDecisionFor(
     };
     writeCache(key, entry);
     lastSuccessfulAnalysisTime[symbol] = Date.now();
+    recordSuccess({
+      kind: "decision",
+      symbol,
+      timeframe: input.timeframe,
+      regime: input.marketRegime,
+      atrPct: input.indicators.atrPct,
+      hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
+    });
     return entry;
   }
 
@@ -201,6 +235,14 @@ export async function getMarketDecisionFor(
     };
     writeCache(key, fallbackEntry);
     lastSuccessfulAnalysisTime[symbol] = Date.now();
+    recordSuccess({
+      kind: "decision",
+      symbol,
+      timeframe: input.timeframe,
+      regime: input.marketRegime,
+      atrPct: input.indicators.atrPct,
+      hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
+    });
     return fallbackEntry;
   }
 
@@ -227,6 +269,14 @@ export async function getMarketDecisionFor(
     };
     writeCache(key, fallbackEntry);
     lastSuccessfulAnalysisTime[symbol] = Date.now();
+    recordSuccess({
+      kind: "decision",
+      symbol,
+      timeframe: input.timeframe,
+      regime: input.marketRegime,
+      atrPct: input.indicators.atrPct,
+      hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
+    });
     return fallbackEntry;
   }
 
@@ -260,6 +310,14 @@ export async function getMarketDecisionFor(
     };
     writeCache(key, entry);
     lastSuccessfulAnalysisTime[symbol] = Date.now();
+    recordSuccess({
+      kind: "decision",
+      symbol,
+      timeframe: input.timeframe,
+      regime: input.marketRegime,
+      atrPct: input.indicators.atrPct,
+      hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
+    });
     return entry;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -280,6 +338,14 @@ export async function getMarketDecisionFor(
     };
     writeCache(key, fallbackEntry);
     lastSuccessfulAnalysisTime[symbol] = Date.now();
+    recordSuccess({
+      kind: "decision",
+      symbol,
+      timeframe: input.timeframe,
+      regime: input.marketRegime,
+      atrPct: input.indicators.atrPct,
+      hasOpenPosition: input.portfolio?.hasOpenPositionThisSymbol,
+    });
     return fallbackEntry;
   }
 }

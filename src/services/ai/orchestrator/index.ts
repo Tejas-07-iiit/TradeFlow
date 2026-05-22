@@ -7,6 +7,7 @@
  */
 
 import { findInFlight, inFlightKeys, trackInFlight } from "./dedup";
+import { startOrchestratorHeartbeat } from "./heartbeat";
 import { executeDecisionJob } from "./pipeline";
 import { computeDecisionPriority } from "./priority";
 import { Scheduler } from "./scheduler";
@@ -24,6 +25,10 @@ import {
 import type { DecisionInput, ThesisInput } from "../schemas";
 
 const scheduler = new Scheduler(executeDecisionJob);
+
+// Boot the structured-log heartbeat the moment any orchestrator entry
+// point is imported. Idempotent — safe to call from multiple call sites.
+startOrchestratorHeartbeat();
 
 /**
  * Compose the dedup key. Two requests collide if they have the same

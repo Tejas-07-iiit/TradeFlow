@@ -23,11 +23,13 @@ export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
   // Active positions must NEVER be skipped by the prefilter as stop-loss/take-profit
   // adjustments and exit validation require continuous monitoring.
   if (hasOpenPosition) {
-    // Open positions default to cheap tier for standard adjustments, premium only if high urgency or elite
+    // Open positions: MID tier by default; PREMIUM only when alignment
+    // crosses the elite threshold (and the trade is hot enough to justify
+    // burning the heavyweight quota).
     const isElite = snap && snap.alignmentScore >= 80;
     return {
       skip: false,
-      tier: isElite ? "premium" : "cheap",
+      tier: isElite ? "premium" : "mid",
       reason: `active position tracking (align=${snap?.alignmentScore ?? 0})`,
     };
   }
@@ -92,10 +94,12 @@ export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
     };
   }
 
-  // 7. Route standard setups to the cheap tier
+  // 7. Routine setups → MID tier (gpt-oss-20b / qwen3-32b). The LIGHT
+  // pool is never reached directly here; it's reserved for news/sentiment
+  // and serves as the downgrade target only when MID is exhausted.
   return {
     skip: false,
-    tier: "cheap",
+    tier: "mid",
     reason: `routine setup (align=${snap.alignmentScore.toFixed(0)})`,
   };
 }

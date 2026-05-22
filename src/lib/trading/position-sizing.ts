@@ -33,7 +33,7 @@ const MIN_NOTIONAL_USDT = 100;
 /** Hard ceiling on per-trade notional regardless of caller request. */
 const MAX_NOTIONAL_USDT = 7_500;
 /** Reject trades whose expected profit at TP is below this. */
-const MIN_EXPECTED_PROFIT_USDT = 25;
+const MIN_EXPECTED_PROFIT_USDT = 2;
 /** Max % of total equity in a single trade. */
 const MAX_SINGLE_TRADE_EQUITY_PCT = 35;
 /** Max % of total equity exposed across all open trades. */

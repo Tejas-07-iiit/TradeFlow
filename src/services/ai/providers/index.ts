@@ -5,76 +5,142 @@ export type { ChatMessage, LlmProvider } from "./types";
 export { LlmProviderError } from "./types";
 
 /**
- * Single-vendor provider layer (Groq only).
+ * Provider layer — Groq-only, multi-tier, multi-account.
  *
- * Earlier versions of this module multiplexed across Groq + OpenRouter, but
- * OpenRouter's free-tier daily quota was account-wide across all free models
- * and was getting exhausted before it could help, while its per-call latency
- * was noticeably worse than Groq. The system now runs entirely on Groq using
- * two independently-tracked accounts (`GROQ_API_KEY` + `GROQ_API_KEY_2`) so
- * the chain can survive one account's TPM/TPD bucket emptying without
- * pulling in a slower vendor.
+ * Two big design rules drive this module:
  *
- * If you want to bring OpenRouter (or any other vendor) back later: add a
- * new provider class under `./<vendor>.ts` implementing `LlmProvider`, then
- * extend `getLlmProviderChain` to push it after the Groq accounts.
+ *   1. **Tier isolation.** Models are partitioned into three pools — LIGHT,
+ *      MID, PREMIUM. A request never silently escalates across pools; the
+ *      caller picks a tier and the chain stays inside it (with one explicit
+ *      fallback step *down* when premium → mid when premium is exhausted).
+ *      The 70B and GPT-OSS-120B are never reachable from a news/sentiment
+ *      call, period.
+ *
+ *   2. **Dynamic registry.** Every model slot is env-driven. Unset slots
+ *      are silently skipped so deployments can run with 2, 4, or 6 models
+ *      depending on what their Groq account supports. There is no
+ *      hardcoded model list anywhere in the runtime.
+ *
+ * Env contract (any subset may be set):
+ *
+ *     GROQ_MODEL_LIGHT_1   = llama-3.1-8b-instant
+ *     GROQ_MODEL_LIGHT_2   = meta-llama/llama-4-scout-17b-16e-instruct
+ *     GROQ_MODEL_MID_1     = openai/gpt-oss-20b
+ *     GROQ_MODEL_MID_2     = qwen/qwen3-32b
+ *     GROQ_MODEL_PREMIUM_1 = llama-3.3-70b-versatile
+ *     GROQ_MODEL_PREMIUM_2 = openai/gpt-oss-120b
+ *
+ *     GROQ_API_KEY         = primary key  (account #1)
+ *     GROQ_API_KEY_2..5    = additional keys (account #2..#5)
+ *
+ * Optional account-sharding hints (deterministic, defaults to safe behavior
+ * if unset):
+ *
+ *     GROQ_TIER_ACCOUNT_PREMIUM = "1"      // account ids permitted for PREMIUM
+ *     GROQ_TIER_ACCOUNT_MID     = "1,2"
+ *     GROQ_TIER_ACCOUNT_LIGHT   = "2"
+ *
+ * Legacy purpose-keyed env (GROQ_MODEL_DECISION, _THESIS, _NEWS,
+ * _SENTIMENT, _CHEAP, GROQ_MODEL) is still honoured — when a tier slot is
+ * empty we fall back to the legacy keys so existing deployments keep
+ * working without an env rewrite.
  */
 
-/**
- * The set of distinct LLM call sites in the app. Each one gets its own
- * env var for model selection so heavy reasoning (decision) and light
- * summarization (thesis/news) ride independent Groq buckets via
- * `GROQ_MODEL_<PURPOSE>`.
- *
- * Env var lookup order:
- *   GROQ_MODEL_<PURPOSE>  →  GROQ_MODEL
- *
- * If neither env is set for a purpose, that call site is treated as
- * unconfigured — the chain will be empty and the orchestrator will fall
- * through to the local deterministic engine.
- */
 export type LlmPurpose = "decision" | "thesis" | "news" | "sentiment" | "default";
 
-/**
- * Model lookup for a purpose. Returns undefined when no env var is set —
- * the caller skips that link in the chain.
- */
-function modelForPurpose(purpose: LlmPurpose): string | undefined {
-  const upper = purpose.toUpperCase();
-  return (
-    process.env[`GROQ_MODEL_${upper}`]?.trim() ||
-    process.env.GROQ_MODEL?.trim() ||
-    undefined
-  );
+export type LlmTier = "light" | "mid" | "premium";
+
+export interface ProviderOptions {
+  purpose?: LlmPurpose;
+  /**
+   * Tier override. When omitted, we use the canonical purpose→tier map:
+   *   news       → light
+   *   sentiment  → light
+   *   thesis     → mid
+   *   decision   → mid  (elite callers pass tier="premium" explicitly)
+   *   default    → light
+   */
+  tier?: LlmTier;
+  /** Preferred account id at the head of the chain, when present. */
+  preferredAccountId?: number;
+  /**
+   * When false, premium-tier callers do NOT fall back to mid/light if every
+   * premium model is cooled. Used by truly-critical elite paths where we
+   * prefer to return a local-engine answer over downgrading silently.
+   * Default: true.
+   */
+  allowCrossTierFallback?: boolean;
+}
+
+export interface GroqAccount {
+  id: number;
+  key: string;
+}
+
+function tierForPurpose(purpose: LlmPurpose): LlmTier {
+  switch (purpose) {
+    case "news":
+    case "sentiment":
+      return "light";
+    case "thesis":
+      return "mid";
+    case "decision":
+      // Decision defaults to MID; callers that have earned the premium tier
+      // (elite alignment) pass tier: "premium" explicitly.
+      return "mid";
+    default:
+      return "light";
+  }
 }
 
 /**
- * Enumerate every Groq API key in env, in priority order, tagged with a
- * stable 1-based id that matches the env var suffix:
+ * Resolve the model id list for one tier — most-preferred first.
  *
- *   GROQ_API_KEY     → accountId 1
- *   GROQ_API_KEY_2   → accountId 2
- *   GROQ_API_KEY_3   → accountId 3   (etc., up to 5)
+ * Lookup order per tier slot:
+ *   1. GROQ_MODEL_<TIER>_<N>           (new tier-keyed env)
+ *   2. legacy purpose env, only for the matching tier
+ *        - light:   GROQ_MODEL_CHEAP, GROQ_MODEL_NEWS, GROQ_MODEL_SENTIMENT
+ *        - mid:     GROQ_MODEL_THESIS
+ *        - premium: GROQ_MODEL_DECISION, GROQ_MODEL
  *
- * The id is what the token-budget tracker and cooldown registry key on,
- * so each Groq account maintains its own TPM bucket. Adding a second key
- * effectively doubles the system's Groq throughput because key #1
- * exhausting its 12k/min cap no longer blocks key #2 from serving the
- * same model.
+ * Duplicates are dropped. Returns [] if the tier is unconfigured — the
+ * caller will then degrade to the next tier (or the local engine).
  */
-export interface GroqAccount {
-  /** 1-based id matching the env var suffix. */
-  id: number;
-  /** Bearer token sent to Groq. */
-  key: string;
+function modelsForTier(tier: LlmTier): string[] {
+  const upper = tier.toUpperCase();
+  const result: string[] = [];
+  const push = (raw: string | undefined) => {
+    if (!raw) return;
+    const v = raw.trim();
+    if (!v) return;
+    if (!result.includes(v)) result.push(v);
+  };
+
+  // Tier-keyed env, slots 1..4 so deployments can stack more variants per tier.
+  for (let i = 1; i <= 4; i += 1) {
+    push(process.env[`GROQ_MODEL_${upper}_${i}`]);
+  }
+
+  // Legacy fallbacks.
+  if (tier === "light") {
+    push(process.env.GROQ_MODEL_CHEAP);
+    push(process.env.GROQ_MODEL_NEWS);
+    push(process.env.GROQ_MODEL_SENTIMENT);
+  } else if (tier === "mid") {
+    push(process.env.GROQ_MODEL_THESIS);
+  } else if (tier === "premium") {
+    push(process.env.GROQ_MODEL_DECISION);
+    push(process.env.GROQ_MODEL);
+  }
+
+  return result;
 }
 
 function collectGroqAccounts(): GroqAccount[] {
   const accounts: GroqAccount[] = [];
   const primary = process.env.GROQ_API_KEY?.trim();
   if (primary) accounts.push({ id: 1, key: primary });
-  // Allow up to GROQ_API_KEY_5 — adjust if you ever need more.
-  for (let i = 2; i <= 5; i++) {
+  for (let i = 2; i <= 5; i += 1) {
     const k = process.env[`GROQ_API_KEY_${i}`]?.trim();
     if (k) accounts.push({ id: i, key: k });
   }
@@ -82,67 +148,51 @@ function collectGroqAccounts(): GroqAccount[] {
 }
 
 /**
- * Round-robin counter for distributing load across Groq accounts.
- * Incremented on every chain/provider call so consecutive requests
- * start with alternating accounts instead of always hammering #1.
- *
- *   Call 1 → [#1, #2]   (counter=0, start=#1)
- *   Call 2 → [#2, #1]   (counter=1, start=#2)
- *   Call 3 → [#1, #2]   (counter=2, start=#1)
- *   …
+ * Account allow-list per tier. Defaults preserve current behaviour
+ * (every account serves every tier) but deployments can set
+ * GROQ_TIER_ACCOUNT_PREMIUM="1" and GROQ_TIER_ACCOUNT_LIGHT="2" to shard
+ * load across keys.
  */
-let _rrCounter = 0;
+function accountsForTier(tier: LlmTier, all: GroqAccount[]): GroqAccount[] {
+  const raw = process.env[`GROQ_TIER_ACCOUNT_${tier.toUpperCase()}`]?.trim();
+  if (!raw) return all;
+  const allowed = new Set(
+    raw
+      .split(",")
+      .map((s) => parseInt(s.trim(), 10))
+      .filter((n) => Number.isFinite(n)),
+  );
+  const filtered = all.filter((a) => allowed.has(a.id));
+  // Never return an empty list — if config is wrong, fall back to all keys
+  // so the system stays available rather than going dark.
+  return filtered.length > 0 ? filtered : all;
+}
 
-/** Rotate an array so the element at `offset % len` comes first. */
+let _rrCounter = 0;
 function rotateAccounts(accounts: GroqAccount[]): GroqAccount[] {
   if (accounts.length <= 1) return accounts;
   const offset = _rrCounter++ % accounts.length;
   return [...accounts.slice(offset), ...accounts.slice(0, offset)];
 }
 
-/**
- * Cold-start log: report how many Groq keys this process saw, so misconfigs
- * are obvious on boot rather than after the first rate limit. Logged once
- * per process via a side-effect-on-import sentinel.
- */
 let _bootLogged = false;
 function logBootOnce(): void {
   if (_bootLogged) return;
   _bootLogged = true;
   const accounts = collectGroqAccounts();
+  const tiers: LlmTier[] = ["light", "mid", "premium"];
+  const summary = tiers
+    .map((t) => `${t}=[${modelsForTier(t).join(", ") || "—"}]`)
+    .join(" · ");
   if (accounts.length === 0) {
     console.warn(
       "[LLM/boot] no Groq API keys configured (GROQ_API_KEY unset) — Groq disabled in chain; system will run on local fallback only",
     );
   } else {
     console.info(
-      `[LLM/boot] loaded ${accounts.length} Groq account(s): ${accounts.map((a) => `#${a.id}`).join(", ")}`,
+      `[LLM/boot] groq accounts=${accounts.map((a) => `#${a.id}`).join(",")} · ${summary}`,
     );
   }
-}
-
-/**
- * Quality tier for the call. Lets the chain swap order without renaming
- * models or duplicating env config.
- *
- *   cheap   → start with `GROQ_MODEL_CHEAP` (or GROQ_MODEL) and only
- *             escalate to the configured purpose model if it errors.
- *             Routine evaluation, position management, low-alignment scans.
- *   premium → start with the configured purpose model (heavyweight).
- *             Reserved for elite snapshots that earned the deeper reasoning.
- *
- * Default (undefined) preserves the legacy chain order so non-decision
- * call sites don't change behavior.
- */
-export type LlmTier = "cheap" | "premium";
-
-export interface ProviderOptions {
-  /** Which call site is this for? Drives model selection. */
-  purpose?: LlmPurpose;
-  /** Routing tier — overrides the default chain order when set. */
-  tier?: LlmTier;
-  /** Preferred account ID to prioritize at the beginning of the chain. */
-  preferredAccountId?: number;
 }
 
 function buildGroqProvider(model: string, account: GroqAccount): LlmProvider {
@@ -154,118 +204,113 @@ function buildGroqProvider(model: string, account: GroqAccount): LlmProvider {
 }
 
 /**
- * Resolve a single LLM provider for the given purpose. Returns the first
- * Groq account on the configured purpose model. Throws on missing creds
- * or missing model env so misconfigs surface at the boundary.
+ * Build the provider chain.
  *
- * Multi-account selection lives in `getLlmProviderChain` — every code
- * path that wants automatic fallback over both Groq accounts should call
- * the chain version instead.
+ * Strategy:
+ *   1. Resolve the *requested* tier from opts.tier (or tier-for-purpose).
+ *   2. Cross-product (models in tier) × (accounts allowed for tier).
+ *   3. If allowCrossTierFallback (default true), append the next-cheaper
+ *      tier(s) at the end of the chain so a fully-cooled premium pool can
+ *      still resolve to a mid model, etc. LIGHT never escalates upward —
+ *      that's the institutional invariant the user demanded.
+ *
+ * Dedup is by `(model:accountId)`. Unset slots produce nothing.
+ */
+export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
+  logBootOnce();
+  const allAccounts = collectGroqAccounts();
+  if (allAccounts.length === 0) return [];
+
+  const requestedTier =
+    opts.tier ?? tierForPurpose(opts.purpose ?? "default");
+  const allowCrossTierFallback = opts.allowCrossTierFallback !== false;
+
+  const ordered = orderTiers(requestedTier, allowCrossTierFallback);
+  const seen = new Set<string>();
+  const chain: LlmProvider[] = [];
+
+  for (const tier of ordered) {
+    const models = modelsForTier(tier);
+    if (models.length === 0) continue;
+    let tierAccounts = accountsForTier(tier, allAccounts);
+    tierAccounts = rotateAccounts(tierAccounts);
+    if (opts.preferredAccountId !== undefined) {
+      const idx = tierAccounts.findIndex((a) => a.id === opts.preferredAccountId);
+      if (idx >= 0) {
+        tierAccounts = [
+          tierAccounts[idx],
+          ...tierAccounts.slice(0, idx),
+          ...tierAccounts.slice(idx + 1),
+        ];
+      }
+    }
+    for (const model of models) {
+      for (const acct of tierAccounts) {
+        const key = `groq:${model}:${acct.id}`;
+        if (seen.has(key)) continue;
+        try {
+          chain.push(buildGroqProvider(model, acct));
+          seen.add(key);
+        } catch {
+          // Construction errors (missing api key etc.) — skip silently.
+        }
+      }
+    }
+  }
+
+  return chain;
+}
+
+/**
+ * Tier ordering — request tier first, then approved fallback path.
+ *
+ *   light   → light only. NEVER ESCALATES (institutional rule).
+ *   mid     → mid then light (downgrade only).
+ *   premium → premium then mid then light (full downgrade chain).
+ */
+function orderTiers(requested: LlmTier, allowCrossTier: boolean): LlmTier[] {
+  if (!allowCrossTier) return [requested];
+  switch (requested) {
+    case "light":
+      return ["light"];
+    case "mid":
+      return ["mid", "light"];
+    case "premium":
+      return ["premium", "mid", "light"];
+  }
+}
+
+/**
+ * Single-provider convenience — returns the head of the chain. Throws
+ * LlmProviderError when no provider can be constructed (no keys / no
+ * configured models for the resolved tier).
  */
 export function getLlmProvider(opts: ProviderOptions = {}): LlmProvider {
-  logBootOnce();
-  const purpose: LlmPurpose = opts.purpose ?? "default";
-  const model = modelForPurpose(purpose);
-  if (!model) {
+  const chain = getLlmProviderChain(opts);
+  if (chain.length === 0) {
     throw new LlmProviderError(
-      `No model configured for groq purpose=${purpose}. ` +
-        `Set GROQ_MODEL_${purpose.toUpperCase()} or GROQ_MODEL in env.`,
+      `No Groq model configured for tier=${opts.tier ?? tierForPurpose(opts.purpose ?? "default")}. ` +
+        `Set at least one GROQ_MODEL_<TIER>_<N> env (or legacy GROQ_MODEL_*).`,
       undefined,
       "groq",
     );
   }
-  const accounts = rotateAccounts(collectGroqAccounts());
-  const first = accounts[0];
-  if (!first) {
-    throw new LlmProviderError("GROQ_API_KEY is not set", undefined, "groq");
-  }
-  return buildGroqProvider(model, first);
+  return chain[0];
 }
 
 /**
- * Ordered fallback chain for a call site. Callers iterate until one
- * succeeds — designed for the decision call where a single account's
- * TPD exhaustion would otherwise leave the executor with no answer for
- * up to 30 minutes.
- *
- * Chain composition (best-effort, dedup'd):
- *   1. Configured primary (or tier-aware) model, tried on *every* Groq
- *      account in order (#1 → #2 → …). Each account has its own TPM
- *      bucket, so when #1 reports "12000/12000 tpm exhausted" we
- *      immediately try #2 on the same model before stepping down.
- *   2. If the primary call was for the decision purpose, the cheap-tier
- *      Groq model (`GROQ_MODEL_CHEAP`) again across every Groq account.
- *
- * Dedup is by `(provider:model:accountId)` so the same Groq model on
- * two accounts both make it into the chain.
- *
- * Links that can't be constructed (no model env, no API key) are silently
- * omitted. An empty chain means every higher-level fallback (local engine,
- * synthetic HOLD) takes over.
+ * Inspector — used by structured logging and the orchestrator to report
+ * which models are wired for each tier without leaking provider internals.
  */
-export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
-  logBootOnce();
-  const purpose: LlmPurpose = opts.purpose ?? "default";
-  const chain: LlmProvider[] = [];
-  const seen = new Set<string>();
-
-  let groqAccounts = rotateAccounts(collectGroqAccounts());
-  if (opts.preferredAccountId !== undefined) {
-    const idx = groqAccounts.findIndex((a) => a.id === opts.preferredAccountId);
-    if (idx >= 0) {
-      const preferred = groqAccounts[idx];
-      groqAccounts = [
-        preferred,
-        ...groqAccounts.slice(0, idx),
-        ...groqAccounts.slice(idx + 1),
-      ];
-    }
-  }
-
-  /** Push one Groq model once per available account. */
-  const pushGroqAcrossAccounts = (model: string | undefined) => {
-    if (!model) return;
-    for (const acct of groqAccounts) {
-      const key = `groq:${model}:${acct.id}`;
-      if (seen.has(key)) continue;
-      try {
-        chain.push(buildGroqProvider(model, acct));
-        seen.add(key);
-      } catch {
-        // Construction error — skip this link silently.
-      }
-    }
+export function describeTierRegistry(): Record<LlmTier, string[]> {
+  return {
+    light: modelsForTier("light"),
+    mid: modelsForTier("mid"),
+    premium: modelsForTier("premium"),
   };
+}
 
-  const cheapModel =
-    process.env.GROQ_MODEL_CHEAP?.trim() ||
-    process.env.GROQ_MODEL?.trim() ||
-    undefined;
-
-  // Tier-aware routing — honoured for every purpose, not just decision.
-  //
-  //   tier = "cheap"   → cheap model first, configured purpose model only as
-  //                      a *fallback* if cheap is exhausted.
-  //   tier = "premium" → configured purpose model first, cheap as fallback.
-  //   tier undefined   → preserves legacy chain (purpose model, then cheap
-  //                      only for the decision purpose).
-  //
-  // The 70B (and any other heavyweight) is therefore reachable *only* when
-  // a caller explicitly opts into tier="premium". Routine thesis / news /
-  // sentiment / monitoring calls pin to cheap and never burn premium quota.
-  const configuredPurposeModel = modelForPurpose(purpose);
-  if (opts.tier === "cheap") {
-    pushGroqAcrossAccounts(cheapModel);
-    if (configuredPurposeModel && configuredPurposeModel !== cheapModel) {
-      pushGroqAcrossAccounts(configuredPurposeModel);
-    }
-  } else if (opts.tier === "premium") {
-    pushGroqAcrossAccounts(configuredPurposeModel);
-    pushGroqAcrossAccounts(cheapModel);
-  } else {
-    pushGroqAcrossAccounts(configuredPurposeModel);
-    if (purpose === "decision") pushGroqAcrossAccounts(cheapModel);
-  }
-
-  return chain;
+/** Inspector — accounts the process has loaded from env. */
+export function describeAccounts(): GroqAccount[] {
+  return collectGroqAccounts().map((a) => ({ id: a.id, key: "***" }));
 }

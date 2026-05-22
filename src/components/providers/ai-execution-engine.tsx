@@ -807,6 +807,12 @@ export function AiExecutionEngine() {
           spreadValidation: "Passed (standard spread)",
           liquidityChecks: "Passed (deep orderbook)",
           newsVetoResult
+        }, {
+          // Gate hints — the persistence layer uses these to drop
+          // local-fallback rejections, low-conviction rejections, and
+          // duplicate writes before they hit the database.
+          source: entry.model === "fallback-engine" ? "local-fallback" : "llm",
+          alignmentScore: undefined,
         });
       } catch (err) {
         console.error("[XAI-INTEGRATION-ERROR] Failed to save explainable signal:", err);

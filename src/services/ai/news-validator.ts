@@ -104,7 +104,11 @@ export async function classifyNewsItemsLLM(
   try {
     chain = getLlmProviderChain({
       purpose: "news",
-      tier: "cheap",
+      tier: "light",
+      // News is the canonical LIGHT-tier task — never escalates to mid or
+      // premium. If every light model is cooled we degrade to the local
+      // prefilter, not to a thesis/decision-grade model.
+      allowCrossTierFallback: false,
       preferredAccountId,
     });
   } catch (err) {

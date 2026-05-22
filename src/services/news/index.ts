@@ -68,14 +68,13 @@ export interface NewsFeed {
  * ticker code and the human name; the LLM is good at the former, retail
  * news copy tends to use the latter ("Bitcoin", "Solana").
  *
- * "BNB" / "XRP" stay as-is — they're already short tokens.
+ * "BNB" stays short — it's already the canonical token.
  */
 const SYMBOL_TOKENS: Record<WatchlistSymbol, string[]> = {
   BTCUSDT: ["BTC", "Bitcoin"],
   ETHUSDT: ["ETH", "Ethereum", "Ether"],
   SOLUSDT: ["SOL", "Solana"],
   BNBUSDT: ["BNB", "Binance Coin"],
-  XRPUSDT: ["XRP", "Ripple"],
 };
 
 /**
