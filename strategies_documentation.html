@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeFlow Intelligence Document</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            bg: '#0f172a',
+                            panel: '#1e293b',
+                            border: '#334155'
+                        },
+                        brand: {
+                            500: '#3b82f6',
+                            600: '#2563eb'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .collapse-content { display: none; }
+        .collapse-content.open { display: block; animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 dark:bg-dark-bg dark:text-gray-100 font-sans antialiased transition-colors duration-200 h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-72 bg-white dark:bg-dark-panel border-r border-gray-200 dark:border-dark-border flex flex-col h-full shrink-0">
+        <div class="p-6 border-b border-gray-200 dark:border-dark-border">
+            <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">TradeFlow</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wider font-semibold">Intelligence Engine</p>
+        </div>
+        
+        <div class="p-4">
+            <div class="relative">
+                <input type="text" id="searchInput" placeholder="Search systems..." 
+                    class="w-full bg-gray-100 dark:bg-dark-bg border border-gray-200 dark:border-dark-border rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 dark:text-gray-200">
+                <svg class="w-4 h-4 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1" id="navLinks">
+            <a href="#dashboard" class="nav-link block px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100 dark:hover:bg-dark-bg text-brand-500 dark:text-brand-500">Overview Dashboard</a>
+            <div class="pt-4 pb-2">
+                <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Trading Strategies</p>
+            </div>
+            <!-- Populated by JS -->
+            <div id="strategyNav"></div>
+            
+            <div class="pt-4 pb-2">
+                <p class="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Core Systems</p>
+            </div>
+            <a href="#ai-systems" class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-bg">AI Orchestration</a>
+            <a href="#risk-systems" class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-bg">Risk Management</a>
+            <a href="#news-systems" class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-bg">News & Sentiment</a>
+            <a href="#indicators" class="nav-link block px-3 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-bg">Indicators & Candles</a>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-200 dark:border-dark-border flex justify-between items-center">
+            <span class="text-xs text-gray-500">System v1.0.0</span>
+            <button id="themeToggle" class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-dark-bg text-gray-500">
+                🌙
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-dark-bg p-8" id="mainContent">
+        
+        <!-- Dashboard Overview -->
+        <section id="dashboard" class="max-w-6xl mx-auto space-y-6">
+            <h2 class="text-3xl font-bold mb-8">System Overview</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-dark-panel p-6 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Strategies</p>
+                    <p class="text-3xl font-bold text-brand-500 mt-2">12</p>
+                </div>
+                <div class="bg-white dark:bg-dark-panel p-6 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Candlestick Patterns</p>
+                    <p class="text-3xl font-bold text-green-500 mt-2">61</p>
+                </div>
+                <div class="bg-white dark:bg-dark-panel p-6 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Core Indicators</p>
+                    <p class="text-3xl font-bold text-purple-500 mt-2">11</p>
+                </div>
+                <div class="bg-white dark:bg-dark-panel p-6 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">AI Pipelines</p>
+                    <p class="text-3xl font-bold text-orange-500 mt-2">4</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                <div class="bg-white dark:bg-dark-panel rounded-xl border border-gray-200 dark:border-dark-border p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold mb-4 border-b border-gray-100 dark:border-dark-border pb-2">Execution Architecture</h3>
+                    <p class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                        Multi-Agent Hub-and-Spoke model. Deterministic strategies vote via the Scorer, generating a Fusion Engine snapshot. The AI Decision Filter assesses the snapshot and routes to Premium LLMs for elite setups or handles routine changes via fast algorithms.
+                    </p>
+                    <div class="space-y-2">
+                        <div class="flex items-center text-sm"><span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span> Most Common Filter: EMA200</div>
+                        <div class="flex items-center text-sm"><span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span> Top Market Regimes: Trending Up/Down, Breakout, Choppy</div>
+                        <div class="flex items-center text-sm"><span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span> Most Frequent Indicator: RSI & ADX</div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-dark-panel rounded-xl border border-gray-200 dark:border-dark-border p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold mb-4 border-b border-gray-100 dark:border-dark-border pb-2">Institutional Components</h3>
+                    <ul class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Dynamic TP/SL Trailing based on Volatility state
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            News-Aware Exit Boosts overriding normal stops during CRITICAL_RISK events
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            Volume Imbalance & adverse consecutive candle tracking
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-green-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            10-Factor Trade Health scoring dynamically adjusting risk
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Strategies Section -->
+        <section id="strategies" class="max-w-6xl mx-auto mt-16">
+            <h2 class="text-3xl font-bold mb-8">Trading Strategies</h2>
+            <div id="strategyContainer" class="space-y-4">
+                <!-- Rendered via JS -->
+            </div>
+        </section>
+
+        <!-- Core Systems Section -->
+        <section id="core-systems" class="max-w-6xl mx-auto mt-16 space-y-12 mb-20">
+            
+            <!-- AI Systems -->
+            <div id="ai-systems">
+                <h2 class="text-2xl font-bold mb-6 flex items-center"><span class="bg-indigo-500/20 text-indigo-500 p-2 rounded-lg mr-3">🧠</span> AI Orchestration</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="aiContainer"></div>
+            </div>
+
+            <!-- Risk Systems -->
+            <div id="risk-systems">
+                <h2 class="text-2xl font-bold mb-6 flex items-center"><span class="bg-red-500/20 text-red-500 p-2 rounded-lg mr-3">🛡️</span> Risk Management</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="riskContainer"></div>
+            </div>
+
+            <!-- News Systems -->
+            <div id="news-systems">
+                <h2 class="text-2xl font-bold mb-6 flex items-center"><span class="bg-emerald-500/20 text-emerald-500 p-2 rounded-lg mr-3">📰</span> News & Sentiment</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="newsContainer"></div>
+            </div>
+            
+            <!-- Indicators & Candles -->
+            <div id="indicators">
+                <h2 class="text-2xl font-bold mb-6 flex items-center"><span class="bg-cyan-500/20 text-cyan-500 p-2 rounded-lg mr-3">📊</span> Indicators & Patterns</h2>
+                <div class="bg-white dark:bg-dark-panel rounded-xl border border-gray-200 dark:border-dark-border p-6 shadow-sm mb-6">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Core Mathematical Indicators</h3>
+                    <div class="flex flex-wrap gap-2" id="indicatorTags"></div>
+                </div>
+                <div class="bg-white dark:bg-dark-panel rounded-xl border border-gray-200 dark:border-dark-border p-6 shadow-sm">
+                    <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">TA-Lib Candlestick Detectors (61)</h3>
+                    <div class="flex flex-wrap gap-2 text-xs font-mono" id="candleTags"></div>
+                </div>
+            </div>
+            
+        </section>
+
+    </main>
+
+    <script>
+        const data = {
+            "strategies": [
+                {
+                    "name": "Time-Series Momentum", "category": "momentum",
+                    "description": "Continuation-style intraday momentum; longs when the recent return and trend filter agree, shorts when both flip.",
+                    "indicatorsUsed": ["12-bar return", "EMA50"], "bullishConditions": ["12-bar return magnitude > 0.4%", "Price > EMA50"], "bearishConditions": ["12-bar return magnitude < -0.4%", "Price < EMA50"],
+                    "entryLogic": "Momentum magnitude exceeds 0.4% aligned with EMA50 trend.", "exitLogic": "Momentum decays toward zero or Price closes back across EMA50.", "tpLogic": "Trail by 1× ATR once trade moves 1.5× ATR in favour.", "slLogic": "1.5× ATR below entry for longs (mirrored for shorts).", "riskLevel": "Medium"
+                },
+                {
+                    "name": "52-Bar High/Low Effect (Range Breakout)", "category": "momentum",
+                    "description": "Adaptation of Quantpedia's 52-Week High effect: trade continuation when price sits at the extreme of its 52-bar range.",
+                    "indicatorsUsed": ["52-period high", "52-period low", "ADX14"], "bullishConditions": ["Price within 0.5% of 52-bar high", "ADX ≥ 18"], "bearishConditions": ["Price within 0.5% of 52-bar low", "ADX ≥ 18"],
+                    "entryLogic": "Price nears range extremes with ADX confirming directional intent.", "exitLogic": "Price re-enters middle of 52-bar range or ADX drops below 15.", "tpLogic": "1.5× ATR extension beyond the broken level.", "slLogic": "Just inside the prior range boundary (1× ATR cushion).", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Residual Momentum", "category": "momentum",
+                    "description": "Approximates the residual-momentum factor by removing EMA200 baseline drift from recent return.",
+                    "indicatorsUsed": ["12-bar momentum", "EMA200 baseline", "RSI14"], "bullishConditions": ["Residual momentum magnitude > 0.5%", "RSI > 50"], "bearishConditions": ["Residual momentum magnitude < -0.5%", "RSI < 50"],
+                    "entryLogic": "Abnormal momentum stretched away from EMA200 baseline, confirmed by RSI.", "exitLogic": "Residual collapses toward zero or RSI crosses 50 against the trade.", "tpLogic": "Exit when residual momentum reverts past zero.", "slLogic": "1.2× ATR against entry.", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Short-Term Reversal", "category": "mean-reversion",
+                    "description": "Fades RSI extremes paired with a multi-ATR stretch — the intraday analogue of the 1-month reversal anomaly.",
+                    "indicatorsUsed": ["RSI14", "EMA20", "ATR14"], "bullishConditions": ["RSI ≤ 28", "Price stretched < -1.5 ATR from EMA20"], "bearishConditions": ["RSI ≥ 72", "Price stretched > 1.5 ATR from EMA20"],
+                    "entryLogic": "Extreme RSI combined with price deviating significantly from short-term mean (EMA20).", "exitLogic": "RSI reverts to 50 band or Price recloses on EMA20.", "tpLogic": "Target EMA20 (~mean) on partial; 1.5× ATR on runner.", "slLogic": "0.8× ATR beyond the extreme.", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Bollinger Mean Reversion", "category": "mean-reversion",
+                    "description": "Fades touches of the outer Bollinger band when ADX confirms there is no dominant trend.",
+                    "indicatorsUsed": ["Bollinger 20,2", "ADX14", "RSI14"], "bullishConditions": ["Price ≤ lower band", "ADX < 22"], "bearishConditions": ["Price ≥ upper band", "ADX < 22"],
+                    "entryLogic": "Price tags outer band during non-trending regime (ADX < 22), fading the move.", "exitLogic": "Price reaches Bollinger middle band or ADX rises above 25.", "tpLogic": "Bollinger middle band on first touch.", "slLogic": "Just outside the touched band.", "riskLevel": "Medium"
+                },
+                {
+                    "name": "SMA Trend Filter", "category": "trend-following",
+                    "description": "Faber-style structural trend filter using EMA50 / EMA200 — provides a directional veto for the rest of the suite.",
+                    "indicatorsUsed": ["EMA50", "EMA200", "ADX14"], "bullishConditions": ["Price > EMA200", "EMA50 > EMA200"], "bearishConditions": ["Price < EMA200", "EMA50 < EMA200"],
+                    "entryLogic": "Structural trend alignment (Price & Fast MA above Slow MA). Veto-only strategy.", "exitLogic": "EMA50 crosses back through EMA200 or Price closes through EMA200.", "tpLogic": "Trail by 2× ATR; ride until structural break.", "slLogic": "Below EMA200 for longs (mirror for shorts).", "riskLevel": "Low"
+                },
+                {
+                    "name": "EMA Cross + ADX", "category": "trend-following",
+                    "description": "Short/medium EMA crossover with ADX filter — provides the framework's primary trend-entry voice.",
+                    "indicatorsUsed": ["EMA20", "EMA50", "ADX14", "MACD"], "bullishConditions": ["EMA20 > EMA50", "ADX ≥ 22"], "bearishConditions": ["EMA20 < EMA50", "ADX ≥ 22"],
+                    "entryLogic": "Moving average stack confirmed by directional trend strength (ADX).", "exitLogic": "EMA20 / EMA50 re-cross or ADX drops below 18.", "tpLogic": "2× ATR or break of prior swing.", "slLogic": "Opposite EMA (EMA50 for longs).", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Donchian Breakout", "category": "breakout",
+                    "description": "Turtle-style 20-bar breakout entry — fast trigger for emerging trends and breakouts.",
+                    "indicatorsUsed": ["20-bar high/low", "ATR14", "ADX14"], "bullishConditions": ["Close above 20-bar high"], "bearishConditions": ["Close below 20-bar low"],
+                    "entryLogic": "Price exceeds the rolling 20-bar extremes, indicating potential new trend.", "exitLogic": "Close back inside Donchian channel or ATR collapses.", "tpLogic": "2× ATR extension or 10-bar Donchian trailing exit.", "slLogic": "1× ATR inside the broken level.", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Volatility Regime Filter", "category": "volatility",
+                    "description": "Encodes the low-vol-factor and vol-risk-premium principles as a directional bias modifier.",
+                    "indicatorsUsed": ["ATR%", "Realized volatility", "RSI14"], "bullishConditions": ["ATR% > 3.5 with RSI ≤ 30"], "bearishConditions": ["ATR% > 3.5 with RSI ≥ 70"],
+                    "entryLogic": "Fades extremes in high-volatility regimes; anticipates grind in low-vol regimes.", "exitLogic": "Vol normalises or RSI returns to mid-range.", "tpLogic": "Half-position partial at 1× ATR; runner to mean.", "slLogic": "Wider stop in high-vol; tighter in low-vol.", "riskLevel": "Medium/High"
+                },
+                {
+                    "name": "News + Fear-Greed Sentiment", "category": "sentiment",
+                    "description": "Sentiment-fusion strategy combining news, social, and Fear-Greed Index. Adds a directional tilt.",
+                    "indicatorsUsed": ["News sentiment", "Social sentiment", "Fear-Greed Index"], "bullishConditions": ["Bullish news + FGI < 35", "Bearish news + FGI < 20 (Contrarian)"], "bearishConditions": ["Bearish news + FGI > 65", "Bullish news + FGI > 80 (Contrarian)"],
+                    "entryLogic": "Sentiment shifting from fear to greed (bullish) or contrarian fade at absolute extremes.", "exitLogic": "Fear-greed mean-reverts or News turns neutral.", "tpLogic": "Discretionary; ride until sentiment fades.", "slLogic": "Volatility-anchored — 1.5× ATR.", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Support/Resistance Sweep", "category": "market-structure",
+                    "description": "Detects intraday liquidity sweeps — wicks that pierce S/R then reclaim the level with a strong-bodied reversal close.",
+                    "indicatorsUsed": ["30-bar high/low", "Candle body ratio"], "bullishConditions": ["Wick below 30-bar low, close above low, strong body"], "bearishConditions": ["Wick above 30-bar high, close below high, strong body"],
+                    "entryLogic": "Liquidity grab below support or above resistance, immediately rejected.", "exitLogic": "Mean of the recent range reached or Sweep is taken back.", "tpLogic": "Mean of 30-bar range on partial; full range on runner.", "slLogic": "Beyond the sweep wick.", "riskLevel": "Medium"
+                },
+                {
+                    "name": "Candlestick Intelligence (TA-Lib 61)", "category": "market-structure",
+                    "description": "Voice of the 61-pattern TA-Lib candlestick engine — converts the per-bar scored detection set into a regime-aware vote.",
+                    "indicatorsUsed": ["TA-Lib CDL (61 patterns)", "Volume", "EMA50/EMA200", "RSI", "ADX", "VWAP", "HTF alignment"], "bullishConditions": ["Top pattern bullish", "Composite confidence >= 70", "Trend-aligned"], "bearishConditions": ["Top pattern bearish", "Composite confidence >= 70", "Trend-aligned"],
+                    "entryLogic": "High-confidence TA-Lib pattern confirmed by trend or higher timeframe.", "exitLogic": "Opposite direction pattern with >= 65 confidence.", "tpLogic": "Scaled by pattern category — reversals to nearest structure, continuations 1.5× ATR.", "slLogic": "Tight stop just past the pattern bar's invalidating extreme.", "riskLevel": "Medium"
+                }
+            ],
+            "aiSystems": [
+                { "name": "Market Decision (LLM Coordinator)", "description": "Orchestrates trade execution. Uses a local prefilter to skip flat markets. Routes elite setups to premium Groq LLMs (llama-3.3-70b-versatile) and routine adjustments to cheap models." },
+                { "name": "Market Thesis Generator", "description": "Generates natural language market narratives based on technical indicators, sentiment, and strategy consensus." },
+                { "name": "LLM News Classifier", "description": "Second-pass news validation. Re-evaluates rule-based headlines using an LLM to accurately assign CRITICAL_RISK to VERY_BULLISH tiers." },
+                { "name": "Local Fallback Engine", "description": "Deterministic fallback used when LLM providers are rate-limited or unavailable, ensuring continuous autonomous operation." }
+            ],
+            "riskSystems": [
+                { "name": "Trade Health Scorer", "description": "10-factor weighted scoring (EMA, RSI, MACD, VWAP, Vol, ATR, Candlestick, Regime, News, PnL). Outputs 0-100 smoothed score." },
+                { "name": "Adverse Candle Penalty", "description": "Dynamically counts consecutive adverse candles, scaling penalties by volume, ATR body size, and wick rejection." },
+                { "name": "Structure Deterioration", "description": "Detects lower highs/lows, EMA loss, VWAP rejection, and momentum divergence during an active trade." },
+                { "name": "Dynamic TP/SL Levels", "description": "Adjusts Take Profit targets dynamically based on trade age and health. Adjusts Stop Loss via Break-even triggers, Profit Protection (1R, 2R, 3R), and State-dependent Trailing Stops." },
+                { "name": "Early Exit Intelligence", "description": "Monitors EMA death crosses, regime shifts, MACD collapse, adverse volume climaxes, and critical news to preemptively exit trades before Stop Loss hits." },
+                { "name": "Partial Exits (Scale-out)", "description": "Confidence-based scale-out (closes 25% if health decays to 50-59%) and sequential TP partials (closes 50% at target milestones)." }
+            ],
+            "newsSystems": [
+                { "name": "CryptoCompare Feed", "description": "Fetches general market news. Sentiment derived from community voting." },
+                { "name": "Reddit Integration", "description": "Fetches r/CryptoCurrency posts. Sentiment derived from flair analysis (Bullish/Bearish tags)." },
+                { "name": "Rule-Based Classifier", "description": "Fast keyword matching categorizing text into 6 tiers. Flags CRITICAL_RISK words (hack, exploit, sec emergency, bankrupt)." },
+                { "name": "Fear & Greed Index", "description": "External sentiment gauge (0-100) incorporated into the NewsFearGreed strategy for contrarian signaling." }
+            ],
+            "indicators": ["EMA (Exponential Moving Average)", "RSI (Relative Strength Index)", "ATR (Average True Range)", "ADX (Average Directional Index)", "Bollinger Bands", "Z-Score", "VWAP (Volume Weighted Average Price)", "VWAP Slope", "MACD (Moving Average Convergence Divergence)", "Donchian Channels (High/Low)", "Realized Volatility"],
+            "candlestickPatterns": ["DOJI", "DRAGONFLYDOJI", "GRAVESTONEDOJI", "LONGLEGGEDDOJI", "RICKSHAWMAN", "HAMMER", "HANGINGMAN", "INVERTEDHAMMER", "SHOOTINGSTAR", "TAKURI", "MARUBOZU", "CLOSINGMARUBOZU", "LONGLINE", "SHORTLINE", "SPINNINGTOP", "HIGHWAVE", "BELTHOLD", "ENGULFING", "HARAMI", "HARAMICROSS", "PIERCING", "DARKCLOUDCOVER", "COUNTERATTACK", "HOMINGPIGEON", "INNECK", "ONNECK", "THRUSTING", "KICKING", "KICKINGBYLENGTH", "MATCHINGLOW", "SEPARATINGLINES", "DOJISTAR", "MORNINGSTAR", "MORNINGDOJISTAR", "EVENINGSTAR", "EVENINGDOJISTAR", "3WHITESOLDIERS", "3BLACKCROWS", "3INSIDE", "3OUTSIDE", "3LINESTRIKE", "TRISTAR", "2CROWS", "UPSIDEGAP2CROWS", "ABANDONEDBABY", "ADVANCEBLOCK", "STALLEDPATTERN", "IDENTICAL3CROWS", "3STARSINSOUTH", "STICKSANDWICH", "TASUKIGAP", "GAPSIDESIDEWHITE", "UNIQUE3RIVER", "HIKKAKE", "HIKKAKEMOD", "MATHOLD", "RISEFALL3METHODS", "XSIDEGAP3METHODS", "CONCEALBABYSWALL", "LADDERBOTTOM", "BREAKAWAY"]
+        };
+
+        function init() {
+            // Theme toggle
+            const toggle = document.getElementById('themeToggle');
+            const html = document.documentElement;
+            toggle.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                toggle.textContent = html.classList.contains('dark') ? '🌙' : '☀️';
+            });
+
+            // Nav links
+            const strategyNav = document.getElementById('strategyNav');
+            const strategyContainer = document.getElementById('strategyContainer');
+
+            data.strategies.forEach((s, idx) => {
+                const id = `strat-${idx}`;
+                // Nav
+                const a = document.createElement('a');
+                a.href = `#${id}`;
+                a.className = 'nav-link block px-3 py-1.5 rounded-md text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-bg truncate';
+                a.textContent = s.name;
+                strategyNav.appendChild(a);
+
+                // Card
+                const card = document.createElement('div');
+                card.id = id;
+                card.className = 'strategy-card bg-white dark:bg-dark-panel rounded-xl border border-gray-200 dark:border-dark-border shadow-sm overflow-hidden transition-all';
+                
+                const catColor = s.category === 'momentum' ? 'text-blue-500' : s.category === 'mean-reversion' ? 'text-purple-500' : 'text-green-500';
+
+                card.innerHTML = `
+                    <div class="p-6 cursor-pointer flex justify-between items-center" onclick="toggleCard('${id}-content')">
+                        <div>
+                            <div class="flex items-center space-x-3 mb-1">
+                                <h3 class="text-xl font-bold">${s.name}</h3>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 dark:bg-gray-800 ${catColor} uppercase">${s.category}</span>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">${s.description}</p>
+                        </div>
+                        <svg class="w-6 h-6 text-gray-400 transform transition-transform" id="${id}-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div id="${id}-content" class="collapse-content border-t border-gray-100 dark:border-dark-border bg-gray-50/50 dark:bg-[#1a2332]">
+                        <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">Logic Rules</h4>
+                                <div class="space-y-4">
+                                    <div class="bg-gray-100 dark:bg-dark-bg p-3 rounded-md font-mono text-sm border-l-2 border-green-500">
+                                        <span class="text-gray-400 block mb-1">// Bullish Entry</span>
+                                        ${s.bullishConditions.map(c => `<div>&& ${c}</div>`).join('')}
+                                    </div>
+                                    <div class="bg-gray-100 dark:bg-dark-bg p-3 rounded-md font-mono text-sm border-l-2 border-red-500">
+                                        <span class="text-gray-400 block mb-1">// Bearish Entry</span>
+                                        ${s.bearishConditions.map(c => `<div>&& ${c}</div>`).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-3">Execution Parameters</h4>
+                                <div class="space-y-3 text-sm">
+                                    <div><span class="text-gray-400 block text-xs">Indicators Used</span><span class="font-medium">${s.indicatorsUsed.join(", ")}</span></div>
+                                    <div><span class="text-gray-400 block text-xs">Exit Condition</span><span>${s.exitLogic}</span></div>
+                                    <div class="grid grid-cols-2 gap-4 mt-2">
+                                        <div class="bg-gray-100 dark:bg-dark-bg p-2 rounded border border-gray-200 dark:border-dark-border"><span class="text-gray-400 block text-xs mb-1">Take Profit</span><span class="font-mono text-xs">${s.tpLogic}</span></div>
+                                        <div class="bg-gray-100 dark:bg-dark-bg p-2 rounded border border-gray-200 dark:border-dark-border"><span class="text-gray-400 block text-xs mb-1">Stop Loss</span><span class="font-mono text-xs">${s.slLogic}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                strategyContainer.appendChild(card);
+            });
+
+            // Core Systems
+            const buildCards = (items, containerId) => {
+                const container = document.getElementById(containerId);
+                items.forEach(i => {
+                    container.innerHTML += `
+                        <div class="bg-white dark:bg-dark-panel p-5 rounded-xl border border-gray-200 dark:border-dark-border shadow-sm">
+                            <h4 class="font-bold mb-2">${i.name}</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">${i.description}</p>
+                        </div>
+                    `;
+                });
+            }
+            buildCards(data.aiSystems, 'aiContainer');
+            buildCards(data.riskSystems, 'riskContainer');
+            buildCards(data.newsSystems, 'newsContainer');
+
+            // Tags
+            document.getElementById('indicatorTags').innerHTML = data.indicators.map(i => `<span class="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">${i}</span>`).join('');
+            document.getElementById('candleTags').innerHTML = data.candlestickPatterns.map(i => `<span class="px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded text-[10px] border border-indigo-100 dark:border-indigo-800/50">${i}</span>`).join('');
+
+            // Search
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                document.querySelectorAll('.strategy-card').forEach(card => {
+                    const text = card.textContent.toLowerCase();
+                    card.style.display = text.includes(term) ? 'block' : 'none';
+                });
+            });
+
+            // Active nav state
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        document.querySelectorAll('.nav-link').forEach(l => {
+                            l.classList.remove('bg-gray-100', 'dark:bg-dark-bg', 'text-brand-500');
+                            if (l.getAttribute('href') === `#${entry.target.id}`) {
+                                l.classList.add('bg-gray-100', 'dark:bg-dark-bg', 'text-brand-500');
+                            }
+                        });
+                    }
+                });
+            }, { threshold: 0.5 });
+            document.querySelectorAll('section, .strategy-card').forEach(s => observer.observe(s));
+        }
+
+        function toggleCard(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(id.replace('-content', '-icon'));
+            const isOpen = content.classList.contains('open');
+            
+            document.querySelectorAll('.collapse-content').forEach(c => c.classList.remove('open'));
+            document.querySelectorAll('svg[id$="-icon"]').forEach(i => i.classList.remove('rotate-180'));
+            
+            if (!isOpen) {
+                content.classList.add('open');
+                icon.classList.add('rotate-180');
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>

@@ -151,14 +151,22 @@ export function modelCooldownRemainingMs(
 
 class TokenBudget {
   private events: UsageEvent[] = [];
+  private dailyEvents: { id: number; timestamp: number; tokens: number }[] = [];
   private nextId = 1;
+  private readonly dailyLimit: number;
+
   constructor(
     private readonly model: string,
     private readonly tpmCap: number,
     /** Optional account id (e.g. Groq key #1 vs #2). Surfaces in logs and
      *  composes the cooldown key so each account tracks independently. */
     private readonly accountId?: string | number,
-  ) {}
+  ) {
+    const defaultDailyLimit = process.env.LLM_DAILY_LIMIT
+      ? parseInt(process.env.LLM_DAILY_LIMIT, 10)
+      : 500_000;
+    this.dailyLimit = defaultDailyLimit;
+  }
 
   private get label(): string {
     return this.accountId == null
@@ -166,15 +174,40 @@ class TokenBudget {
       : `${this.model}#${this.accountId}`;
   }
 
+  private cleanDailyEvents() {
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    this.dailyEvents = this.dailyEvents.filter((e) => now - e.timestamp < oneDayMs);
+  }
+
+  getDailyUsage(): number {
+    this.cleanDailyEvents();
+    return this.dailyEvents.reduce((sum, e) => sum + e.tokens, 0);
+  }
+
+  getDailyLimit(): number {
+    return this.dailyLimit;
+  }
+
+  getRpm(): number {
+    const now = Date.now();
+    this.events = this.events.filter((e) => now - e.at < WINDOW_MS);
+    return this.events.length;
+  }
+
+  getTpm(): number {
+    const now = Date.now();
+    this.events = this.events.filter((e) => now - e.at < WINDOW_MS);
+    return this.events.reduce((sum, e) => sum + e.tokens, 0);
+  }
+
+  getIsLowTokenMode(): boolean {
+    return this.getDailyUsage() > this.dailyLimit * 0.8;
+  }
+
   /**
-   * Reserve `tokens` against the budget. Now a passthrough — always
-   * succeeds immediately. The only gate is the per-account cooldown set
-   * by actual Groq 429 responses (markModelCooldown). The old TPM
-   * estimation logic was too conservative and blocked requests that Groq
-   * would have accepted, starving idle accounts.
-   *
-   * The cooldown check remains because it's driven by *real* 429s from
-   * Groq with a `retry-after` header — not estimates.
+   * Reserve `tokens` against the budget.
+   * Checks for model cooldown and daily budget limits.
    */
   async reserve(tokens: number): Promise<ReservationHandle> {
     const cooldownLeft = modelCooldownRemainingMs(this.model, this.accountId);
@@ -186,10 +219,26 @@ class TokenBudget {
         cooldownLeft,
       );
     }
+
     const now = Date.now();
     this.events = this.events.filter((e) => now - e.at < WINDOW_MS);
+    this.cleanDailyEvents();
+
+    const currentDaily = this.getDailyUsage();
+    if (currentDaily + tokens > this.dailyLimit) {
+      const oldest = this.dailyEvents[0];
+      const waitMs = oldest ? Math.max(1000, 24 * 60 * 60 * 1000 - (now - oldest.timestamp)) : 60_000;
+      throw new BudgetExhaustedError(
+        this.label,
+        currentDaily,
+        this.dailyLimit,
+        waitMs,
+      );
+    }
+
     const id = this.nextId++;
     this.events.push({ id, at: now, tokens });
+    this.dailyEvents.push({ id, timestamp: now, tokens });
     return { id, estimated: tokens };
   }
 
@@ -201,14 +250,20 @@ class TokenBudget {
    */
   recordActual(handle: ReservationHandle, actualTokens: number): void {
     const event = this.events.find((e) => e.id === handle.id);
-    if (!event) return;
-    event.tokens = actualTokens;
+    if (event) {
+      event.tokens = actualTokens;
+    }
+    const dev = this.dailyEvents.find((e) => e.id === handle.id);
+    if (dev) {
+      dev.tokens = actualTokens;
+    }
   }
 
   /** Release a reservation entirely — used when the request errored
    *  before reaching Groq (so we didn't actually consume the budget). */
   release(handle: ReservationHandle): void {
     this.events = this.events.filter((e) => e.id !== handle.id);
+    this.dailyEvents = this.dailyEvents.filter((e) => e.id !== handle.id);
   }
 }
 
@@ -219,10 +274,6 @@ const budgets = new Map<string, TokenBudget>();
  * omit `accountId` and get the legacy per-model bucket. Multi-account
  * setups (e.g. two Groq keys) pass distinct ids so each account tracks its
  * own TPM independently — exhausting one no longer blocks the other.
- *
- * The TPM cap is read per *model* (Groq enforces it that way per account),
- * so account-A's `llama-3.3-70b-versatile` and account-B's same model both
- * get 12k TPM individually.
  */
 export function budgetFor(
   model: string,
@@ -235,6 +286,17 @@ export function budgetFor(
     budgets.set(key, b);
   }
   return b;
+}
+
+export function getBudgetStats(model: string, accountId?: string | number) {
+  const b = budgetFor(model, accountId);
+  return {
+    rpm: b.getRpm(),
+    tpm: b.getTpm(),
+    dailyUsage: b.getDailyUsage(),
+    dailyLimit: b.getDailyLimit(),
+    isLowTokenMode: b.getIsLowTokenMode(),
+  };
 }
 
 export class BudgetExhaustedError extends Error {

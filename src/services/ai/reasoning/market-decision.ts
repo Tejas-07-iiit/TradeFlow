@@ -7,109 +7,8 @@ import {
   type MarketDecision,
 } from "../schemas";
 import { localFallbackDecision } from "./local-fallback";
-
-/**
- * Compact provider label for logs. Renders `groq#2/llama-3.3-70b-versatile`
- * when the provider exposes an `accountId`, otherwise the legacy
- * `groq/llama-3.3-70b-versatile` form. Makes multi-account Groq chains
- * readable without breaking single-account log greps.
- */
-function formatProviderLabel(p: LlmProvider): string {
-  return p.accountId != null
-    ? `${p.name}#${p.accountId}/${p.model}`
-    : `${p.name}/${p.model}`;
-}
-
-/**
- * Local prefilter result. Built from the strategy snapshot the server
- * already computed, so it costs no LLM tokens. Three outcomes:
- *
- *   skip:true  → snapshot is flat enough that the LLM has nothing to add.
- *                We return a synthetic HOLD decision so the UI / executor
- *                see a stable answer; the autonomous flow treats it as
- *                no-op the same way it would a real HOLD.
- *   tier:cheap → routine evaluation. Route through the cheap-tier Groq
- *                model (`GROQ_MODEL_CHEAP`) first; the configured
- *                purpose model is reserved for elite setups.
- *   tier:premium → snapshot endorses an elite setup. Use the configured
- *                  purpose model (`GROQ_MODEL_DECISION`) for the deeper
- *                  reasoning the trade deserves.
- */
-export interface DecisionPrefilter {
-  skip: boolean;
-  tier?: LlmTier;
-  reason: string;
-  syntheticDecision?: MarketDecision;
-}
-
-const FLAT_ALIGNMENT_MAX = 30;
-const FLAT_DIRECTION_MAX = 8;
-const ELITE_ALIGNMENT_MIN = 70;
-
-export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
-  const snap = input.strategySnapshot;
-  const hasOpenPosition = !!input.portfolio?.hasOpenPositionThisSymbol;
-
-  // Skip path. An open position always deserves a fresh look (SL/TP could
-  // change), so we only skip when there's no position AND no directional
-  // edge to evaluate.
-  if (snap && !hasOpenPosition) {
-    const flatAlignment = snap.alignmentScore < FLAT_ALIGNMENT_MAX;
-    const flatDirection = Math.abs(snap.netDirection) < FLAT_DIRECTION_MAX;
-    if (flatAlignment && flatDirection) {
-      return {
-        skip: true,
-        reason: `flat snapshot (align=${snap.alignmentScore.toFixed(0)} netDir=${snap.netDirection.toFixed(0)} regime=${snap.regime})`,
-        syntheticDecision: buildSyntheticHold(input),
-      };
-    }
-  }
-
-  // Premium path. Elite alignment earns the deeper reasoning of the 70B.
-  // Open-position management stays on the cheap tier because it's about
-  // fast SL/TP adjustments, not constructing a new thesis.
-  if (snap && snap.alignmentScore >= ELITE_ALIGNMENT_MIN) {
-    return {
-      skip: false,
-      tier: "premium",
-      reason: `elite alignment=${snap.alignmentScore.toFixed(0)}`,
-    };
-  }
-
-  return {
-    skip: false,
-    tier: "cheap",
-    reason: snap
-      ? `routine (align=${snap.alignmentScore.toFixed(0)}${hasOpenPosition ? " openPos" : ""})`
-      : "no snapshot",
-  };
-}
-
-function buildSyntheticHold(input: DecisionInput): MarketDecision {
-  const price = input.price;
-  const regime = input.marketRegime;
-  return {
-    decision: "HOLD",
-    confidence: 30,
-    setupQuality: "C",
-    riskLevel: "Low",
-    executeTrade: false,
-    positionSizePercent: 0,
-    expectedHoldTimeMinutes: 5,
-    entryPrice: price,
-    takeProfit: price,
-    stopLoss: price,
-    reasoning: [
-      `Local prefilter: strategy alignment below ${FLAT_ALIGNMENT_MAX} with no directional edge — no LLM coordination needed.`,
-    ],
-    warnings: [],
-    marketSummary: `Skipped LLM coordinator in ${regime} regime — snapshot offered no actionable edge.`,
-    alignedStrategies: [],
-    conflictingStrategies: [],
-    marketConditions: `${regime} regime, alignment below threshold`,
-    executionRecommendation: "skip",
-  };
-}
+import { prefilterDecision } from "../orchestrator/prefilter";
+import type { DecisionPrefilter } from "../orchestrator/prefilter";
 
 export interface CachedDecision {
   decision: MarketDecision;
@@ -127,6 +26,12 @@ export interface CachedDecision {
    *                    degraded mode.
    */
   source: "llm" | "prefilter" | "local-fallback";
+}
+
+function formatProviderLabel(p: LlmProvider): string {
+  return p.accountId != null
+    ? `${p.name}#${p.accountId}/${p.model}`
+    : `${p.name}/${p.model}`;
 }
 
 /**

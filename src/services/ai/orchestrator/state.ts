@@ -5,12 +5,44 @@
  * Groq API keys, allowing the scheduler to route jobs intelligently.
  */
 
-import { modelCooldownRemainingMs, markModelCooldown } from "../providers/token-budget";
-import type { KeyLoadStats, RateLimitEvent } from "./types";
+import { modelCooldownRemainingMs, markModelCooldown, getBudgetStats } from "../providers/token-budget";
+import type { KeyLoadStats, RateLimitEvent, AdminSettings } from "./types";
 
 interface RequestEvent {
   timestamp: number;
   tokens: number;
+}
+
+// Global process-wide admin settings with defaults.
+const adminSettings: AdminSettings = {
+  pausedModels: [],
+  disabledAccounts: [],
+  routingWeights: {
+    "1": 50,
+    "2": 50,
+    "3": 33,
+    "4": 25,
+    "5": 20,
+  },
+  concurrencyLimits: {
+    premium: 1,
+    lightweight: 3,
+    background: 2,
+  },
+  aggressiveMode: false,
+  lowTokenMode: false,
+  emergencyStop: false,
+  disablePremium: false,
+  maintenanceMode: false,
+};
+
+export function getAdminSettings(): AdminSettings {
+  return adminSettings;
+}
+
+export function updateAdminSettings(settings: Partial<AdminSettings>): AdminSettings {
+  Object.assign(adminSettings, settings);
+  return adminSettings;
 }
 
 class AccountTracker {
@@ -77,12 +109,25 @@ class AccountTracker {
   }
 
   getHealthScore(model: string): number {
+    if (adminSettings.pausedModels.includes(model)) {
+      return 0;
+    }
+    if (adminSettings.disabledAccounts.includes(this.id)) {
+      return 0;
+    }
+
     const now = Date.now();
     const cdRemaining = Math.max(
       this.cooldownUntil - now,
       modelCooldownRemainingMs(model, this.id)
     );
     if (cdRemaining > 0) {
+      return 0;
+    }
+
+    // Daily budget check integration
+    const budget = getBudgetStats(model, this.id);
+    if (budget.dailyUsage >= budget.dailyLimit) {
       return 0;
     }
 
@@ -104,6 +149,16 @@ class AccountTracker {
   }
 
   getStatus(model: string): "healthy" | "cooldown" | "exhausted" {
+    if (adminSettings.pausedModels.includes(model)) {
+      return "exhausted";
+    }
+    if (adminSettings.disabledAccounts.includes(this.id)) {
+      return "exhausted";
+    }
+    const budget = getBudgetStats(model, this.id);
+    if (budget.dailyUsage >= budget.dailyLimit) {
+      return "exhausted";
+    }
     const now = Date.now();
     const cdRemaining = Math.max(
       this.cooldownUntil - now,
@@ -145,9 +200,10 @@ export function collectGroqAccounts(): number[] {
 
 /**
  * Select the best Groq account id for the given model using health scoring.
+ * Uses probabilistic (weighted random) selection of active healthy accounts.
  */
 export function selectBestKey(model: string): number {
-  const ids = collectGroqAccounts();
+  const ids = collectGroqAccounts().filter((id) => !adminSettings.disabledAccounts.includes(id));
   if (ids.length === 0) return 1; // Default to key #1 if none configured
 
   const candidates = ids.map((id) => {
@@ -157,15 +213,28 @@ export function selectBestKey(model: string): number {
       tracker.cooldownUntil - Date.now(),
       modelCooldownRemainingMs(model, id)
     );
-    return { id, health, cd, tracker };
+    const weight = adminSettings.routingWeights[String(id)] ?? 50;
+    return { id, health, cd, tracker, weight };
   });
 
-  // Sort candidates by health score descending (highest health score first)
-  candidates.sort((a, b) => b.health - a.health);
-
-  // If the best health score is greater than 0, use it
-  if (candidates[0].health > 0) {
-    return candidates[0].id;
+  const activeCandidates = candidates.filter((c) => c.health > 0);
+  if (activeCandidates.length > 0) {
+    // Probabilistic selection: calculate effective weights as health * weight pct
+    const totalWeight = activeCandidates.reduce(
+      (sum, c) => sum + c.health * (c.weight / 100),
+      0
+    );
+    if (totalWeight > 0) {
+      let rand = Math.random() * totalWeight;
+      for (const c of activeCandidates) {
+        const w = c.health * (c.weight / 100);
+        rand -= w;
+        if (rand <= 0) return c.id;
+      }
+    }
+    // Fallback: choose highest health
+    activeCandidates.sort((a, b) => b.health - a.health);
+    return activeCandidates[0].id;
   }
 
   // All keys are under cooldown/zero health — choose the one with the shortest remaining cooldown
@@ -211,7 +280,7 @@ export function record429Event(
     retryAfterSec,
     isTpd,
     message,
-    };
+  };
 
   recentEvents.unshift(event);
   if (recentEvents.length > MAX_EVENTS) {
@@ -224,6 +293,7 @@ export function getLiveKeysStats(model: string): KeyLoadStats[] {
   return ids.map((id) => {
     const t = getTracker(id);
     const cd = Math.max(t.cooldownUntil - Date.now(), modelCooldownRemainingMs(model, id));
+    const budget = getBudgetStats(model, id);
     return {
       accountId: id,
       activeCount: t.activeCount,
@@ -237,6 +307,11 @@ export function getLiveKeysStats(model: string): KeyLoadStats[] {
       cooldownUntil: t.cooldownUntil,
       recent429s: t.recent429s,
       status: t.getStatus(model),
+      dailyTokensUsed: budget.dailyUsage,
+      dailyQuotaLimit: budget.dailyLimit,
+      activeRequests: t.activeCount,
+      queuedRequests: 0,
+      rate429: t.totalRequests > 0 ? Math.round((t.total429s / t.totalRequests) * 100) : 0,
     };
   });
 }

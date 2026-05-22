@@ -242,24 +242,29 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
     process.env.GROQ_MODEL?.trim() ||
     undefined;
 
-  // Decision purpose with explicit tier overrides the default model order.
-  // The configured `GROQ_MODEL_DECISION` env still wins as the "premium"
-  // entry, so users can swap heavyweights without touching code.
-  const decisionWithTier = purpose === "decision" && opts.tier != null;
-  if (decisionWithTier) {
-    const configuredPremium = modelForPurpose(purpose);
-    if (opts.tier === "cheap") {
-      pushGroqAcrossAccounts(cheapModel);
-      pushGroqAcrossAccounts(configuredPremium);
-    } else {
-      pushGroqAcrossAccounts(configuredPremium);
-      pushGroqAcrossAccounts(cheapModel);
+  // Tier-aware routing — honoured for every purpose, not just decision.
+  //
+  //   tier = "cheap"   → cheap model first, configured purpose model only as
+  //                      a *fallback* if cheap is exhausted.
+  //   tier = "premium" → configured purpose model first, cheap as fallback.
+  //   tier undefined   → preserves legacy chain (purpose model, then cheap
+  //                      only for the decision purpose).
+  //
+  // The 70B (and any other heavyweight) is therefore reachable *only* when
+  // a caller explicitly opts into tier="premium". Routine thesis / news /
+  // sentiment / monitoring calls pin to cheap and never burn premium quota.
+  const configuredPurposeModel = modelForPurpose(purpose);
+  if (opts.tier === "cheap") {
+    pushGroqAcrossAccounts(cheapModel);
+    if (configuredPurposeModel && configuredPurposeModel !== cheapModel) {
+      pushGroqAcrossAccounts(configuredPurposeModel);
     }
+  } else if (opts.tier === "premium") {
+    pushGroqAcrossAccounts(configuredPurposeModel);
+    pushGroqAcrossAccounts(cheapModel);
   } else {
-    pushGroqAcrossAccounts(modelForPurpose(purpose));
-    if (purpose === "decision") {
-      pushGroqAcrossAccounts(cheapModel);
-    }
+    pushGroqAcrossAccounts(configuredPurposeModel);
+    if (purpose === "decision") pushGroqAcrossAccounts(cheapModel);
   }
 
   return chain;

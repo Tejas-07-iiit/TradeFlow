@@ -1,0 +1,126 @@
+import type { DecisionInput, MarketDecision } from "../schemas";
+import type { LlmTier } from "../providers";
+
+export interface DecisionPrefilter {
+  skip: boolean;
+  tier?: LlmTier;
+  reason: string;
+  syntheticDecision?: MarketDecision;
+}
+
+const FLAT_ALIGNMENT_THRESHOLD = 55;
+const NO_TREND_ADX_THRESHOLD = 20;
+const NEUTRAL_RSI_MIN = 42;
+const NEUTRAL_RSI_MAX = 58;
+const MIN_ATR_PCT = 0.5; // low volatility floor in %
+
+export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
+  const snap = input.strategySnapshot;
+  const hasOpenPosition = !!input.portfolio?.hasOpenPositionThisSymbol;
+  const price = input.price;
+  const regime = input.marketRegime;
+
+  // Active positions must NEVER be skipped by the prefilter as stop-loss/take-profit
+  // adjustments and exit validation require continuous monitoring.
+  if (hasOpenPosition) {
+    // Open positions default to cheap tier for standard adjustments, premium only if high urgency or elite
+    const isElite = snap && snap.alignmentScore >= 80;
+    return {
+      skip: false,
+      tier: isElite ? "premium" : "cheap",
+      reason: `active position tracking (align=${snap?.alignmentScore ?? 0})`,
+    };
+  }
+
+  // 1. If strategy snapshot is missing, skip the LLM execution.
+  if (!snap) {
+    return {
+      skip: true,
+      reason: "missing strategy snapshot",
+      syntheticDecision: buildSyntheticHold(price, regime, "Skipped LLM: Strategy snapshot is missing."),
+    };
+  }
+
+  // 2. Reject setups with poor alignment score.
+  if (snap.alignmentScore < FLAT_ALIGNMENT_THRESHOLD) {
+    return {
+      skip: true,
+      reason: `flat strategy alignment (score=${snap.alignmentScore.toFixed(0)} < ${FLAT_ALIGNMENT_THRESHOLD})`,
+      syntheticDecision: buildSyntheticHold(price, regime, `Skipped LLM: Low strategy alignment score (${snap.alignmentScore.toFixed(0)}).`),
+    };
+  }
+
+  // 3. Reject setups with no directional conviction.
+  if (Math.abs(snap.netDirection) < 15) {
+    return {
+      skip: true,
+      reason: `low net directional conviction (netDirection=${snap.netDirection.toFixed(0)} < 15)`,
+      syntheticDecision: buildSyntheticHold(price, regime, `Skipped LLM: Directional conviction too low (${snap.netDirection.toFixed(0)}).`),
+    };
+  }
+
+  // 4. Reject setups in sideways chop with no trend (low ADX + neutral RSI).
+  const adx = input.indicators.adx14;
+  const rsi = input.indicators.rsi14;
+  if (
+    adx != null && adx < NO_TREND_ADX_THRESHOLD &&
+    rsi != null && rsi >= NEUTRAL_RSI_MIN && rsi <= NEUTRAL_RSI_MAX
+  ) {
+    return {
+      skip: true,
+      reason: `sideways chop detected (adx=${adx.toFixed(1)} < ${NO_TREND_ADX_THRESHOLD}, rsi=${rsi.toFixed(1)} neutral)`,
+      syntheticDecision: buildSyntheticHold(price, regime, `Skipped LLM: Market is in range-bound sideways consolidation with no trend.`),
+    };
+  }
+
+  // 5. Reject setups with near-zero volatility to avoid paying exchange fees on dead action.
+  const atrPct = input.indicators.atrPct;
+  if (atrPct != null && atrPct < MIN_ATR_PCT && snap.alignmentScore < 70) {
+    return {
+      skip: true,
+      reason: `extremely low volatility (atrPct=${atrPct.toFixed(2)}% < ${MIN_ATR_PCT}%)`,
+      syntheticDecision: buildSyntheticHold(price, regime, `Skipped LLM: Volatility is too low to cover slippage and fees.`),
+    };
+  }
+
+  // 6. Premium Routing for Elite Setups
+  if (snap.alignmentScore >= 75 && Math.abs(snap.netDirection) >= 25) {
+    return {
+      skip: false,
+      tier: "premium",
+      reason: `elite setup (align=${snap.alignmentScore.toFixed(0)}, netDir=${snap.netDirection.toFixed(0)})`,
+    };
+  }
+
+  // 7. Route standard setups to the cheap tier
+  return {
+    skip: false,
+    tier: "cheap",
+    reason: `routine setup (align=${snap.alignmentScore.toFixed(0)})`,
+  };
+}
+
+function buildSyntheticHold(price: number, regime: string, reasonText: string): MarketDecision {
+  return {
+    decision: "HOLD",
+    confidence: 30,
+    setupQuality: "C",
+    riskLevel: "Low",
+    executeTrade: false,
+    positionSizePercent: 0,
+    expectedHoldTimeMinutes: 5,
+    entryPrice: price,
+    takeProfit: price,
+    stopLoss: price,
+    reasoning: [
+      reasonText,
+      "Deterministic pre-filter blocked LLM coordination to protect token quota."
+    ],
+    warnings: [],
+    marketSummary: `Skipped LLM coordinator in ${regime} regime — market conditions do not support entry.`,
+    alignedStrategies: [],
+    conflictingStrategies: [],
+    marketConditions: `${regime} regime, failed pre-filter criteria`,
+    executionRecommendation: "skip",
+  };
+}

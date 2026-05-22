@@ -11,12 +11,25 @@
  * that arrive already past `expiresAt`.
  */
 
-import { JobPriority, type AnalysisJob, type JobResult } from "./types";
+import { JobPriority, type AnalysisJob, type JobResult, type LlmModelTier } from "./types";
 
 export interface QueueEntry {
   job: AnalysisJob;
   resolve: (result: JobResult) => void;
   reject: (error: unknown) => void;
+}
+
+export function getJobTier(job: AnalysisJob): LlmModelTier {
+  if (job.kind === "news" || job.kind === "thesis") {
+    return "background";
+  }
+  if (job.priority === JobPriority.EXECUTION_CRITICAL || job.priority === JobPriority.ELITE_SETUP) {
+    return "premium";
+  }
+  if (job.priority === JobPriority.POSITION_MGMT || job.priority === JobPriority.NEW_SETUP) {
+    return "lightweight";
+  }
+  return "background";
 }
 
 export class PriorityQueue {
@@ -66,6 +79,44 @@ export class PriorityQueue {
       
       // Find the first job that is eligible to run (runAfter <= now)
       const eligibleIdx = bucket.findIndex((e) => e.job.runAfter <= now);
+      if (eligibleIdx >= 0) {
+        return bucket.splice(eligibleIdx, 1)[0];
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Pop the highest-priority job that fits within active concurrency limits.
+   */
+  shiftEligible(activeTiers: Record<LlmModelTier, number>, limits: Record<LlmModelTier, number>): QueueEntry | undefined {
+    const priorities = [...this.buckets.keys()].sort((a, b) => a - b);
+    const now = Date.now();
+    for (const p of priorities) {
+      const bucket = this.buckets.get(p);
+      if (!bucket || bucket.length === 0) continue;
+      
+      // Clean up expired jobs at the head of the bucket first
+      while (bucket.length > 0 && bucket[0].job.expiresAt <= now) {
+        const stale = bucket.shift()!;
+        this.expiredCount++;
+        stale.resolve({
+          ok: false,
+          error: `Job expired in queue (priority ${p})`,
+          source: "expired",
+          durationMs: now - stale.job.enqueuedAt,
+        });
+      }
+      
+      // Find the first job that is eligible to run and fits the tier concurrency limits
+      const eligibleIdx = bucket.findIndex((e) => {
+        if (e.job.runAfter > now) return false;
+        const tier = getJobTier(e.job);
+        const active = activeTiers[tier] ?? 0;
+        const limit = limits[tier] ?? 999;
+        return active < limit;
+      });
+
       if (eligibleIdx >= 0) {
         return bucket.splice(eligibleIdx, 1)[0];
       }

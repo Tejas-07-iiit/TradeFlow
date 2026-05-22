@@ -25,7 +25,10 @@ export function buildMarketThesisPrompt(input: ThesisInput): ChatMessage[] {
         "Analyze the following intraday market snapshot and produce a structured trade thesis.",
         "",
         "INPUT:",
-        JSON.stringify(input, null, 2),
+        // Compressed JSON — no indent. The thesis input is already compact
+        // (no candle arrays, no strategy snapshot), so dropping pretty-print
+        // is enough to save 20-30% prompt tokens.
+        JSON.stringify(input),
         "",
         "Respond with a SINGLE JSON object matching this schema (no prose, no markdown):",
         SCHEMA_REMINDER,

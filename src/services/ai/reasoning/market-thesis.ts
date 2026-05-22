@@ -99,7 +99,11 @@ export async function getMarketThesisFor(
     return null;
   }
 
-  const chain = getLlmProviderChain({ purpose: "thesis", preferredAccountId });
+  // Thesis is a routine summarisation task — pin to the cheap tier so it
+  // can never burn the premium (70B) quota that's reserved for elite
+  // decisions. Configured GROQ_MODEL_THESIS remains as the fallback if
+  // cheap is exhausted.
+  const chain = getLlmProviderChain({ purpose: "thesis", tier: "cheap", preferredAccountId });
   if (chain.length === 0) {
     console.error("[ai/market-thesis] no provider configured for thesis");
     if (!allowFallback) {

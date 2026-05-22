@@ -116,6 +116,55 @@ export interface JobResult {
   source?: "llm" | "prefilter" | "local-fallback" | "cache" | "expired" | "aborted";
   durationMs: number;
   isTransient?: boolean;
+  /** When set, the scheduler MUST NOT requeue this job even if isTransient
+   *  is true — set by the pipeline when every model is in cooldown so we
+   *  fall through to local fallback instead of feeding the retry storm. */
+  skipRetry?: boolean;
+}
+
+export type LlmModelTier = "premium" | "lightweight" | "background";
+
+export interface ModelStats {
+  modelName: string;
+  health: "healthy" | "cooldown" | "exhausted";
+  cooldownLeftMs: number;
+  avgLatencyMs: number;
+  queueDepth: number;
+  successRate: number;
+  failureRate: number;
+  totalRequests: number;
+  totalSuccess: number;
+  totalFailures: number;
+  total429s: number;
+  rpm: number;
+  tpm: number;
+  dailyQuotaUsage: number;
+  dailyQuotaLimit: number;
+  fallbackCount: number;
+  retryCount: number;
+}
+
+export interface SystemHealthStats {
+  postgresStatus: "healthy" | "unhealthy";
+  prismaPoolActive: number;
+  websocketStatus: "connected" | "disconnected";
+  memoryUsageMb: number;
+  cpuUsagePct: number;
+  serverLatencyMs: number;
+  apiLatencyMs: number;
+  pm2Status: string;
+}
+
+export interface AdminSettings {
+  pausedModels: string[];
+  disabledAccounts: number[];
+  routingWeights: Record<string, number>;
+  concurrencyLimits: Record<LlmModelTier, number>;
+  aggressiveMode: boolean;
+  lowTokenMode: boolean;
+  emergencyStop: boolean;
+  disablePremium: boolean;
+  maintenanceMode: boolean;
 }
 
 export interface KeyLoadStats {
@@ -131,6 +180,12 @@ export interface KeyLoadStats {
   cooldownUntil: number;
   recent429s: number;
   status: "healthy" | "cooldown" | "exhausted";
+  // Add new fields for admin/ops monitoring
+  dailyTokensUsed: number;
+  dailyQuotaLimit: number;
+  activeRequests: number;
+  queuedRequests: number;
+  rate429: number;
 }
 
 export interface RateLimitEvent {
@@ -156,5 +211,12 @@ export interface OrchestratorStats {
   totalRetries: number;
   keys: KeyLoadStats[];
   recentEvents: RateLimitEvent[];
+  // Added for institutional ops dashboard
+  activeByTier: Record<LlmModelTier, number>;
+  tierLimits: Record<LlmModelTier, number>;
+  models: ModelStats[];
+  systemHealth: SystemHealthStats;
+  adminSettings: AdminSettings;
 }
+
 

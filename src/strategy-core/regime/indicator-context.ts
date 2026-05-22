@@ -2,11 +2,20 @@ import {
   adx,
   atr,
   bollingerBands,
+  cci,
   ema,
+  ichimoku,
+  keltnerChannels,
   lastNumber,
   lastValue,
   macd,
+  mfi,
+  parabolicSar,
   rsi,
+  sma,
+  supertrend,
+  t3,
+  waveTrend,
 } from "@/lib/indicators/calculations";
 import type { Candle } from "@/types/market";
 
@@ -41,6 +50,42 @@ export function buildIndicatorContext(candles: Candle[]): IndicatorContext {
   const rangeLow52 = computeRange(candles, 52, "low");
   const realizedVol = computeRealizedVol(closes, 20);
 
+  const sma50 = lastNumber(sma(closes, 50));
+  const sma200 = lastNumber(sma(closes, 200));
+  const psar = lastValue(parabolicSar(candles));
+  const keltner = lastValue(keltnerChannels(candles, 20, 10, 1.5));
+  const wave = lastValue(waveTrend(candles, 10, 21, 4));
+  const ichi = lastValue(ichimoku(candles, 9, 26, 52));
+  const mfi14 = lastNumber(mfi(candles, 14));
+  const t3v = lastNumber(t3(closes, 8, 0.7));
+  const cci20 = lastNumber(cci(candles, 20));
+
+  // PSAR on the RSI series itself — Parabolic RSI strategy needs this.
+  const rsiSeries = rsi(closes, 14);
+  const rsiValues = rsiSeries
+    .map((v) => (v == null ? Number.NaN : v))
+    .filter((v) => !Number.isNaN(v));
+  let psarOnRsi: IndicatorContext["psarOnRsi"] = null;
+  if (rsiValues.length >= 5) {
+    const synthetic = rsiValues.map(
+      (v) =>
+        ({
+          time: 0,
+          open: v,
+          high: v,
+          low: v,
+          close: v,
+          volume: 0,
+        }) as Candle,
+    );
+    const psarSeries = parabolicSar(synthetic);
+    const last = lastValue(psarSeries);
+    const lastRsi = rsiValues.at(-1);
+    if (last && lastRsi != null) {
+      psarOnRsi = { value: last.value, trend: last.trend, rsi: lastRsi };
+    }
+  }
+
   return {
     ema20,
     ema50,
@@ -55,8 +100,21 @@ export function buildIndicatorContext(candles: Candle[]): IndicatorContext {
     rangeHigh52,
     rangeLow52,
     realizedVol,
+    sma50,
+    sma200,
+    psar,
+    psarOnRsi,
+    keltner,
+    waveTrend: wave,
+    ichimoku: ichi,
+    mfi14,
+    t3: t3v,
+    cci20,
   };
 }
+
+/** Re-export so strategies that need triple supertrend can call directly. */
+export { supertrend };
 
 function emptyContext(): IndicatorContext {
   return {
@@ -73,6 +131,16 @@ function emptyContext(): IndicatorContext {
     rangeHigh52: null,
     rangeLow52: null,
     realizedVol: null,
+    sma50: null,
+    sma200: null,
+    psar: null,
+    psarOnRsi: null,
+    keltner: null,
+    waveTrend: null,
+    ichimoku: null,
+    mfi14: null,
+    t3: null,
+    cci20: null,
   };
 }
 

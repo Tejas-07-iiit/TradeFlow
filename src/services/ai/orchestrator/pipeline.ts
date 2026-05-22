@@ -10,6 +10,10 @@ export async function executeDecisionJob(
   scheduler: Scheduler,
 ): Promise<JobResult> {
   const startedAt = Date.now();
+  const fallbackDecisionModel =
+    process.env.GROQ_MODEL_DECISION?.trim() ||
+    process.env.GROQ_MODEL?.trim() ||
+    "llama-3.3-70b-versatile";
 
   // Abort check before we do any work
   if (job.abortSignal?.aborted) {
@@ -32,7 +36,7 @@ export async function executeDecisionJob(
       : purpose === "thesis"
       ? process.env.GROQ_MODEL_THESIS
       : process.env.GROQ_MODEL_NEWS;
-  let model = defaultModel || process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  let model = defaultModel || process.env.GROQ_MODEL || fallbackDecisionModel;
 
   // Model Routing & Downgrading Logic
   if (job.modelOverride) {
@@ -45,9 +49,9 @@ export async function executeDecisionJob(
     if (purpose === "decision" && queueDepth > 3) {
       if (model.toLowerCase().includes("deepseek") || model.toLowerCase().includes("qwen")) {
         console.warn(
-          `[orch/pipeline] Queue depth (${queueDepth}) > 3, stress-downgrading decision model from ${model} to llama-3.3-70b-versatile`,
+          `[orch/pipeline] Queue depth (${queueDepth}) > 3, stress-downgrading decision model from ${model} to ${fallbackDecisionModel}`,
         );
-        model = "llama-3.3-70b-versatile";
+        model = fallbackDecisionModel;
         modelSwitched = true;
       }
     }
@@ -56,13 +60,39 @@ export async function executeDecisionJob(
     const stats = getLiveKeysStats(model);
     const allInCooldown = stats.length > 0 && stats.every(s => s.status === "cooldown" || s.status === "exhausted");
     if (allInCooldown) {
-      const fallbackModel = "llama-3.3-70b-versatile";
-      if (model !== fallbackModel) {
+      const cheapModel =
+        process.env.GROQ_MODEL_CHEAP?.trim() ||
+        process.env.GROQ_MODEL_THESIS?.trim() ||
+        process.env.GROQ_MODEL?.trim();
+      const candidate = cheapModel && cheapModel !== model ? cheapModel : fallbackDecisionModel;
+      const candidateStats = getLiveKeysStats(candidate);
+      const candidateAllCooldown =
+        candidateStats.length > 0 &&
+        candidateStats.every((s) => s.status === "cooldown" || s.status === "exhausted");
+
+      if (candidate !== model && !candidateAllCooldown) {
         console.warn(
-          `[orch/pipeline] Primary model ${model} is fully in cooldown. Dynamically routing job to alternative model: ${fallbackModel}`,
+          `[orch/pipeline] ${model} fully cooled down — routing to ${candidate}.`,
         );
-        model = fallbackModel;
+        model = candidate;
         modelSwitched = true;
+      } else {
+        // Every viable model is cooled. Skip the LLM entirely and let the
+        // pipeline's local-fallback path produce a deterministic answer.
+        // The scheduler is instructed not to retry this job — feeding the
+        // retry storm would just churn the queue while every model stays
+        // exhausted.
+        console.warn(
+          `[orch/pipeline] ALL configured models in cooldown — falling through to local engine for ${job.symbol}.`,
+        );
+        return {
+          ok: true,
+          isTransient: false,
+          skipRetry: true,
+          source: "local-fallback",
+          durationMs: Date.now() - startedAt,
+          ...(await runLocalFallback(job)),
+        };
       }
     }
 
@@ -121,12 +151,61 @@ export async function executeDecisionJob(
       err?.message?.includes("Token budget exhausted");
 
     if (is429 && !isLastAttempt) {
+      // Re-check: if every model we could route to is cooled, do NOT
+      // requeue. The scheduler honors skipRetry to stop the 5-attempt
+      // storm that was previously congesting the queue and getting jobs
+      // expired.
+      const cheapModel =
+        process.env.GROQ_MODEL_CHEAP?.trim() ||
+        process.env.GROQ_MODEL_THESIS?.trim() ||
+        process.env.GROQ_MODEL?.trim();
+      const allCooled = [model, cheapModel].filter(Boolean).every((m) => {
+        const s = getLiveKeysStats(m!);
+        return s.length > 0 && s.every((k) => k.status === "cooldown" || k.status === "exhausted");
+      });
+      if (allCooled) {
+        console.warn(
+          `[orch/pipeline] 429 on ${job.symbol} and every fallback model is cooled — falling through to local engine (no retry).`,
+        );
+        return {
+          ok: true,
+          isTransient: false,
+          skipRetry: true,
+          source: "local-fallback",
+          durationMs: Date.now() - startedAt,
+          ...(await runLocalFallback(job)),
+        };
+      }
       console.warn(
         `[orch/pipeline] Job ${job.kind} ${job.symbol} rate limited (429) on attempt ${job.attempt}. Returning transient error.`,
       );
       return {
         ok: false,
         error: err.message || String(err),
+        isTransient: true,
+        durationMs: Date.now() - startedAt,
+      };
+    }
+
+    const isUnavailable =
+      err?.status === 404 ||
+      err?.status === 400 ||
+      err?.status === 503 ||
+      err?.message?.toLowerCase().includes("model not found") ||
+      err?.message?.toLowerCase().includes("model_not_found") ||
+      err?.message?.toLowerCase().includes("not found") ||
+      err?.message?.toLowerCase().includes("model unavailable") ||
+      err?.message?.toLowerCase().includes("unknown model") ||
+      err?.message?.toLowerCase().includes("unsupported model");
+
+    if (isUnavailable && model !== fallbackDecisionModel && !isLastAttempt) {
+      console.warn(
+        `[orch/pipeline] Job ${job.kind} ${job.symbol} failed with model unavailable/unsupported error on model ${model}. Overriding model to ${fallbackDecisionModel} and returning transient error.`,
+      );
+      job.modelOverride = fallbackDecisionModel;
+      return {
+        ok: false,
+        error: `Model unavailable: ${err.message || String(err)}`,
         isTransient: true,
         durationMs: Date.now() - startedAt,
       };
@@ -186,4 +265,36 @@ export async function executeDecisionJob(
     error: `Job execution failed permanently.`,
     durationMs: Date.now() - startedAt,
   };
+}
+
+/**
+ * Run the deterministic local engine for a job. Used as a fast-fail when
+ * every configured model is cooled — avoids the retry storm by giving the
+ * caller a definitive answer immediately. Returns the partial JobResult
+ * fields the caller can spread into the final result.
+ */
+async function runLocalFallback(job: AnalysisJob): Promise<Partial<JobResult>> {
+  try {
+    if (job.kind === "decision") {
+      const fallback = await getMarketDecisionFor(job.payload, undefined, true);
+      return {
+        decision: fallback || undefined,
+        source: fallback?.source || "local-fallback",
+      };
+    }
+    if (job.kind === "thesis") {
+      const fallback = await getMarketThesisFor(job.payload, undefined, true);
+      return { thesis: fallback || undefined, source: fallback ? "llm" : undefined };
+    }
+    const fallback = await classifyNewsItemsLLM(
+      job.symbol,
+      job.coinName,
+      job.items,
+      undefined,
+      true,
+    );
+    return { verdicts: fallback || [], source: fallback ? "llm" : "prefilter" };
+  } catch (err) {
+    return { ok: false, error: `Local fallback crashed: ${err instanceof Error ? err.message : String(err)}` };
+  }
 }

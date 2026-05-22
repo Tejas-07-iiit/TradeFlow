@@ -64,6 +64,31 @@ export interface IndicatorContext {
   rangeLow52: number | null;
   /** Standard deviation of last-20 log returns (annualised-ish). */
   realizedVol: number | null;
+  /** 50- and 200-period SMA for golden / death cross + macro filters. */
+  sma50: number | null;
+  sma200: number | null;
+  /** Parabolic SAR over price. */
+  psar: { value: number; trend: 1 | -1 } | null;
+  /** Parabolic SAR applied to RSI(14) source — Parabolic RSI strategy reads this. */
+  psarOnRsi: { value: number; trend: 1 | -1; rsi: number } | null;
+  /** Keltner Channels (EMA20 mid, 1.5× ATR10 envelope). */
+  keltner: { upper: number; middle: number; lower: number } | null;
+  /** WaveTrend Oscillator (LazyBear) — wt1/wt2. */
+  waveTrend: { wt1: number; wt2: number } | null;
+  /** Ichimoku components. */
+  ichimoku: {
+    tenkan: number;
+    kijun: number;
+    senkouA: number;
+    senkouB: number;
+    chikou: number | null;
+  } | null;
+  /** Money Flow Index. */
+  mfi14: number | null;
+  /** Tillson T3 moving average. */
+  t3: number | null;
+  /** Commodity Channel Index 20 — used by Lorentzian feature set. */
+  cci20: number | null;
 }
 
 /**
