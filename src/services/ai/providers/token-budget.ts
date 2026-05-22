@@ -126,10 +126,19 @@ export function markModelCooldown(
   model: string,
   retryAfterSec: number,
   accountId?: string | number,
+  isDailyQuota: boolean = false
 ): void {
   if (!Number.isFinite(retryAfterSec) || retryAfterSec <= 0) return;
+  
+  // Soft Cooldown Clamping: Prevent 40+ minute freezes from temporary RPM spikes
+  // If it's over 1800s (30m), it's likely a true daily limit, otherwise cap it to 120s
+  let effectiveSec = retryAfterSec;
+  if (!isDailyQuota && retryAfterSec < 1800) {
+    effectiveSec = Math.min(retryAfterSec, 120);
+  }
+  
   const key = bucketKey(model, accountId);
-  const until = Date.now() + retryAfterSec * 1000;
+  const until = Date.now() + effectiveSec * 1000;
   const prev = cooldownUntilMs.get(key) ?? 0;
   if (until > prev) cooldownUntilMs.set(key, until);
 }

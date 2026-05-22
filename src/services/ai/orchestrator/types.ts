@@ -49,12 +49,12 @@ export type JobKind = "decision" | "thesis" | "news";
  * window, it's dropped from the queue. Prevents stale work from running.
  */
 export const PRIORITY_SLA_MS: Record<JobPriority, number> = {
-  [JobPriority.EXECUTION_CRITICAL]: 30_000,
-  [JobPriority.POSITION_MGMT]: 20_000,
-  [JobPriority.ELITE_SETUP]: 25_000,
-  [JobPriority.NEW_SETUP]: 20_000,
-  [JobPriority.ROUTINE_SCAN]: 15_000,
-  [JobPriority.RECHECK]: 10_000,
+  [JobPriority.EXECUTION_CRITICAL]: 25_000,
+  [JobPriority.POSITION_MGMT]: 15_000,
+  [JobPriority.ELITE_SETUP]: 20_000,
+  [JobPriority.NEW_SETUP]: 15_000,
+  [JobPriority.ROUTINE_SCAN]: 8_000,
+  [JobPriority.RECHECK]: 5_000,
 };
 
 export interface DecisionJob {
@@ -122,8 +122,16 @@ export interface JobResult {
   skipRetry?: boolean;
 }
 
-export type LlmModelTier = "premium" | "lightweight" | "background";
+export type LlmModelTier = "premium" | "mid" | "lightweight" | "background";
 
+export interface ModelCapability {
+  id: string;
+  tier: LlmModelTier;
+  supportsJson: boolean;
+  supportsReasoning: boolean;
+  supportsFastInference: boolean;
+  avgLatencyMs: number;
+}
 export interface ModelStats {
   modelName: string;
   health: "healthy" | "cooldown" | "exhausted";
@@ -157,6 +165,7 @@ export interface SystemHealthStats {
 
 export interface AdminSettings {
   pausedModels: string[];
+  quarantinedPairs: string[]; // e.g. "groq#2+gpt-oss-20b"
   disabledAccounts: number[];
   routingWeights: Record<string, number>;
   concurrencyLimits: Record<LlmModelTier, number>;

@@ -235,10 +235,11 @@ export class GroqProvider implements LlmProvider {
       const raw = await attempt(messages);
       const data = parseAndValidate(raw);
       const duration = Date.now() - startMs;
-      recordRequestEnd(this.accountId, duration, actualTokens);
+      recordRequestEnd(this.accountId, this.model, duration, actualTokens, true);
       return data;
     } catch (err) {
-      recordRequestFailure(this.accountId);
+      const isJsonError = err instanceof Error && (err.message.toLowerCase().includes("json") || err.message.toLowerCase().includes("parse"));
+      recordRequestFailure(this.accountId, this.model, isJsonError);
       // 429s / network errors meant the call never produced billable
       // usage — release the reservation so the next attempt in the chain
       // doesn't see an inflated window.

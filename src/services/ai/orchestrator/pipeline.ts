@@ -2,7 +2,8 @@ import { getMarketDecisionFor } from "../reasoning/market-decision";
 import { getMarketThesisFor } from "../reasoning/market-thesis";
 import { classifyNewsItemsLLM } from "../news-validator";
 import type { AnalysisJob, JobResult } from "./types";
-import { selectBestKey, getLiveKeysStats } from "./state";
+import { selectBestKey, getLiveKeysStats, getModelCapability } from "./state";
+import { getJobTier } from "./queue";
 import type { Scheduler } from "./scheduler";
 
 export async function executeDecisionJob(
@@ -29,79 +30,70 @@ export async function executeDecisionJob(
   let purpose: "decision" | "thesis" | "news" = "decision";
   if (job.kind === "thesis") purpose = "thesis";
   if (job.kind === "news") purpose = "news";
-
   const defaultModel =
     purpose === "decision"
       ? process.env.GROQ_MODEL_DECISION
       : purpose === "thesis"
       ? process.env.GROQ_MODEL_THESIS
       : process.env.GROQ_MODEL_NEWS;
-  let model = defaultModel || process.env.GROQ_MODEL || fallbackDecisionModel;
+      
+  let model = job.modelOverride || defaultModel || process.env.GROQ_MODEL || fallbackDecisionModel;
+  let modelCap = getModelCapability(model);
+  let preferredAccountId: number | undefined;
 
-  // Model Routing & Downgrading Logic
-  if (job.modelOverride) {
-    model = job.modelOverride;
-  } else {
-    let modelSwitched = false;
-    const queueDepth = scheduler.stats({ inFlightKeys: [] }).queued;
-    
-    // Stress-downgrade decision models from heavy reasoning models (DeepSeek/Qwen) to faster ones under load
-    if (purpose === "decision" && queueDepth > 3) {
-      if (model.toLowerCase().includes("deepseek") || model.toLowerCase().includes("qwen")) {
-        console.warn(
-          `[orch/pipeline] Queue depth (${queueDepth}) > 3, stress-downgrading decision model from ${model} to ${fallbackDecisionModel}`,
-        );
-        model = fallbackDecisionModel;
-        modelSwitched = true;
-      }
+  // 1. Strict JSON Enforcement
+  if ((purpose === "decision" || purpose === "news") && !modelCap.supportsJson) {
+    const jsonModel = process.env.GROQ_MODEL_DECISION || "qwen/qwen3-32b";
+    console.warn(`[orch/pipeline] Model ${model} lacks JSON capability. Rerouting to ${jsonModel}`);
+    model = jsonModel;
+    modelCap = getModelCapability(model);
+    job.modelOverride = model;
+  }
+
+  // 2. Execution Budget Awareness (Don't use premium for weak priorities)
+  const tier = getJobTier(job);
+  if (modelCap.tier === "premium" && tier === "lightweight") {
+    const midModel = "qwen/qwen3-32b";
+    console.warn(`[orch/pipeline] Budget Protection: Downgrading lightweight job from premium ${model} to ${midModel}`);
+    model = midModel;
+    modelCap = getModelCapability(model);
+    job.modelOverride = model;
+  }
+
+  // 3. Intelligent Tier Degradation & Fail-Fast Resolution
+  // We try to find a healthy account for the requested model. If none exists, we degrade instantly.
+  const fallbackChain = [model, "qwen/qwen3-32b", "llama-3.1-8b-instant", "meta-llama/llama-4-scout-17b-16e-instruct"];
+  
+  for (const candidate of fallbackChain) {
+    // Re-verify json capability if degrading
+    const cap = getModelCapability(candidate);
+    if ((purpose === "decision" || purpose === "news") && !cap.supportsJson) {
+      continue; // Skip models that can't fulfill the contract
     }
 
-    // Downgrade/switch model if the primary model is fully in cooldown across all keys
-    const stats = getLiveKeysStats(model);
-    const allInCooldown = stats.length > 0 && stats.every(s => s.status === "cooldown" || s.status === "exhausted");
-    if (allInCooldown) {
-      const cheapModel =
-        process.env.GROQ_MODEL_CHEAP?.trim() ||
-        process.env.GROQ_MODEL_THESIS?.trim() ||
-        process.env.GROQ_MODEL?.trim();
-      const candidate = cheapModel && cheapModel !== model ? cheapModel : fallbackDecisionModel;
-      const candidateStats = getLiveKeysStats(candidate);
-      const candidateAllCooldown =
-        candidateStats.length > 0 &&
-        candidateStats.every((s) => s.status === "cooldown" || s.status === "exhausted");
-
-      if (candidate !== model && !candidateAllCooldown) {
-        console.warn(
-          `[orch/pipeline] ${model} fully cooled down — routing to ${candidate}.`,
-        );
+    preferredAccountId = selectBestKey(candidate);
+    if (preferredAccountId !== undefined) {
+      if (candidate !== model) {
+        console.warn(`[orch/pipeline] Fail-Fast: ${model} exhausted/unavailable. Instantly degraded to ${candidate} (Account #${preferredAccountId})`);
         model = candidate;
-        modelSwitched = true;
-      } else {
-        // Every viable model is cooled. Skip the LLM entirely and let the
-        // pipeline's local-fallback path produce a deterministic answer.
-        // The scheduler is instructed not to retry this job — feeding the
-        // retry storm would just churn the queue while every model stays
-        // exhausted.
-        console.warn(
-          `[orch/pipeline] ALL configured models in cooldown — falling through to local engine for ${job.symbol}.`,
-        );
-        return {
-          ok: true,
-          isTransient: false,
-          skipRetry: true,
-          source: "local-fallback",
-          durationMs: Date.now() - startedAt,
-          ...(await runLocalFallback(job)),
-        };
+        job.modelOverride = model;
       }
-    }
-
-    if (modelSwitched) {
-      job.modelOverride = model;
+      break;
     }
   }
 
-  const preferredAccountId = selectBestKey(model);
+  // 4. Local-First Rescue Mode
+  if (preferredAccountId === undefined) {
+    console.warn(`[orch/pipeline] RESCUE MODE: ALL API keys and fallback models exhausted. Falling through to local engine for ${job.symbol}.`);
+    return {
+      ok: true,
+      isTransient: false,
+      skipRetry: true, // Don't churn the queue
+      source: "local-fallback",
+      durationMs: Date.now() - startedAt,
+      ...(await runLocalFallback(job)),
+    };
+  }
   const isLastAttempt = job.attempt >= 4;
 
   try {

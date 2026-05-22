@@ -6,7 +6,7 @@
  */
 
 import { modelCooldownRemainingMs, markModelCooldown, getBudgetStats } from "../providers/token-budget";
-import type { KeyLoadStats, RateLimitEvent, AdminSettings } from "./types";
+import type { KeyLoadStats, RateLimitEvent, AdminSettings, ModelCapability } from "./types";
 
 interface RequestEvent {
   timestamp: number;
@@ -16,6 +16,7 @@ interface RequestEvent {
 // Global process-wide admin settings with defaults.
 const adminSettings: AdminSettings = {
   pausedModels: [],
+  quarantinedPairs: [],
   disabledAccounts: [],
   routingWeights: {
     "1": 50,
@@ -26,6 +27,7 @@ const adminSettings: AdminSettings = {
   },
   concurrencyLimits: {
     premium: 1,
+    mid: 2,
     lightweight: 3,
     background: 2,
   },
@@ -45,6 +47,27 @@ export function updateAdminSettings(settings: Partial<AdminSettings>): AdminSett
   return adminSettings;
 }
 
+export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
+  "llama-3.3-70b-versatile": { id: "llama-3.3-70b-versatile", tier: "premium", supportsJson: false, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 1500 },
+  "openai/gpt-oss-120b": { id: "openai/gpt-oss-120b", tier: "premium", supportsJson: true, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 2000 },
+  "qwen/qwen3-32b": { id: "qwen/qwen3-32b", tier: "mid", supportsJson: true, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 800 },
+  "openai/gpt-oss-20b": { id: "openai/gpt-oss-20b", tier: "mid", supportsJson: false, supportsReasoning: true, supportsFastInference: true, avgLatencyMs: 500 },
+  "llama-3.1-8b-instant": { id: "llama-3.1-8b-instant", tier: "lightweight", supportsJson: false, supportsReasoning: false, supportsFastInference: true, avgLatencyMs: 300 },
+  "meta-llama/llama-4-scout-17b-16e-instruct": { id: "meta-llama/llama-4-scout-17b-16e-instruct", tier: "lightweight", supportsJson: false, supportsReasoning: false, supportsFastInference: true, avgLatencyMs: 400 },
+};
+
+export function getModelCapability(modelName: string): ModelCapability {
+  // Try to match known capabilities by substring to support variant names
+  const lower = modelName.toLowerCase();
+  for (const [key, cap] of Object.entries(MODEL_CAPABILITIES)) {
+    if (lower.includes(key.toLowerCase()) || lower.includes(key.split("/").pop()!)) {
+      return cap;
+    }
+  }
+  // Default fallback assumes mid-tier non-json reasoning model
+  return { id: modelName, tier: "mid", supportsJson: false, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 1000 };
+}
+
 class AccountTracker {
   activeCount = 0;
   totalRequests = 0;
@@ -54,6 +77,11 @@ class AccountTracker {
   latencies: number[] = [];
   events: RequestEvent[] = [];
   events429: number[] = [];
+  
+  // Model-level rolling metrics
+  modelFailures: Record<string, number[]> = {};
+  modelSuccesses: Record<string, number[]> = {};
+  modelJsonFailures: Record<string, number[]> = {};
 
   constructor(readonly id: number) {}
 
@@ -109,6 +137,10 @@ class AccountTracker {
   }
 
   getHealthScore(model: string): number {
+    const pairKey = `groq#${this.id}+${model}`;
+    if (adminSettings.quarantinedPairs.includes(pairKey)) {
+      return 0; // Quarantined
+    }
     if (adminSettings.pausedModels.includes(model)) {
       return 0;
     }
@@ -145,10 +177,40 @@ class AccountTracker {
     // -2 penalty per 1000 tokens used in the last minute
     score -= (this.tokensLastMin / 1000) * 2;
 
+    // Apply Rolling Success Modifier
+    const nowMs = Date.now();
+    const recentSuccesses = (this.modelSuccesses[model] || []).filter(t => nowMs - t < 300000).length;
+    const recentFailures = (this.modelFailures[model] || []).filter(t => nowMs - t < 300000).length;
+    const recentJsonFailures = (this.modelJsonFailures[model] || []).filter(t => nowMs - t < 300000).length;
+    
+    // Circuit breaker check: 5 recent failures or 3 json failures trips circuit breaker
+    if (recentFailures >= 5 || recentJsonFailures >= 3 || this.recent429s >= 5) {
+      // Auto-quarantine the pair if circuit breaker trips
+      const pairKey = `groq#${this.id}+${model}`;
+      if (!adminSettings.quarantinedPairs.includes(pairKey)) {
+        console.warn(`[orch/circuit-breaker] Tripped for ${pairKey}! Quarantining pair.`);
+        adminSettings.quarantinedPairs.push(pairKey);
+      }
+      return 0;
+    }
+    
+    // Boost score for high success rate, penalize for failures
+    const totalRuns = recentSuccesses + recentFailures;
+    if (totalRuns > 0) {
+      const successRate = recentSuccesses / totalRuns;
+      if (successRate > 0.9) score += 10;
+      else if (successRate < 0.5) score -= 30;
+      else score -= (1.0 - successRate) * 20;
+    }
+    
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
   getStatus(model: string): "healthy" | "cooldown" | "exhausted" {
+    const pairKey = `groq#${this.id}+${model}`;
+    if (adminSettings.quarantinedPairs.includes(pairKey)) {
+      return "exhausted";
+    }
     if (adminSettings.pausedModels.includes(model)) {
       return "exhausted";
     }
@@ -202,7 +264,7 @@ export function collectGroqAccounts(): number[] {
  * Select the best Groq account id for the given model using health scoring.
  * Uses probabilistic (weighted random) selection of active healthy accounts.
  */
-export function selectBestKey(model: string): number {
+export function selectBestKey(model: string): number | undefined {
   const ids = collectGroqAccounts().filter((id) => !adminSettings.disabledAccounts.includes(id));
   if (ids.length === 0) return 1; // Default to key #1 if none configured
 
@@ -237,9 +299,9 @@ export function selectBestKey(model: string): number {
     return activeCandidates[0].id;
   }
 
-  // All keys are under cooldown/zero health — choose the one with the shortest remaining cooldown
-  candidates.sort((a, b) => a.cd - b.cd);
-  return candidates[0].id;
+  // FAIL-FAST: Return undefined if no keys are healthy. 
+  // We do NOT want to return an exhausted account and freeze the pipeline.
+  return undefined;
 }
 
 export function recordRequestStart(accountId: number, estimatedTokens: number) {
@@ -247,14 +309,27 @@ export function recordRequestStart(accountId: number, estimatedTokens: number) {
   tracker.addEvent(estimatedTokens);
 }
 
-export function recordRequestEnd(accountId: number, durationMs: number, actualTokens?: number) {
+export function recordRequestEnd(accountId: number, model: string, durationMs: number, actualTokens?: number, success: boolean = true) {
   const tracker = getTracker(accountId);
   tracker.recordEnd(durationMs, actualTokens);
+  
+  if (success) {
+    if (!tracker.modelSuccesses[model]) tracker.modelSuccesses[model] = [];
+    tracker.modelSuccesses[model].push(Date.now());
+  }
 }
 
-export function recordRequestFailure(accountId: number) {
+export function recordRequestFailure(accountId: number, model: string, isJsonError: boolean = false) {
   const tracker = getTracker(accountId);
   tracker.recordFailure();
+  
+  if (!tracker.modelFailures[model]) tracker.modelFailures[model] = [];
+  tracker.modelFailures[model].push(Date.now());
+  
+  if (isJsonError) {
+    if (!tracker.modelJsonFailures[model]) tracker.modelJsonFailures[model] = [];
+    tracker.modelJsonFailures[model].push(Date.now());
+  }
 }
 
 export function record429Event(
@@ -271,7 +346,7 @@ export function record429Event(
   tracker.last429Time = Date.now();
 
   // Log cooldown locally
-  markModelCooldown(model, retryAfterSec, accountId);
+  markModelCooldown(model, retryAfterSec, accountId, isTpd);
 
   const event: RateLimitEvent = {
     timestamp: new Date().toISOString(),

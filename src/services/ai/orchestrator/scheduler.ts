@@ -102,6 +102,7 @@ export class Scheduler {
 
   private activeByTier: Record<LlmModelTier, number> = {
     premium: 0,
+    mid: 0,
     lightweight: 0,
     background: 0,
   };

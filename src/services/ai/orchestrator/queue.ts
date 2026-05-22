@@ -69,9 +69,15 @@ export class PriorityQueue {
       while (bucket.length > 0 && bucket[0].job.expiresAt <= now) {
         const stale = bucket.shift()!;
         this.expiredCount++;
+        
+        console.warn(
+          `[orch/queue] STALE-DECISION PROTECTION: Dropping expired job ${stale.job.symbol} ` +
+          `(priority ${p}). Age: ${now - stale.job.enqueuedAt}ms. Forced regeneration required.`
+        );
+        
         stale.resolve({
           ok: false,
-          error: `Job expired in queue (priority ${p})`,
+          error: `Job expired in queue (priority ${p}) - Stale Market Data`,
           source: "expired",
           durationMs: now - stale.job.enqueuedAt,
         });
@@ -100,9 +106,15 @@ export class PriorityQueue {
       while (bucket.length > 0 && bucket[0].job.expiresAt <= now) {
         const stale = bucket.shift()!;
         this.expiredCount++;
+        
+        console.warn(
+          `[orch/queue] STALE-DECISION PROTECTION: Dropping expired job ${stale.job.symbol} ` +
+          `(priority ${p}). Age: ${now - stale.job.enqueuedAt}ms. Forced regeneration required.`
+        );
+        
         stale.resolve({
           ok: false,
-          error: `Job expired in queue (priority ${p})`,
+          error: `Job expired in queue (priority ${p}) - Stale Market Data`,
           source: "expired",
           durationMs: now - stale.job.enqueuedAt,
         });
