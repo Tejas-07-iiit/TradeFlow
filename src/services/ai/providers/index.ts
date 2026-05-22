@@ -258,7 +258,23 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
     }
   }
 
-  return chain;
+  // All calls in this system use chatJson() with response_format=json_object.
+  // Models that lack native JSON support (like gpt-oss-20b) will frequently
+  // fail with empty completions or malformed responses. Push them to the end
+  // of the chain so JSON-capable models are tried first.
+  const { getModelCapability } = require("../orchestrator/state");
+  const jsonCapable: LlmProvider[] = [];
+  const nonJsonCapable: LlmProvider[] = [];
+  for (const p of chain) {
+    const cap = getModelCapability(p.model);
+    if (cap.supportsJson) {
+      jsonCapable.push(p);
+    } else {
+      nonJsonCapable.push(p);
+    }
+  }
+
+  return [...jsonCapable, ...nonJsonCapable];
 }
 
 /**

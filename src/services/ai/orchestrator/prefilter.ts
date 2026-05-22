@@ -8,11 +8,11 @@ export interface DecisionPrefilter {
   syntheticDecision?: MarketDecision;
 }
 
-const FLAT_ALIGNMENT_THRESHOLD = 55;
-const NO_TREND_ADX_THRESHOLD = 20;
-const NEUTRAL_RSI_MIN = 42;
-const NEUTRAL_RSI_MAX = 58;
-const MIN_ATR_PCT = 0.5; // low volatility floor in %
+const FLAT_ALIGNMENT_THRESHOLD = 35;
+const NO_TREND_ADX_THRESHOLD = 12;
+const NEUTRAL_RSI_MIN = 45;
+const NEUTRAL_RSI_MAX = 55;
+const MIN_ATR_PCT = 0.15; // low volatility floor in %
 
 export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
   const snap = input.strategySnapshot;
@@ -53,10 +53,10 @@ export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
   }
 
   // 3. Reject setups with no directional conviction.
-  if (Math.abs(snap.netDirection) < 15) {
+  if (Math.abs(snap.netDirection) < 10) {
     return {
       skip: true,
-      reason: `low net directional conviction (netDirection=${snap.netDirection.toFixed(0)} < 15)`,
+      reason: `low net directional conviction (netDirection=${snap.netDirection.toFixed(0)} < 10)`,
       syntheticDecision: buildSyntheticHold(price, regime, `Skipped LLM: Directional conviction too low (${snap.netDirection.toFixed(0)}).`),
     };
   }

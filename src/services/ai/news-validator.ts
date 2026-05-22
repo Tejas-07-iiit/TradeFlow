@@ -50,7 +50,10 @@ const LlmVerdictSchema = z.object({
       z.object({
         id: z.string().min(1).max(128),
         class: z.enum(NEWS_CLASS_VALUES),
-        confidence: z.enum(["low", "medium", "high"]),
+        confidence: z
+          .string()
+          .transform((v) => v.toLowerCase().trim())
+          .pipe(z.enum(["low", "medium", "high"])),
         reasoning: z.string().min(3).max(220),
       }),
     )
@@ -149,7 +152,8 @@ export async function classifyNewsItemsLLM(
   const user =
     `Coin: ${coinName} (${symbol})\n` +
     `Classify each item below from the perspective of a trader holding ${coinName} ` +
-    `right now. Confidence reflects how certain you are this label is correct, ` +
+    `right now. Confidence must be exactly one of: "low", "medium", "high" (lowercase). ` +
+    `It reflects how certain you are this label is correct, ` +
     `given how concrete and time-relevant the news is.\n\n` +
     `Items:\n${itemsBlob}\n\n` +
     `Return JSON only.`;

@@ -48,12 +48,12 @@ export function updateAdminSettings(settings: Partial<AdminSettings>): AdminSett
 }
 
 export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
-  "llama-3.3-70b-versatile": { id: "llama-3.3-70b-versatile", tier: "premium", supportsJson: false, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 1500 },
+  "llama-3.3-70b-versatile": { id: "llama-3.3-70b-versatile", tier: "premium", supportsJson: true, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 1500 },
   "openai/gpt-oss-120b": { id: "openai/gpt-oss-120b", tier: "premium", supportsJson: true, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 2000 },
   "qwen/qwen3-32b": { id: "qwen/qwen3-32b", tier: "mid", supportsJson: true, supportsReasoning: true, supportsFastInference: false, avgLatencyMs: 800 },
   "openai/gpt-oss-20b": { id: "openai/gpt-oss-20b", tier: "mid", supportsJson: false, supportsReasoning: true, supportsFastInference: true, avgLatencyMs: 500 },
-  "llama-3.1-8b-instant": { id: "llama-3.1-8b-instant", tier: "lightweight", supportsJson: false, supportsReasoning: false, supportsFastInference: true, avgLatencyMs: 300 },
-  "meta-llama/llama-4-scout-17b-16e-instruct": { id: "meta-llama/llama-4-scout-17b-16e-instruct", tier: "lightweight", supportsJson: false, supportsReasoning: false, supportsFastInference: true, avgLatencyMs: 400 },
+  "llama-3.1-8b-instant": { id: "llama-3.1-8b-instant", tier: "lightweight", supportsJson: true, supportsReasoning: false, supportsFastInference: true, avgLatencyMs: 300 },
+  "meta-llama/llama-4-scout-17b-16e-instruct": { id: "meta-llama/llama-4-scout-17b-16e-instruct", tier: "lightweight", supportsJson: true, supportsReasoning: false, supportsFastInference: true, avgLatencyMs: 400 },
 };
 
 export function getModelCapability(modelName: string): ModelCapability {
