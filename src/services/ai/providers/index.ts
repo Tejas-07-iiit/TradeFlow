@@ -1,4 +1,5 @@
 import { GroqProvider } from "./groq";
+import { modelCooldownRemainingMs, getBudgetStats } from "./token-budget";
 import { LlmProviderError, type LlmProvider } from "./types";
 
 export type { ChatMessage, LlmProvider } from "./types";
@@ -274,7 +275,33 @@ export function getLlmProviderChain(opts: ProviderOptions = {}): LlmProvider[] {
     }
   }
 
-  return [...jsonCapable, ...nonJsonCapable];
+  // Move any provider whose (model, account) pair is currently in cooldown
+  // OR whose account has exhausted its daily token budget for this model to
+  // the BACK of the chain. Without this, chain[0] is picked by tier+account
+  // preference only — so an elite-tier call lands on llama-3.3-70b#1 even
+  // when that exact pair has hours of TPD cooldown remaining, throws
+  // BudgetExhaustedError before contacting Groq, and the queue burns a slot
+  // until stale-decision protection drops the job. We DON'T drop cooled
+  // providers entirely — if every option is cooled, the chain still has
+  // entries to attempt (one of them may have its cooldown expire by the
+  // time the call is dispatched), but the head is always the most-callable
+  // candidate.
+  const isCallable = (p: LlmProvider): boolean => {
+    if (p.accountId == null) return true;
+    if (modelCooldownRemainingMs(p.model, p.accountId) > 0) return false;
+    const budget = getBudgetStats(p.model, p.accountId);
+    if (budget.dailyUsage >= budget.dailyLimit) return false;
+    return true;
+  };
+
+  const orderedByHealth = (arr: LlmProvider[]): LlmProvider[] => {
+    const callable: LlmProvider[] = [];
+    const cooled: LlmProvider[] = [];
+    for (const p of arr) (isCallable(p) ? callable : cooled).push(p);
+    return [...callable, ...cooled];
+  };
+
+  return [...orderedByHealth(jsonCapable), ...orderedByHealth(nonJsonCapable)];
 }
 
 /**

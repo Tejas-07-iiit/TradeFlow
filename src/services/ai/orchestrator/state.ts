@@ -156,11 +156,11 @@ class AccountTracker {
       return 0;
     }
 
-    const now = Date.now();
-    const cdRemaining = Math.max(
-      this.cooldownUntil - now,
-      modelCooldownRemainingMs(model, this.id)
-    );
+    // Only the (model, account) cooldown blocks routing — a 429 on
+    // gpt-oss-20b#2 must NOT lock out llama-3.3-70b-versatile#2. The
+    // account-level `cooldownUntil` is informational only (kept for
+    // logs / health-stats display).
+    const cdRemaining = modelCooldownRemainingMs(model, this.id);
     if (cdRemaining > 0) {
       return 0;
     }
@@ -229,11 +229,8 @@ class AccountTracker {
     if (budget.dailyUsage >= budget.dailyLimit) {
       return "exhausted";
     }
-    const now = Date.now();
-    const cdRemaining = Math.max(
-      this.cooldownUntil - now,
-      modelCooldownRemainingMs(model, this.id)
-    );
+    // Per-(model, account) cooldown only — see comment in getHealthScore.
+    const cdRemaining = modelCooldownRemainingMs(model, this.id);
     if (cdRemaining > 0) {
       // Cooldown > 30 minutes indicates daily limit or severe exhaustion
       if (cdRemaining > 30 * 60 * 1000) {
@@ -375,7 +372,10 @@ export function getLiveKeysStats(model: string): KeyLoadStats[] {
   const ids = collectGroqAccounts();
   return ids.map((id) => {
     const t = getTracker(id);
-    const cd = Math.max(t.cooldownUntil - Date.now(), modelCooldownRemainingMs(model, id));
+    // Per-(model, account) cooldown is the authoritative routing signal —
+    // see getHealthScore. Surfacing only this in the stats keeps heartbeat
+    // logs consistent with what selectBestKey actually does.
+    const cd = modelCooldownRemainingMs(model, id);
     const budget = getBudgetStats(model, id);
     return {
       accountId: id,
