@@ -97,6 +97,23 @@ export class BackgroundRunner {
       }
     }
 
+    // 1a. Extend candle history for any position older than the bootstrap
+    // window. Without this, an SL hit that occurred before the cache's
+    // earliest bar is invisible to the offline-backfill check.
+    await this.ensureCandlesCoverOpenPositions().catch((err) => {
+      console.error("[BACKGROUND-RUNNER] Failed to extend candle history for open positions:", err);
+    });
+
+    // 1b. Run an immediate reconciliation pass BEFORE starting the live
+    // interval and BEFORE the WebSocket has had a chance to deliver tickers.
+    // The backfill check inside runMatchingLoop only needs historical candles
+    // (which we just bootstrapped) — this is what catches "laptop was off
+    // overnight, SL was hit while we were down" scenarios on cold start.
+    console.info("[BACKGROUND-RUNNER] Running startup reconciliation for open positions...");
+    await this.runMatchingLoop().catch((err) => {
+      console.error("[BACKGROUND-RUNNER] Startup reconciliation failed:", err);
+    });
+
     // 2. Connect WebSocket
     this.connectWebSocket();
 
@@ -170,6 +187,68 @@ export class BackgroundRunner {
     };
   }
 
+  /**
+   * Walk back the 5m candle cache so it covers every currently-open position's
+   * createdAt. The default bootstrap fetches the last 500 bars (~41h). For
+   * positions older than that, the gap between createdAt and the earliest
+   * cached bar is invisible to the offline-backfill check — an SL hit in that
+   * gap would never be reconciled. Paginates backwards in 1000-bar chunks
+   * (Binance REST max) and merges the older bars into the front of the cache.
+   */
+  private async ensureCandlesCoverOpenPositions() {
+    const openPositions = await prisma.paperPosition.findMany({
+      where: { status: { in: ["OPEN", "PARTIALLY_CLOSED"] } },
+      select: { symbol: true, createdAt: true },
+    });
+    if (openPositions.length === 0) return;
+
+    const oldestBySymbol: Record<string, number> = {};
+    for (const p of openPositions) {
+      const ms = new Date(p.createdAt).getTime();
+      const prev = oldestBySymbol[p.symbol];
+      if (prev === undefined || ms < prev) {
+        oldestBySymbol[p.symbol] = ms;
+      }
+    }
+
+    const FIVE_MIN_MS = 5 * 60 * 1000;
+    const MAX_PAGES = 10; // safety cap → up to 10,000 extra bars (~35 days)
+
+    for (const [symbol, oldestMs] of Object.entries(oldestBySymbol)) {
+      const cache = this.candles[`${symbol}:5m`] || [];
+      if (cache.length === 0) continue;
+
+      // Pad the target back by a single bar so we definitely include the bar
+      // containing createdAt (its subsequent bars are what we need to scan).
+      const targetMs = oldestMs - FIVE_MIN_MS;
+
+      let earliestCachedMs = cache[0].time * 1000;
+      let pages = 0;
+      while (earliestCachedMs > targetMs && pages < MAX_PAGES) {
+        pages += 1;
+        const endMs = earliestCachedMs - 1; // exclusive upper bound
+        try {
+          const older = await fetchHistoricalCandles(symbol, "5m", 1000, { endTime: endMs });
+          if (older.length === 0) break;
+          const existing = this.candles[`${symbol}:5m`] || [];
+          const seen = new Set(existing.map((c) => c.time));
+          const merged = [...older.filter((c) => !seen.has(c.time)), ...existing];
+          merged.sort((a, b) => a.time - b.time);
+          this.candles[`${symbol}:5m`] = merged;
+          const newEarliestMs = merged[0].time * 1000;
+          if (newEarliestMs >= earliestCachedMs) break; // nothing actually older returned
+          earliestCachedMs = newEarliestMs;
+          console.info(
+            `[BACKGROUND-RUNNER] Extended ${symbol} candles by ${older.length} bars (now back to ${new Date(earliestCachedMs).toISOString()})`,
+          );
+        } catch (err) {
+          console.warn(`[BACKGROUND-RUNNER] Failed to extend ${symbol} candles:`, err);
+          break;
+        }
+      }
+    }
+  }
+
   private updateCandleCache(symbol: string, interval: string, candle: Candle) {
     const key = `${symbol}:${interval}`;
     const existing = this.candles[key] || [];
@@ -236,20 +315,22 @@ export class BackgroundRunner {
       }
 
       for (const pos of openPositions) {
-        const ticker = this.tickers[pos.symbol];
-        if (!ticker) continue;
-
-        const currentPrice = ticker.last;
         let reason: "TAKE_PROFIT" | "STOP_LOSS" | null = null;
-        let exitPrice = currentPrice;
+        let exitPrice: number | null = null;
         let closedAt: number | undefined = undefined;
 
         // 1. Backfill check: Did we hit SL/TP while the system was offline?
+        //    This MUST run independently of the live ticker — historical
+        //    candles are the only signal we have for prices that moved while
+        //    the process wasn't running.
         const symbolCandles = this.candles[`${pos.symbol}:5m`];
-        if (symbolCandles) {
+        if (symbolCandles && symbolCandles.length > 0) {
           const openedTime = Math.floor(new Date(pos.createdAt).getTime() / 1000);
           for (const c of symbolCandles) {
-            if (c.time < openedTime) continue;
+            // Skip the candle that contains the open — its low/high includes
+            // price action from before the position existed, which would
+            // create a false SL/TP trigger.
+            if (c.time <= openedTime) continue;
 
             if (pos.stopLoss != null) {
               const sl = Number(pos.stopLoss);
@@ -284,24 +365,30 @@ export class BackgroundRunner {
           }
         }
 
-        // 2. Live Check
+        // 2. Live check — only when the ticker has arrived. If the WebSocket
+        //    hasn't delivered a tick yet, the backfill above is our only
+        //    enforcement path; we don't skip the whole position because of it.
         if (!reason) {
-          if (pos.stopLoss != null) {
-            const sl = Number(pos.stopLoss);
-            if (pos.side === "LONG" && currentPrice <= sl) reason = "STOP_LOSS";
-            if (pos.side === "SHORT" && currentPrice >= sl) reason = "STOP_LOSS";
-            if (reason) exitPrice = sl;
-          }
-          if (!reason && pos.takeProfit != null) {
-            const tp = Number(pos.takeProfit);
-            if (pos.side === "LONG" && currentPrice >= tp) reason = "TAKE_PROFIT";
-            if (pos.side === "SHORT" && currentPrice <= tp) reason = "TAKE_PROFIT";
-            if (reason) exitPrice = tp;
+          const ticker = this.tickers[pos.symbol];
+          if (ticker) {
+            const currentPrice = ticker.last;
+            if (pos.stopLoss != null) {
+              const sl = Number(pos.stopLoss);
+              if (pos.side === "LONG" && currentPrice <= sl) reason = "STOP_LOSS";
+              if (pos.side === "SHORT" && currentPrice >= sl) reason = "STOP_LOSS";
+              if (reason) exitPrice = sl;
+            }
+            if (!reason && pos.takeProfit != null) {
+              const tp = Number(pos.takeProfit);
+              if (pos.side === "LONG" && currentPrice >= tp) reason = "TAKE_PROFIT";
+              if (pos.side === "SHORT" && currentPrice <= tp) reason = "TAKE_PROFIT";
+              if (reason) exitPrice = tp;
+            }
           }
         }
 
-        if (reason) {
-          console.info(`[SERVER-MATCHING] Closing position ${pos.id} due to ${reason} @ ${exitPrice}`);
+        if (reason && exitPrice != null) {
+          console.info(`[SERVER-MATCHING] Closing position ${pos.id} due to ${reason} @ ${exitPrice}${closedAt ? ` (backfill @ ${new Date(closedAt).toISOString()})` : ""}`);
           await closePaperPositionInternal(pos.userId, pos.id, exitPrice, { reason, closedAt }).catch(err => {
             console.error(`[SERVER-MATCHING] Close failed for position ${pos.id}:`, err);
           });

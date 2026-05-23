@@ -1,6 +1,34 @@
 {
   "items": [
     {
+      "id": "cc:8faa1f25-ca61-4379-9b3a-84790087a874",
+      "source": "cryptocompare",
+      "title": "Bitcoin left behind in the geopolitical melee",
+      "excerpt": "Your day-ahead look for May 22, 2026",
+      "url": "https://www.coindesk.com/daybook-us/2026/05/22/bitcoin-left-behind-in-the-geopolitical-melee",
+      "publishedAt": 1779449490,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/2e95f0a867861e80a3d80fd8a304d95ec5451345-5376x3584.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "r:1tkg66u",
+      "source": "reddit",
+      "title": "Would the 10,000 BTC pizza transaction have become as legendary if BTC had stayed cheap for years afterward?",
+      "excerpt": "A lot of people talk about it as “the most expensive pizza ever,” but that only became the dominant story because of what happened to BTC’s price later.\n\nIf BTC had remained a small niche internet currency for much longer, would we still celebrate Pizza Day as a major proof-of-use moment - the first famous example of Bitcoin being exchanged for something real, or would it just be a forgotten forum",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkg66u/would_the_10000_btc_pizza_transaction_have_become/",
+      "publishedAt": 1779449292,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "DISCUSSION",
+      "comments": 7
+    },
+    {
       "id": "cc:https---cointelegraph-com-news-polymarket-seeks-japan-entry-global-regulatory-scrutiny",
       "source": "cryptocompare",
       "title": "Polymarket seeks Japan entry despite gambling law hurdles: Report",
@@ -84,9 +112,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 5,
+      "score": 11,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 19
+      "comments": 39
     },
     {
       "id": "r:1tkdjt5",
@@ -98,7 +126,7 @@
       "mentions": [
         "BNBUSDT"
       ],
-      "score": 0,
+      "score": 1,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 0
     },
@@ -112,7 +140,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 2,
+      "score": 1,
       "sourceLabel": "PROJECT-UPDATE",
       "comments": 0
     },
@@ -218,7 +246,7 @@
       ],
       "score": 0,
       "sourceLabel": "ANALYSIS",
-      "comments": 8
+      "comments": 9
     },
     {
       "id": "cc:https---cointelegraph-com-news-tokenized-stocks-risk-liquidity-and-revenue-fragmentation-research",
@@ -395,9 +423,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 1836,
+      "score": 1969,
       "sourceLabel": "MEME",
-      "comments": 183
+      "comments": 187
     },
     {
       "id": "cc:https---cointelegraph-com-markets-bitcoin-longs-soar-despite-weak-us-macroeconomic-data-is-82k-btc-next",
@@ -425,7 +453,7 @@
       ],
       "score": 11,
       "sourceLabel": "DISCUSSION",
-      "comments": 12
+      "comments": 13
     },
     {
       "id": "cc:https---cointelegraph-com-news-harvard-dumps-entire-eth-position-one-quarter",
@@ -449,9 +477,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjxumf/up_down_down_down/",
       "publishedAt": 1779397378,
       "mentions": [],
-      "score": 322,
+      "score": 336,
       "sourceLabel": "MEME",
-      "comments": 27
+      "comments": 29
     },
     {
       "id": "r:1tjxol9",
@@ -502,18 +530,6 @@
       "score": 50,
       "sourceLabel": "Cointelegraph",
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9wZW9wbGUtc3RyZWV0LWRlZmktMS5qcGc=.jpg"
-    },
-    {
-      "id": "r:1tjwdxb",
-      "source": "reddit",
-      "title": "US Intensifies Operation Economic Fury Targeting Iran’s $7.7 Billion Crypto Network",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjwdxb/us_intensifies_operation_economic_fury_targeting/",
-      "publishedAt": 1779394225,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 5
     },
     {
       "id": "cc:bd8b8918-e20c-420d-a56e-d7b610503df7",
@@ -833,7 +849,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 66,
+      "score": 70,
       "sourceLabel": "DISCUSSION",
       "comments": 45
     },
@@ -883,9 +899,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjiyzq/how_to_buy_crypto_without_getting_restricted/",
       "publishedAt": 1779366440,
       "mentions": [],
-      "score": 10,
+      "score": 12,
       "sourceLabel": "DISCUSSION",
-      "comments": 19
+      "comments": 20
     },
     {
       "id": "cc:https---cointelegraph-com-news-boerse-stuttgart-societe-generale-flatexdegiro-team-up-for-blockchain-securities-settlement-in-eu",
@@ -907,7 +923,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjikha/south_carolina_signs_procrypto_anticbdc_bill_into/",
       "publishedAt": 1779365440,
       "mentions": [],
-      "score": 41,
+      "score": 38,
       "sourceLabel": "REGULATIONS",
       "comments": 10
     },
@@ -938,21 +954,6 @@
       "score": 50,
       "sourceLabel": "CoinDesk",
       "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/09f6f8dd6ce70c60b94142414b39032f9427163a-2400x1200.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:9b86ba40-0fde-416f-9fb4-fbe44d75f68f",
-      "source": "cryptocompare",
-      "title": "HYPE leads crypto rebound as traders position for volatility breakout",
-      "excerpt": "Bitcoin and ether stabilized as derivatives activity rebounded, HYPE rose for a fifth straight day and options traders positioned for a breakout.",
-      "url": "https://www.coindesk.com/markets/2026/05/21/hype-leads-crypto-rebound-as-traders-position-for-volatility-breakout",
-      "publishedAt": 1779360777,
-      "mentions": [
-        "BTCUSDT",
-        "ETHUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/2045e4ff010e4337ea9b250d5969971fc8d04019-1862x1044.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
     },
     {
       "id": "r:1tjglyo",
@@ -986,7 +987,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjatgm/37_banks_back_qivalis_euro_stablecoin_before_2026/",
       "publishedAt": 1779341251,
       "mentions": [],
-      "score": 24,
+      "score": 23,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 2
     },
@@ -998,7 +999,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tj7gek/what_are_your_thoughts_on_crypto_cards/",
       "publishedAt": 1779331689,
       "mentions": [],
-      "score": 7,
+      "score": 8,
       "sourceLabel": "DISCUSSION",
       "comments": 43
     },
@@ -1012,7 +1013,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 537,
+      "score": 536,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 62
     },
@@ -1024,9 +1025,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tj2hrd/the_binance_android_app_is_a_chinese_surveillance/",
       "publishedAt": 1779318925,
       "mentions": [],
-      "score": 307,
+      "score": 316,
       "sourceLabel": "ADVICE",
-      "comments": 70
+      "comments": 71
     },
     {
       "id": "r:1tj24gf",
@@ -1036,7 +1037,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tj24gf/daily_crypto_discussion_may_20_2026_gmt0/",
       "publishedAt": 1779318039,
       "mentions": [],
-      "score": 14,
+      "score": 13,
       "sourceLabel": "r/CryptoCurrency",
       "comments": 70
     },
@@ -1050,9 +1051,9 @@
       "mentions": [
         "ETHUSDT"
       ],
-      "score": 42,
+      "score": 40,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 19
+      "comments": 20
     },
     {
       "id": "r:1tiobrs",
@@ -1062,7 +1063,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tiobrs/trump_orders_government_fed_to_review_crypto/",
       "publishedAt": 1779289290,
       "mentions": [],
-      "score": 49,
+      "score": 51,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 2
     },
@@ -1074,7 +1075,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tin0p7/trump_just_issued_an_executive_order_allowing/",
       "publishedAt": 1779286548,
       "mentions": [],
-      "score": 262,
+      "score": 265,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 114
     }
@@ -1082,16 +1083,16 @@
   "trending": [
     {
       "symbol": "BTCUSDT",
-      "mentions": 28,
+      "mentions": 29,
       "recentTitles": [
-        "Crypto majors stuck in tight range as altcoin rotation picks up steam",
-        "US Pumps $2B Into Quantum as Bitcoin Encryption Risk Grows",
-        "Bitcoin Pizza Day Boss Live Now — Challenge It Every Hour at :21 Until 11:21pm UTC"
+        "Bitcoin left behind in the geopolitical melee",
+        "Would the 10,000 BTC pizza transaction have become as legendary if BTC had stayed cheap for years afterward?",
+        "Crypto majors stuck in tight range as altcoin rotation picks up steam"
       ]
     },
     {
       "symbol": "ETHUSDT",
-      "mentions": 6,
+      "mentions": 5,
       "recentTitles": [
         "XRP ETFs attract inflows amid wallet surge. bitcoin, ether funds struggle.",
         "Harvard dumps entire ETH position after just one quarter",
@@ -1122,7 +1123,7 @@
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779451445,
+  "fetchedAt": 1779509991,
   "sources": [
     {
       "source": "cryptocompare",

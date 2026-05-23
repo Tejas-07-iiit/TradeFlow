@@ -11,8 +11,16 @@ export async function fetchHistoricalCandles(
   symbol: string,
   interval: Timeframe,
   limit = 500,
+  range: { startTime?: number; endTime?: number } = {},
 ): Promise<Candle[]> {
-  const url = `${REST}/api/v3/klines?symbol=${symbol.toUpperCase()}&interval=${interval}&limit=${limit}`;
+  const params = new URLSearchParams({
+    symbol: symbol.toUpperCase(),
+    interval,
+    limit: String(Math.min(Math.max(limit, 1), 1000)),
+  });
+  if (range.startTime != null) params.set("startTime", String(Math.floor(range.startTime)));
+  if (range.endTime != null) params.set("endTime", String(Math.floor(range.endTime)));
+  const url = `${REST}/api/v3/klines?${params.toString()}`;
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`Binance REST error ${res.status}`);

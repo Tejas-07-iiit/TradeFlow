@@ -211,7 +211,7 @@ export function LivePaperTradingPage() {
             </CardContent>
           </Card>
 
-          <Card className="flex-1 min-h-0 flex flex-col">
+          <Card className="flex-1 max-h-[500px] min-h-[300px] flex flex-col">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="size-4 text-[var(--accent)]" />
