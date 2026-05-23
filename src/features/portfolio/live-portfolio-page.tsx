@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { useMarketStore } from "@/store/market-store";
 import type { PaperPositionView } from "@/types/portfolio";
+import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 
 /**
  * Server-hydrated portfolio analytics view. The numbers here come from the
@@ -41,14 +42,26 @@ export function LivePortfolioPage({
   const unrealizedPnl = positions.reduce((sum, position) => {
     const ticker = tickers[position.symbol];
     const mark = ticker?.last ?? position.entryPrice;
-    const direction = position.side === "LONG" ? 1 : -1;
-    return sum + (mark - position.entryPrice) * position.quantity * direction;
+    const metrics = computePositionRiskMetrics({
+      side: position.side,
+      entryPrice: position.entryPrice,
+      quantity: position.quantity,
+      leverage: position.leverage,
+      currentPrice: mark,
+    });
+    return sum + metrics.unrealizedPnl;
   }, 0);
 
   const totalEquity = walletBalance + unrealizedPnl;
   const availableBalance = walletBalance - usedMargin;
   const grossNotional = positions.reduce((sum, position) => {
-    return sum + position.entryPrice * position.quantity;
+    const metrics = computePositionRiskMetrics({
+      side: position.side,
+      entryPrice: position.entryPrice,
+      quantity: position.quantity,
+      leverage: position.leverage,
+    });
+    return sum + metrics.notionalValue;
   }, 0);
 
   // Layout ratios use Total Equity as the denominator so the bars stay

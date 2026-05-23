@@ -302,6 +302,10 @@ export function LivePaperTradingPage() {
                     unrealizedPnlPct,
                     durationMs,
                     riskReward,
+                    projectedProfit,
+                    projectedLoss,
+                    riskPercentOfWallet,
+                    notionalValue,
                   }) => (
                     <div
                       key={position.id}
@@ -480,40 +484,46 @@ export function LivePaperTradingPage() {
                       </div>
                       {(() => {
                         const sizing = parseSizingMeta(position.decisionMeta);
-                        if (!sizing) return null;
+                        const walletBalance = Number(position.walletBalanceSnapshot || 10000);
+                        const equityPercent = walletBalance > 0 ? (notionalValue / walletBalance) * 100 : 0;
+                        const liveRiskAmount = projectedLoss;
+                        const liveRiskPercent = riskPercentOfWallet ?? (sizing ? sizing.riskPercent : 0);
+                        const liveExpectedProfit = projectedProfit;
+                        const liveExpectedLoss = projectedLoss;
+
                         return (
                           <div className="rounded border border-[var(--border)] bg-[var(--surface-elevated)] px-2.5 py-1.5 text-[10px] leading-tight text-[var(--fg-subtle)]">
                             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 font-mono tabular-nums">
                               <span>
                                 <span className="text-[var(--fg-subtle)]">EQUITY </span>
                                 <span className="text-[var(--fg)]">
-                                  {sizing.equityPercent.toFixed(1)}%
+                                  {equityPercent.toFixed(1)}%
                                 </span>
                               </span>
                               <span>
                                 <span className="text-[var(--fg-subtle)]">RISK </span>
                                 <span className="text-[var(--color-bear)]">
-                                  {formatCurrency(sizing.riskAmount)}
+                                  {formatCurrency(liveRiskAmount)}
                                 </span>
                                 <span className="text-[var(--fg-subtle)]">
                                   {" "}
-                                  ({sizing.riskPercent.toFixed(2)}%)
+                                  ({liveRiskPercent.toFixed(2)}%)
                                 </span>
                               </span>
                               <span>
                                 <span className="text-[var(--fg-subtle)]">TARGET </span>
                                 <span className="text-[var(--color-bull)]">
-                                  +{formatCurrency(sizing.expectedProfit)}
+                                  +{formatCurrency(liveExpectedProfit)}
                                 </span>
                               </span>
                               <span>
                                 <span className="text-[var(--fg-subtle)]">MAX LOSS </span>
                                 <span className="text-[var(--color-bear)]">
-                                  -{formatCurrency(sizing.expectedLoss)}
+                                  -{formatCurrency(liveExpectedLoss)}
                                 </span>
                               </span>
                             </div>
-                            {sizing.rationale ? (
+                            {sizing?.rationale ? (
                               <div className="mt-1 text-[var(--fg)]">
                                 {sizing.rationale}
                               </div>

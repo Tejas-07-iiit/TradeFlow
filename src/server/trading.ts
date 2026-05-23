@@ -10,6 +10,7 @@ import type {
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_WALLET_BALANCE } from "./wallet";
+import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 
 /**
  * Server actions for the paper-trading engine. The accounting model here is
@@ -65,8 +66,14 @@ function statusForReason(reason: CloseReason) {
 }
 
 function pnlFor(side: OrderSide, qty: number, entry: number, exit: number) {
-  const direction = side === "LONG" ? 1 : -1;
-  return (exit - entry) * qty * direction;
+  const metrics = computePositionRiskMetrics({
+    side,
+    entryPrice: entry,
+    quantity: qty,
+    leverage: 1,
+    currentPrice: exit,
+  });
+  return metrics.unrealizedPnl;
 }
 
 /** Informational only — the simulator does not force-liquidate yet. */
@@ -75,13 +82,13 @@ function liquidationPriceFor(
   entry: number,
   leverage: number,
 ) {
-  if (leverage <= 1) {
-    // At 1x there is no liquidation for SHORTs and only at price=0 for LONGs;
-    // surfacing 0 is more honest than NaN.
-    return side === "LONG" ? 0 : Number.POSITIVE_INFINITY;
-  }
-  const move = entry / leverage;
-  return side === "LONG" ? entry - move : entry + move;
+  const metrics = computePositionRiskMetrics({
+    side,
+    entryPrice: entry,
+    quantity: 1,
+    leverage,
+  });
+  return metrics.liquidationPrice ?? (side === "LONG" ? 0 : Number.POSITIVE_INFINITY);
 }
 
 export async function createPaperOrderInternal(userId: string, data: {
@@ -322,11 +329,15 @@ export async function closePaperPositionInternal(
 
     let riskReward: number | null = null;
     if (position.stopLoss && position.takeProfit) {
-      const sl = Number(position.stopLoss);
-      const tp = Number(position.takeProfit);
-      const risk = Math.abs(entry - sl);
-      const reward = Math.abs(tp - entry);
-      riskReward = risk > 0 ? reward / risk : null;
+      const metrics = computePositionRiskMetrics({
+        side: position.side,
+        entryPrice: entry,
+        quantity: closeQty,
+        leverage: position.leverage,
+        takeProfitPrice: Number(position.takeProfit),
+        stopLossPrice: Number(position.stopLoss),
+      });
+      riskReward = metrics.riskRewardRatio > 0 ? metrics.riskRewardRatio : null;
     }
 
     const claim = await tx.paperPosition.updateMany({

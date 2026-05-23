@@ -5,6 +5,8 @@ import { calculateIndicators, generateDecision } from "@/lib/signals/signal-engi
 import { computeRiskAdjustedSize } from "@/lib/trading/position-sizing";
 import { computeDrawdownMultiplier } from "@/lib/risk/drawdown-gate";
 import { computeVolTargetMultiplier } from "@/lib/risk/vol-target";
+import { DEFAULT_WALLET_BALANCE } from "@/server/wallet";
+import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 import { decisionSide } from "@/services/ai/schemas";
 import { runCandlestickEngine } from "@/lib/candlestick";
 import { saveExplainableSignal } from "@/server/xai-signals";
@@ -480,14 +482,25 @@ export class BackgroundRunner {
           const atrPct = last && last.close > 0 && "atrPct" in last ? (last as any).atrPct ?? null : null;
           const ruleGrade = decision.setupQuality === "B" ? "B" : (decision.setupQuality as any);
 
-          const totalEquity =
-            bal + userPositions.reduce((s, p) => s + Number(p.unrealizedPnl ?? 0), 0);
+          let liveTotalEquity = bal;
+          for (const up of userPositions) {
+            const upTicker = this.tickers[up.symbol];
+            const upMark = upTicker?.last ?? Number(up.entryPrice);
+            const upMetrics = computePositionRiskMetrics({
+              side: up.side,
+              entryPrice: Number(up.entryPrice),
+              quantity: Number(up.quantity),
+              leverage: up.leverage,
+              currentPrice: upMark,
+            });
+            liveTotalEquity += upMetrics.unrealizedPnl;
+          }
           // Peak proxy until we add a stored high-water mark: max of current
-          // equity and the paper account's seed balance (60k per Prisma
-          // default). Gate activates once equity dips below the seed.
+          // equity and the paper account's seed balance (10k starting balance).
+          // Gate activates once equity dips below the seed.
           const drawdown = computeDrawdownMultiplier({
-            currentEquity: totalEquity,
-            peakEquity: Math.max(totalEquity, 60_000),
+            currentEquity: liveTotalEquity,
+            peakEquity: Math.max(liveTotalEquity, DEFAULT_WALLET_BALANCE),
           });
           // Continuous vol-target via ATR%-as-daily-vol proxy. atrPct is in
           // percent (e.g. 1.5 = 1.5%); divide by 100 to get a fraction so
@@ -503,7 +516,7 @@ export class BackgroundRunner {
             livePrice: decision.entryPrice,
             stopLossPrice: decision.stopLoss,
             takeProfitPrice: decision.takeProfit,
-            totalEquity,
+            totalEquity: liveTotalEquity,
             availableBalance,
             confidence: decision.confidence,
             setupQuality: ruleGrade,
@@ -649,9 +662,17 @@ export class BackgroundRunner {
 
         const qty = Number(pos.quantity);
         const entry = Number(pos.entryPrice);
-        const direction = pos.side === "LONG" ? 1 : -1;
-        const unrealizedPnl = (livePrice - entry) * qty * direction;
-        const unrealizedPnlPct = (unrealizedPnl / (entry * qty)) * 100;
+        const riskMetrics = computePositionRiskMetrics({
+          side: pos.side,
+          entryPrice: entry,
+          quantity: qty,
+          leverage: pos.leverage,
+          takeProfitPrice: pos.takeProfit ? Number(pos.takeProfit) : null,
+          stopLossPrice: pos.stopLoss ? Number(pos.stopLoss) : null,
+          currentPrice: livePrice,
+        });
+        const unrealizedPnl = riskMetrics.unrealizedPnl;
+        const unrealizedPnlPct = riskMetrics.unrealizedPnlPct;
 
         let setupQuality: string | undefined = undefined;
         let qualityScore: number | undefined = undefined;
@@ -1025,15 +1046,27 @@ export class BackgroundRunner {
           continue;
         }
 
-        const totalEquity = bal + userPositions.reduce((s, p) => s + Number(p.unrealizedPnl ?? 0), 0);
+        let liveTotalEquity = bal;
+        for (const up of userPositions) {
+          const upTicker = this.tickers[up.symbol];
+          const upMark = upTicker?.last ?? Number(up.entryPrice);
+          const upMetrics = computePositionRiskMetrics({
+            side: up.side,
+            entryPrice: Number(up.entryPrice),
+            quantity: Number(up.quantity),
+            leverage: up.leverage,
+            currentPrice: upMark,
+          });
+          liveTotalEquity += upMetrics.unrealizedPnl;
+        }
         const { totalOpenNotional, perSymbolOpenNotional, openPositionsCount } = this.computeExposure(userPositions, symbol);
 
         const atrPct = proposal.atrPct;
         const externalSizeMultiplier = news && news.status === "ok" ? news.sizeMultiplier : 1;
 
         const drawdown = computeDrawdownMultiplier({
-          currentEquity: totalEquity,
-          peakEquity: Math.max(totalEquity, 60_000),
+          currentEquity: liveTotalEquity,
+          peakEquity: Math.max(liveTotalEquity, DEFAULT_WALLET_BALANCE),
         });
         const volTarget = computeVolTargetMultiplier({
           targetDailyVol: 0.015,
@@ -1046,7 +1079,7 @@ export class BackgroundRunner {
           livePrice,
           stopLossPrice: effectiveDecision.stopLoss,
           takeProfitPrice: effectiveDecision.takeProfit,
-          totalEquity,
+          totalEquity: liveTotalEquity,
           availableBalance,
           confidence: effectiveDecision.confidence,
           setupQuality: effectiveDecision.setupQuality as any,
@@ -1245,7 +1278,13 @@ export class BackgroundRunner {
     let openPositionsCount = 0;
     for (const p of positions) {
       openPositionsCount += 1;
-      const notional = Number(p.quantity) * Number(p.entryPrice);
+      const metrics = computePositionRiskMetrics({
+        side: p.side,
+        entryPrice: Number(p.entryPrice),
+        quantity: Number(p.quantity),
+        leverage: p.leverage,
+      });
+      const notional = metrics.notionalValue;
       totalOpenNotional += notional;
       if (p.symbol === symbol) perSymbolOpenNotional += notional;
     }

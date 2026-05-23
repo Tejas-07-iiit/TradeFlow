@@ -8,6 +8,7 @@ import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
 import { useAiDecisionStore } from "@/store/ai-decision-store";
 import { calculateIndicators } from "@/lib/signals/signal-engine";
+import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 import { runCandlestickEngine } from "@/lib/candlestick";
 import { macd } from "@/lib/indicators/calculations";
 import { evaluatePosition } from "@/services/trade-manager";
@@ -128,9 +129,17 @@ export function AiTradeManager() {
           // ─── Compile Position Context ───
           const qty = Number(pos.quantity);
           const entry = Number(pos.entryPrice);
-          const direction = pos.side === "LONG" ? 1 : -1;
-          const unrealizedPnl = (livePrice - entry) * qty * direction;
-          const unrealizedPnlPct = (unrealizedPnl / (entry * qty)) * 100;
+          const riskMetrics = computePositionRiskMetrics({
+            side: pos.side,
+            entryPrice: entry,
+            quantity: qty,
+            leverage: pos.leverage,
+            takeProfitPrice: pos.takeProfit ? Number(pos.takeProfit) : null,
+            stopLossPrice: pos.stopLoss ? Number(pos.stopLoss) : null,
+            currentPrice: livePrice,
+          });
+          const unrealizedPnl = riskMetrics.unrealizedPnl;
+          const unrealizedPnlPct = riskMetrics.unrealizedPnlPct;
 
           // Parse pos.decisionMeta to extract setupQuality and qualityScore
           let setupQuality: string | undefined = undefined;

@@ -24,7 +24,7 @@
       "mentions": [],
       "score": 1,
       "sourceLabel": "DISCUSSION",
-      "comments": 1
+      "comments": 2
     },
     {
       "id": "cc:https---cointelegraph-com-news-bitcoin-etf-outflows-are-a-contrarian-buy-signal-santiment",
@@ -48,9 +48,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tl8u98/trump_just_quietly_gave_himself_his_kids_his/",
       "publishedAt": 1779518753,
       "mentions": [],
-      "score": 72,
+      "score": 95,
       "sourceLabel": "DISCUSSION",
-      "comments": 15
+      "comments": 20
     },
     {
       "id": "r:1tl8raz",
@@ -62,7 +62,7 @@
       "mentions": [],
       "score": 0,
       "sourceLabel": "PERSPECTIVE",
-      "comments": 8
+      "comments": 10
     },
     {
       "id": "r:1tl7os4",
@@ -164,7 +164,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkxlhp/iran_reportedly_funneled_billions_through_binance/",
       "publishedAt": 1779487734,
       "mentions": [],
-      "score": 230,
+      "score": 232,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 48
     },
@@ -178,9 +178,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 26,
+      "score": 24,
       "sourceLabel": "DISCUSSION",
-      "comments": 53
+      "comments": 54
     },
     {
       "id": "r:1tkuh06",
@@ -192,9 +192,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 195,
+      "score": 196,
       "sourceLabel": "LEGACY",
-      "comments": 30
+      "comments": 31
     },
     {
       "id": "r:1tku8z0",
@@ -273,7 +273,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 168,
+      "score": 167,
       "sourceLabel": "ANALYSIS",
       "comments": 102
     },
@@ -347,7 +347,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 125,
+      "score": 124,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 40
     },
@@ -359,7 +359,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tknz1d/house_oversight_chair_launches_probe_into_insider/",
       "publishedAt": 1779467129,
       "mentions": [],
-      "score": 18,
+      "score": 16,
       "sourceLabel": "REGULATIONS",
       "comments": 2
     },
@@ -371,9 +371,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tknwip/crypto_market_in_a_nutshell/",
       "publishedAt": 1779466992,
       "mentions": [],
-      "score": 30,
+      "score": 35,
       "sourceLabel": "COMEDY",
-      "comments": 7
+      "comments": 8
     },
     {
       "id": "r:1tkngwf",
@@ -543,7 +543,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 308,
+      "score": 305,
       "sourceLabel": "ANALYSIS",
       "comments": 85
     },
@@ -731,9 +731,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 92,
+      "score": 94,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 120
+      "comments": 122
     },
     {
       "id": "r:1tkdjt5",
@@ -745,7 +745,7 @@
       "mentions": [
         "BNBUSDT"
       ],
-      "score": 4,
+      "score": 5,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 1
     },
@@ -795,7 +795,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkciw8/south_korea_to_review_22_crypto_tax_repeal/",
       "publishedAt": 1779437777,
       "mentions": [],
-      "score": 5,
+      "score": 4,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 0
     },
@@ -976,9 +976,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 3680,
+      "score": 3687,
       "sourceLabel": "MEME",
-      "comments": 281
+      "comments": 282
     },
     {
       "id": "r:1tk0w61",
@@ -988,7 +988,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tk0w61/daily_crypto_discussion_may_21_2026_gmt0/",
       "publishedAt": 1779404446,
       "mentions": [],
-      "score": 6,
+      "score": 7,
       "sourceLabel": "r/CryptoCurrency",
       "comments": 159
     },
@@ -1002,7 +1002,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 14,
+      "score": 13,
       "sourceLabel": "DISCUSSION",
       "comments": 16
     },
@@ -1014,7 +1014,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjxumf/up_down_down_down/",
       "publishedAt": 1779397378,
       "mentions": [],
-      "score": 544,
+      "score": 548,
       "sourceLabel": "MEME",
       "comments": 41
     },
@@ -1056,7 +1056,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 79,
+      "score": 83,
       "sourceLabel": "DISCUSSION",
       "comments": 49
     },
@@ -1082,7 +1082,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 550,
+      "score": 548,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 79
     }
@@ -1131,7 +1131,7 @@
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779521687,
+  "fetchedAt": 1779522856,
   "sources": [
     {
       "source": "cryptocompare",

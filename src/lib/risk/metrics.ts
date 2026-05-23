@@ -1,5 +1,8 @@
 import type { OrderSide } from "@prisma/client";
 
+export const DEFAULT_WALLET_BALANCE = 10000;
+
+
 export interface PositionRiskInput {
   side: "LONG" | "SHORT" | OrderSide;
   entryPrice: number;

@@ -13,6 +13,7 @@ import { calculateIndicators } from "@/lib/signals/signal-engine";
 import { computeRiskAdjustedSize } from "@/lib/trading/position-sizing";
 import { computeDrawdownMultiplier } from "@/lib/risk/drawdown-gate";
 import { computeVolTargetMultiplier } from "@/lib/risk/vol-target";
+import { DEFAULT_WALLET_BALANCE } from "@/lib/risk/metrics";
 import { closePaperPosition, createPaperOrder } from "@/server/trading";
 import { decisionSide, type MarketDecision } from "@/services/ai/schemas";
 import type { NewsValidationResult } from "@/services/news/validator-types";
@@ -724,7 +725,7 @@ export function AiExecutionEngine() {
         try {
           const drawdown = computeDrawdownMultiplier({
             currentEquity: totalEquity,
-            peakEquity: Math.max(totalEquity, 60_000),
+            peakEquity: Math.max(totalEquity, DEFAULT_WALLET_BALANCE),
           });
           const volTarget = computeVolTargetMultiplier({
             targetDailyVol: 0.015,

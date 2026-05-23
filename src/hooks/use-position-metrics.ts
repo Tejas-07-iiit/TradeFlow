@@ -20,6 +20,10 @@ export interface PositionMetrics {
   durationMs: number;
   /** |reward| / |risk| from TP and SL relative to entry. Null if either is missing. */
   riskReward: number | null;
+  projectedProfit: number;
+  projectedLoss: number;
+  riskPercentOfWallet: number | null;
+  notionalValue: number;
 }
 
 export interface PortfolioMetrics {
@@ -86,6 +90,10 @@ export function usePositionMetrics(positions: PaperPositionView[]): PortfolioMet
         totalPnl: metrics.unrealizedPnl + p.realizedPnl,
         durationMs: Math.max(0, now - openedAt),
         riskReward: metrics.riskRewardRatio > 0 ? metrics.riskRewardRatio : null,
+        projectedProfit: metrics.projectedProfit,
+        projectedLoss: metrics.projectedLoss,
+        riskPercentOfWallet: metrics.riskPercentOfWallet,
+        notionalValue: metrics.notionalValue,
       };
     });
 
