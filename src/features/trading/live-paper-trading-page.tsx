@@ -583,18 +583,18 @@ export function LivePaperTradingPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="max-h-[400px] flex flex-col">
             <CardHeader>
               <CardTitle>Trade History</CardTitle>
               <Badge variant="muted">{tradeHistory.length} closed</Badge>
             </CardHeader>
-            <CardContent className="space-y-1.5">
+            <CardContent className="flex-1 overflow-y-auto min-h-0 space-y-1.5">
               {tradeHistory.length === 0 ? (
                 <div className="py-4 text-center text-xs text-[var(--fg-subtle)]">
                   No closed trades yet
                 </div>
               ) : (
-                tradeHistory.slice(0, 25).map((trade) => (
+                tradeHistory.map((trade) => (
                   <div
                     key={trade.id}
                     className="flex items-center justify-between rounded-md bg-[var(--surface-elevated)] px-3 py-2 border border-[var(--border)]"

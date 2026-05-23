@@ -68,6 +68,14 @@ export class BackgroundRunner {
   private tradeManagerInterval: NodeJS.Timeout | null = null;
   private llmDecisionInterval: NodeJS.Timeout | null = null;
 
+  // Re-entrancy guards. The setInterval fires every N seconds regardless of
+  // whether the previous tick has finished — under load (many PENDING orders,
+  // a slow Prisma transaction, or a DB hiccup) ticks would otherwise stack
+  // and exhaust the Prisma transaction pool with P2028 errors.
+  private matchingLoopRunning = false;
+  private signalLoopRunning = false;
+  private tradeManagerLoopRunning = false;
+
   private constructor() {}
 
   public static getInstance(): BackgroundRunner {
@@ -267,6 +275,8 @@ export class BackgroundRunner {
   }
 
   private async runMatchingLoop() {
+    if (this.matchingLoopRunning) return;
+    this.matchingLoopRunning = true;
     try {
       const pendingOrders = await prisma.paperOrder.findMany({
         where: { status: "PENDING" },
@@ -396,12 +406,16 @@ export class BackgroundRunner {
       }
     } catch (err) {
       console.error(`[SERVER-MATCHING] Error in runMatchingLoop:`, err);
+    } finally {
+      this.matchingLoopRunning = false;
     }
   }
 
   private async runAiSignalLoop() {
     const autonomyOn = process.env.NEXT_PUBLIC_AI_AUTONOMY === "on";
     if (autonomyOn) return;
+    if (this.signalLoopRunning) return;
+    this.signalLoopRunning = true;
 
     try {
       const wallets = await prisma.paperWallet.findMany({
@@ -516,10 +530,14 @@ export class BackgroundRunner {
       }
     } catch (err) {
       console.error(`[SERVER-SIGNAL-ENGINE] Error in runAiSignalLoop:`, err);
+    } finally {
+      this.signalLoopRunning = false;
     }
   }
 
   private async runAiTradeManagerLoop() {
+    if (this.tradeManagerLoopRunning) return;
+    this.tradeManagerLoopRunning = true;
     try {
       const openPositions = await prisma.paperPosition.findMany({
         where: {
@@ -728,6 +746,8 @@ export class BackgroundRunner {
       }
     } catch (err) {
       console.error(`[SERVER-TRADE-MGMT] Error in runAiTradeManagerLoop:`, err);
+    } finally {
+      this.tradeManagerLoopRunning = false;
     }
   }
 

@@ -35,7 +35,16 @@ const LOG_PREFIX = "[trading]";
 const DEFAULT_LEVERAGE = 1;
 
 const revalidateTradingPaths = () => {
-  revalidatePath("/(platform)", "layout");
+  // `revalidatePath` requires a request context (the "static generation
+  // store"). The background matching loop / scheduled jobs call these helpers
+  // outside any request, so the call throws `Invariant: static generation
+  // store missing`. Cache invalidation is best-effort — swallowing here is
+  // safe; the UI polls on its own interval.
+  try {
+    revalidatePath("/(platform)", "layout");
+  } catch {
+    // background context — no client to invalidate
+  }
 };
 
 function statusForReason(reason: CloseReason) {
@@ -181,7 +190,7 @@ export async function cancelPaperOrder(
 }
 
 export async function fillPaperOrderInternal(userId: string, orderId: string, fillPrice: number) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const claim = await tx.paperOrder.updateMany({
       where: { id: orderId, userId, status: "PENDING" },
       data: {
@@ -261,9 +270,10 @@ export async function fillPaperOrderInternal(userId: string, orderId: string, fi
         `margin=$${marginRequired.toFixed(2)} (wallet=$${walletBalance.toFixed(2)}, used→$${(usedMargin + marginRequired).toFixed(2)})`,
     );
 
-    revalidateTradingPaths();
     return { positionId: position.id };
   });
+  revalidateTradingPaths();
+  return result;
 }
 
 export async function fillPaperOrder(orderId: string, fillPrice: number) {
@@ -281,7 +291,7 @@ export async function closePaperPositionInternal(
   const reason: CloseReason = options.reason ?? "MANUAL";
   const nowMs = options.closedAt ?? Date.now();
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const position = await tx.paperPosition.findFirst({
       where: {
         id: positionId,
@@ -390,9 +400,10 @@ export async function closePaperPositionInternal(
         `(${isFullClose ? "FULL" : "PARTIAL"})`,
     );
 
-    revalidateTradingPaths();
     return { realizedPnl: slicePnl, isFullClose };
   });
+  revalidateTradingPaths();
+  return result;
 }
 
 export async function closePaperPosition(
@@ -439,7 +450,7 @@ export async function updatePositionLevelsInternal(
     healthScore?: number;
   }
 ) {
-  return prisma.$transaction(async (tx) => {
+  const outcome = await prisma.$transaction(async (tx) => {
     const position = await tx.paperPosition.findFirst({
       where: {
         id: positionId,
@@ -512,9 +523,10 @@ export async function updatePositionLevelsInternal(
       `[TRADE-MGMT] UPDATED ${positionId} levels: TP ${currentTP}→${data.takeProfit}, SL ${currentSL}→${data.stopLoss}`
     );
 
-    revalidateTradingPaths();
     return { ok: true };
   });
+  if (outcome?.ok) revalidateTradingPaths();
+  return outcome;
 }
 
 export async function updatePositionLevels(

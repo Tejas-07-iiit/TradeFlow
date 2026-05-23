@@ -1,6 +1,589 @@
 {
   "items": [
     {
+      "id": "r:1tl2boq",
+      "source": "reddit",
+      "title": "My name is Theo Chino-Tavarez. I am a Bitcoiner and I am running for Congress in the United States. Does anyone here know Will Schweitzer from Blue Vault?",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl2boq/my_name_is_theo_chinotavarez_i_am_a_bitcoiner_and/",
+      "publishedAt": 1779499796,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "POLITICS",
+      "comments": 0
+    },
+    {
+      "id": "cc:https---cointelegraph-com-markets-ether-analyst-claims-eth-is-still-a-good-long-term-buy-heres-why",
+      "source": "cryptocompare",
+      "title": "Ethereum is still a good long-term buy, according data: Analyst",
+      "excerpt": "Ethereum’s dominance in DeFi, stablecoins and staking is strengthening the long-term ETH accumulation thesis, despite it’s 28% price decline in 2026.",
+      "url": "https://cointelegraph.com/markets/ether-analyst-claims-eth-is-still-a-good-long-term-buy-heres-why?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779496158,
+      "mentions": [
+        "ETHUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS13aHktZG9lcy1ldGhlcmV1bS1oYXMtYW4taW50cmluc2ljLXZhbHVlLmpwZw==.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-bitcoin-pizza-day-those-10k-btc-worth-today",
+      "source": "cryptocompare",
+      "title": "Bitcoin 'Pizza Day' was 16 years ago, here's how much that BTC is worth today",
+      "excerpt": "Laszlo Hanyecz's 2010 post, offering 10,000 BTC in exchange for two pizzas delivered to his home, marked the first recorded commercial BTC payment.",
+      "url": "https://cointelegraph.com/news/bitcoin-pizza-day-those-10k-btc-worth-today?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779491798,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1mYW1vdXMtcGl6emEtZGF5LXdoZXJlLXlvdS1jb3VsZC1idXktcGl6emEtd2l0aC1idGMtaW4tMjAxOC5qcGc=.jpg"
+    },
+    {
+      "id": "r:1tkz7sk",
+      "source": "reddit",
+      "title": "Bitcoin could drop 60% if history repeat.",
+      "excerpt": "No emotion here, just data. When we rejected the green zone Bitcoin returned to the purple zone. Those are just fibo levels high time frame. So the perfect buy level is at 30k. Do whatever you want with this info.",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkz7sk/bitcoin_could_drop_60_if_history_repeat/",
+      "publishedAt": 1779491683,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "ANALYSIS",
+      "comments": 31
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-kevin-warsh-sworn-fed-chair-traders-rate-hikes-2026",
+      "source": "cryptocompare",
+      "title": "Kevin Warsh sworn in as Fed chair, as traders forecast rate hikes in 2026",
+      "excerpt": "US President Donald Trump has repeatedly said he wants the Federal Reserve to lower interest rates, but investors forecast no chance of a rate cut in 2026.",
+      "url": "https://cointelegraph.com/news/kevin-warsh-sworn-fed-chair-traders-rate-hikes-2026?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779487921,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9rZXZpbi13YXJzaC0yLTMuanBn.jpg"
+    },
+    {
+      "id": "r:1tkxlhp",
+      "source": "reddit",
+      "title": "Iran reportedly funneled billions through Binance to fund its military",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkxlhp/iran_reportedly_funneled_billions_through_binance/",
+      "publishedAt": 1779487734,
+      "mentions": [],
+      "score": 168,
+      "sourceLabel": "GENERAL-NEWS",
+      "comments": 36
+    },
+    {
+      "id": "r:1tkuiyq",
+      "source": "reddit",
+      "title": "Clarity Act passed committee and BTC immediately gave it all back. Why does this keep happening",
+      "excerpt": "BTC hit 82k right after the Clarity Act cleared Senate Banking Committee 15-9 last Thursday. Didn't even last a day, dumped straight back to 78k.\n\nFunding rate on bydfi went positive the second the headline dropped, longs everywhere. Then 82k hit, price started bleeding, flipped negative within hours. People who knew what was coming already took profit while everyone else was still entering.\n\nAt t",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkuiyq/clarity_act_passed_committee_and_btc_immediately/",
+      "publishedAt": 1779480812,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 21,
+      "sourceLabel": "DISCUSSION",
+      "comments": 39
+    },
+    {
+      "id": "r:1tkuh06",
+      "source": "reddit",
+      "title": "Happy Bitcoin Pizza Day!",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkuh06/happy_bitcoin_pizza_day/",
+      "publishedAt": 1779480693,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 96,
+      "sourceLabel": "LEGACY",
+      "comments": 20
+    },
+    {
+      "id": "r:1tku8z0",
+      "source": "reddit",
+      "title": "US House Lawmakers Launch Probe into Kalshi, Polymarket Insider Trading",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tku8z0/us_house_lawmakers_launch_probe_into_kalshi/",
+      "publishedAt": 1779480201,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "GENERAL-NEWS",
+      "comments": 1
+    },
+    {
+      "id": "cc:1456bcb2-4a4b-41d6-980a-127d1cc8be63",
+      "source": "cryptocompare",
+      "title": "F2Pool founder who controls 11% of bitcoin's hashrate to lead first SpaceX mission to Mars",
+      "excerpt": "Chun Wang, the first Mission Commander for SpaceX’s first commercial spaceflight to Mars, is crucial for the future transport of millions of tons of cargo and a million citizens to the Red Planet.",
+      "url": "https://www.coindesk.com/business/2026/05/22/f2pool-founder-who-controls-11-of-bitcoin-s-hashrate-to-lead-first-spacex-mission-to-mars",
+      "publishedAt": 1779479229,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/3b93544f6ae76fe08356e8f512cf1ce0aed958eb-4032x3024.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:88267bac-5e7b-4f80-add8-94947fd45938",
+      "source": "cryptocompare",
+      "title": "Robinhood Crypto COO Tanya Denisova is leaving company amid revenue slowdown",
+      "excerpt": "Robinhood Crypto COO Tanya Denisova is leaving the firm after more than five years, as the trading platform navigates a sharp decline in crypto revenue and works to lessen its dependence on digital asset market cycles.",
+      "url": "https://www.coindesk.com/business/2026/05/22/robinhood-crypto-coo-tanya-denisova-is-leaving-company-amid-revenue-slowdown",
+      "publishedAt": 1779478815,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/cb0bf014fcfb96a3b856413652b97154bb22a97e-720x406.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-markets-price-predictions-522-btc-eth-bnb-xrp-sol-doge-hype-ada-zec-bch",
+      "source": "cryptocompare",
+      "title": "Price predictions 5/22: BTC, ETH, BNB, XRP, SOL, DOGE, HYPE, ADA, ZEC, BCH",
+      "excerpt": "Bitcoin sold off to $76,000, giving bears an opportunity to reclaim control of the crypto market. Meanwhile, altcoins like HYPE charted new highs.",
+      "url": "https://cointelegraph.com/markets/price-predictions-522-btc-eth-bnb-xrp-sol-doge-hype-ada-zec-bch?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779478431,
+      "mentions": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT",
+        "BNBUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9hbmFseXNpcy1hbmFseXRpY3MtZ2VvbG9naXN0LW11c2V1bS0xLmpwZw==.jpg"
+    },
+    {
+      "id": "r:1tkt85s",
+      "source": "reddit",
+      "title": "A bitcoin miner spent $860k armouring vehicles for its bosses, a fact for which we have very little context",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkt85s/a_bitcoin_miner_spent_860k_armouring_vehicles_for/",
+      "publishedAt": 1779478014,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "GENERAL-NEWS",
+      "comments": 6
+    },
+    {
+      "id": "r:1tkt6i4",
+      "source": "reddit",
+      "title": "Prediction market trading cards.",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkt6i4/prediction_market_trading_cards/",
+      "publishedAt": 1779477915,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "COMEDY",
+      "comments": 0
+    },
+    {
+      "id": "r:1tkt39u",
+      "source": "reddit",
+      "title": "Michael Saylor says the Bitcoin network will be worth $100 trillion",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkt39u/michael_saylor_says_the_bitcoin_network_will_be/",
+      "publishedAt": 1779477729,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 149,
+      "sourceLabel": "ANALYSIS",
+      "comments": 93
+    },
+    {
+      "id": "cc:5f562811-ae89-46a9-933e-0ab4d8d234b7",
+      "source": "cryptocompare",
+      "title": "SEC Commissioner Peirce counters views that crypto rule will foster synthetic tokens",
+      "excerpt": "Hester Peirce, the commissioner behind the SEC's Crypto Task Force, made statements on the now-delayed proposal, perhaps tamping down mistaken beliefs.",
+      "url": "https://www.coindesk.com/news-analysis/2026/05/22/sec-commissioner-peirce-counters-views-that-crypto-rule-will-foster-synthetic-tokens",
+      "publishedAt": 1779474032,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/facaa2fb18c3e0eac299cf2f40a828bb6705036d-1920x1080.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:942a874d-d6b7-45d6-baad-03ed0685a10d",
+      "source": "cryptocompare",
+      "title": "Why Minnesota is empowering local banks to fight Wall Street for crypto revenue",
+      "excerpt": "A local banker told CoinDesk that in light of Wall Street’s aggressive push into the crypto industry, Minnesota's financial institutions could not afford to remain on the sidelines.",
+      "url": "https://www.coindesk.com/business/2026/05/22/why-minnesota-is-empowering-local-banks-to-fight-wall-street-for-crypto-revenue",
+      "publishedAt": 1779472421,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/271c1937e18b80730064c0aa2ca72aa439a3ec09-1212x865.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-us-house-probe-kalshi-polymarket-insider-trading",
+      "source": "cryptocompare",
+      "title": "US House lawmakers launch probe into Kalshi, Polymarket insider trading",
+      "excerpt": "Representative James Comer asked CEOs of two major prediction market companies for information on their responses to insider trading after “suspiciously timed trades” related to US military actions against Iran.",
+      "url": "https://cointelegraph.com/news/us-house-probe-kalshi-polymarket-insider-trading?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779470449,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1vdGMtb3Zlci10aGUtY291bnRlci10cmFkZS0xLmpwZw==.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-markets-near-protocol-leads-ai-token-rally-with-a-50-pump-is-5-near-price-next",
+      "source": "cryptocompare",
+      "title": "NEAR protocol leads AI token rally with a 50% pump: Is $5 NEAR price next?",
+      "excerpt": "NEAR price surges 50% in a week as AI token momentum, Nvidia optimism and network upgrades fuel bullish sentiment.",
+      "url": "https://cointelegraph.com/markets/near-protocol-leads-ai-token-rally-with-a-50-pump-is-5-near-price-next?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779469288,
+      "mentions": [],
+      "score": 100,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9uZWFyLWNvdmVyLW1heS0yMi5qcGc=.jpg"
+    },
+    {
+      "id": "cc:0ae61452-9581-4862-a8be-619bc303364c",
+      "source": "cryptocompare",
+      "title": "Tom Emmer brushes off law enforcement concerns over Clarity Act",
+      "excerpt": "House Majority Whip Tom Emmer said concerns from law enforcement groups about crypto developer protections are being overstated.",
+      "url": "https://www.coindesk.com/policy/2026/05/22/tom-emmer-brushes-off-law-enforcement-concerns-over-clarity-act",
+      "publishedAt": 1779467455,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/c5dafeb7e4f60dedd2f71a7e7702bef2856f50c1-1920x1080.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "r:1tko1s9",
+      "source": "reddit",
+      "title": "Pro-Bitcoin Kevin Warsh officially sworn in as new Federal Reserve Chair",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tko1s9/probitcoin_kevin_warsh_officially_sworn_in_as_new/",
+      "publishedAt": 1779467295,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 109,
+      "sourceLabel": "GENERAL-NEWS",
+      "comments": 39
+    },
+    {
+      "id": "r:1tknz1d",
+      "source": "reddit",
+      "title": "House Oversight chair launches probe into insider trading on Kalshi and Polymarket",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tknz1d/house_oversight_chair_launches_probe_into_insider/",
+      "publishedAt": 1779467129,
+      "mentions": [],
+      "score": 13,
+      "sourceLabel": "REGULATIONS",
+      "comments": 2
+    },
+    {
+      "id": "r:1tknwip",
+      "source": "reddit",
+      "title": "Crypto Market in a nutshell",
+      "excerpt": "As usual no one knows a shit about the market. ",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tknwip/crypto_market_in_a_nutshell/",
+      "publishedAt": 1779466992,
+      "mentions": [],
+      "score": 28,
+      "sourceLabel": "COMEDY",
+      "comments": 6
+    },
+    {
+      "id": "r:1tknuxo",
+      "source": "reddit",
+      "title": "YOLO $near",
+      "excerpt": "All in on $near",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tknuxo/yolo_near/",
+      "publishedAt": 1779466899,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "ADVICE",
+      "comments": 7
+    },
+    {
+      "id": "r:1tkngwf",
+      "source": "reddit",
+      "title": "How Do They Know?",
+      "excerpt": "This is not a Strike support request. This is questions regarding the support I received and what methods are publicly available for such a decision.\n\nI intended to make a wire purchase of BTC on the order of $5k with my Strike account, so I created a suppport request in their app to get a calculation or estimate of purchase and send fees that I would need to accommodate in my process. In response",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkngwf/how_do_they_know/",
+      "publishedAt": 1779466071,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "ADVICE",
+      "comments": 2
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-institutional-crypto-adoption-tether-bitcoin-ai-polymarket-outflows",
+      "source": "cryptocompare",
+      "title": "Crypto Biz: Institutions tighten their grip on Bitcoin, AI and prediction markets",
+      "excerpt": "Institutional crypto adoption accelerates as Tether expands Bitcoin holdings, miners pivot to AI and Polymarket joins Nasdaq amid $1 billion fund outflows.",
+      "url": "https://cointelegraph.com/news/institutional-crypto-adoption-tether-bitcoin-ai-polymarket-outflows?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779465750,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1nYXRlLWlvLTMuanBn.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-markets-bitcoin-price-falls-under-77k-as-dow-jones-hits-new-all-time-highs",
+      "source": "cryptocompare",
+      "title": "Bitcoin price falls under $77K as Dow Jones hits new all-time highs",
+      "excerpt": "Bitcoin headed lower as Wall Street trading began with new record highs for the Dow Jones, while traders warned of weak US demand.",
+      "url": "https://cointelegraph.com/markets/bitcoin-price-falls-under-77k-as-dow-jones-hits-new-all-time-highs?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779464415,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9yZWQtZG93bi1mYWxsaW5nLWNhci1iaXRjb2luLmpwZw==.jpg"
+    },
+    {
+      "id": "cc:1d2004c7-c9a3-4269-ae73-aa1df7185395",
+      "source": "cryptocompare",
+      "title": "Congress hits Polymarket and Kalshi with a massive insider trading probe",
+      "excerpt": "Rep. James Comer is demanding internal records from the prediction market CEOs, warning that government employees could be using classified information to make “huge profits”.",
+      "url": "https://www.coindesk.com/policy/2026/05/22/congress-probes-polymarket-and-kalshi-over-fears-government-employees-are-trading-on-secret-info",
+      "publishedAt": 1779463660,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/b25f92f41078a970ccce304a54e556d7b64a206c-1900x1268.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "r:1tkljzo",
+      "source": "reddit",
+      "title": "What does Crypto Based their Values Upon?",
+      "excerpt": "And why there are so many cryptos? Other than btc what are  other choices that are legit for long term? And why doge coin still held so much value eventhough it does not really have any values? So far Only bitcoin, zcash and ltc make sense to me since they all have limited cap which is not more than 1b. While xrp and others have crazy limited cap like 100b etc ",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkljzo/what_does_crypto_based_their_values_upon/",
+      "publishedAt": 1779462069,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "DISCUSSION",
+      "comments": 21
+    },
+    {
+      "id": "cc:39eaa6aa-9da8-4c79-9a21-32055dc11d88",
+      "source": "cryptocompare",
+      "title": "The agentic CFO in your pocket",
+      "excerpt": "Chalom explains that retail investors have never had the opportunity to access and manage their own digital treasury desk. Until now.",
+      "url": "https://www.coindesk.com/opinion/2026/05/22/the-agentic-cfo-in-your-pocket",
+      "publishedAt": 1779461849,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/3f692e2624fb7c185ae5f858d0d33d1c8cd5e555-7000x4000.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-nyse-owner-ice-oil-perpetual-futures-okx",
+      "source": "cryptocompare",
+      "title": "NYSE owner ICE to launch oil-linked futures with OKX",
+      "excerpt": "ICE and OKX plan to launch oil-linked perpetual futures based on Brent and WTI benchmarks, bringing crypto derivatives further into traditional energy markets under licensing restrictions.",
+      "url": "https://cointelegraph.com/news/nyse-owner-ice-oil-perpetual-futures-okx?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779460965,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1idGNjLXJlbGF1bmNoLXJlY2FwLmpwZw==.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-mara-spends-430k-ceo-vehicle-armoring-wrench-attacks-rise",
+      "source": "cryptocompare",
+      "title": "Bitcoin miner MARA spent $4.3M on CEO security in 2025 as crypto attacks rise",
+      "excerpt": "MARA spent $4.3 million on CEO Fred Thiel’s security in 2025, including vehicle armoring, as crypto wrench attacks increased globally.",
+      "url": "https://cointelegraph.com/news/mara-spends-430k-ceo-vehicle-armoring-wrench-attacks-rise?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779459950,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 100,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1sYW5kLXJvdmVyLWRpc2NvdmVyeS1zb2xkLW9uLWJsb2NrY2hhaW4tMS5qcGc=.jpg"
+    },
+    {
+      "id": "cc:695ad17d-5e76-430d-bb14-5d3ca995dd6e",
+      "source": "cryptocompare",
+      "title": "Live markets: Bitcoin heads lower late Friday as Warsh takes over at Fed",
+      "excerpt": "Kevin Warsh was sworn in as Fed chairman in a White House ceremony early Friday afternoon.",
+      "url": "https://www.coindesk.com/tech/2026/05/22/live-markets-bitcoin-continues-holding-pattern-near-usd77-000-ahead-of-holiday-weekend",
+      "publishedAt": 1779459844,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/34bd20e89601f70b0aad3c326419ec489ec583ca-8405x5604.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-what-happened-in-crypto-today",
+      "source": "cryptocompare",
+      "title": "Here’s what happened in crypto today",
+      "excerpt": "Need to know what happened in crypto today? Here is the latest news on daily trends and events impacting Bitcoin price, blockchain, DeFi, NFTs, Web3 and crypto regulation.",
+      "url": "https://cointelegraph.com/news/what-happened-in-crypto-today?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779458542,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9hcnRpY2xlLWNvdmVycy0xMTA1ODktd2hhdC1oYXBwZW5lZC1pbi1jcnlwdG8tdG9kYXkuanBn.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-markets-space-x-ipo-bad-news-for-tech-stocks-but-what-about-bitcoin",
+      "source": "cryptocompare",
+      "title": "Space X IPO: 'Bad news' for tech stocks but what about Bitcoin?",
+      "excerpt": "SpaceX’s IPO could turn the Mag 7 into a Mag 8, with Tesla and SpaceX comprising 25% of the group's Bitcoin balance-sheet exposure.",
+      "url": "https://cointelegraph.com/markets/space-x-ipo-bad-news-for-tech-stocks-but-what-about-bitcoin?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779458087,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1ob3ctdG8tcmVjb3Zlci1hLWNyeXB0by13YWxsZXQtd2l0aC1vci13aXRob3V0LXNlZWQtcGhyYXNlLmpwZw==.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-features-defi-hacks-institutional-confidence-risks-outpace-yields",
+      "source": "cryptocompare",
+      "title": "DeFi hacks shake institutional confidence as risks outpace yields",
+      "excerpt": "Repeated bridge exploits and shrinking yields are making institutions question whether DeFi’s risks still justify the returns, says Symbiotic’s Putiatin.",
+      "url": "https://cointelegraph.com/features/defi-hacks-institutional-confidence-risks-outpace-yields?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779457913,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1kZWZpLWV4cGVyaW1lbnRzLWFyZS1jYXVzaW5nLWEtbG90LW9mLXBlb3BsZS10by1sb29zZS10aGVpci1tb25leS1kby1jcmVhdG9ycy1vZi1kZWZpLXByb2plY3RzLXVuZGVyc3RhbmQtdGhhdC0yLmpwZw==.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-thorchains-10m-exploit-mpc-vulnerability-private-key-leak",
+      "source": "cryptocompare",
+      "title": "THORChain exploit tied to malicious node and GG20 flaw",
+      "excerpt": "The $10.7 million THORChain exploit was caused by a GG20 vulnerability, which allowed a malicious node to reconstruct a full private key to one of its vaults.",
+      "url": "https://cointelegraph.com/news/thorchains-10m-exploit-mpc-vulnerability-private-key-leak?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779457696,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1mb2xsb3ctdXAtb24tdGhlLWNyeXB0b3BpYS1oYWNrLmpwZw==.jpg"
+    },
+    {
+      "id": "r:1tkiyj8",
+      "source": "reddit",
+      "title": "Bitcoin crashing from a high of $30, 15 years ago. They called it the \"Great Bubble of 2011.\" Anyone who bought the top is up 200,000%",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkiyj8/bitcoin_crashing_from_a_high_of_30_15_years_ago/",
+      "publishedAt": 1779456341,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 293,
+      "sourceLabel": "ANALYSIS",
+      "comments": 83
+    },
+    {
+      "id": "cc:b9a757f7-40a5-41f0-9395-d863735e3c1f",
+      "source": "cryptocompare",
+      "title": "IREN co-founder says AI’s biggest bottleneck is infrastructure, not chips",
+      "excerpt": "Dan Roberts outlines IREN’s strategy to build a vertically integrated AI platform spanning power, data centers, GPUs and enterprise software.",
+      "url": "https://www.coindesk.com/markets/2026/05/22/iren-co-founder-says-ai-s-biggest-bottleneck-is-infrastructure-not-chips",
+      "publishedAt": 1779456022,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/621a7e00d26515615073001d3c97123324394f4b-1500x1000.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:1a0bf55f-12bf-4901-8452-c36179a9956f",
+      "source": "cryptocompare",
+      "title": "CoinDesk 20 performance update: NEAR surges 19.4% as index trades flat",
+      "excerpt": "Internet Computer (ICP), up 4.3% from Thursday, joined NEAR Protocol (NEAR) as a top performer.",
+      "url": "https://www.coindesk.com/coindesk-indices/2026/05/22/coindesk-20-performance-update-near-surges-19-4-as-index-trades-flat",
+      "publishedAt": 1779455686,
+      "mentions": [],
+      "score": 100,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/c442204fd3a5075f6614a36be8187fed081c6129-640x480.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:f8509e5c-2703-4a51-87f7-b3df9f8304f5",
+      "source": "cryptocompare",
+      "title": "Trump Media moved but 'did not sell' $205 million in bitcoin amid rising losses on crypto bets",
+      "excerpt": "DJT’s bitcoin strategy remains under pressure as the company sits on hundreds of millions in unrealized crypto losses and widening quarterly deficits.",
+      "url": "https://www.coindesk.com/markets/2026/05/22/trump-media-moves-another-usd205m-in-bitcoin-as-losses-on-crypto-bet-swell-to-usd455m",
+      "publishedAt": 1779455321,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/e5ea85fd2f228cded77bd633f4ac8a9f9eb4bf0a-6000x4000.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:b4d0b184-7239-48c7-b9ee-68dccfa9f09b",
+      "source": "cryptocompare",
+      "title": "Tom Lee says trillions in tech IPO supply won't crash the S&P 500",
+      "excerpt": "Fundstrat’s Tom Lee argues that trillions in new IPO supply from SpaceX, Anthropic, and OpenAI could ultimately be absorbed by underallocated investors.",
+      "url": "https://www.coindesk.com/markets/2026/05/22/tom-lee-says-trillions-in-tech-ipo-supply-won-t-crash-the-s-and-p-500",
+      "publishedAt": 1779454657,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/9d7bd39b2982649e7e43cc0537c507eb62abc21c-2048x1152.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "cc:65d86eb5-cb43-44db-8324-801bbe17b1ad",
+      "source": "cryptocompare",
+      "title": "OKX and ICE are bringing 'never-expiring' oil futures to 120 million crypto users",
+      "excerpt": "The new partnership comes as Hyperliquid’s oli futures contracts that never expire have been a huge success with over $1.6 billion in 24-hour trading volume.",
+      "url": "https://www.coindesk.com/business/2026/05/22/okx-and-ice-are-bringing-never-expiring-oil-futures-to-120-million-crypto-users",
+      "publishedAt": 1779454084,
+      "mentions": [],
+      "score": 100,
+      "sourceLabel": "CoinDesk",
+      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/ca9b2a4236d3b64cddb157ea18300e69cd1b587a-1200x800.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+    },
+    {
+      "id": "r:1tkhjzu",
+      "source": "reddit",
+      "title": "FFFF UUUuuu",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkhjzu/ffff_uuuuuu/",
+      "publishedAt": 1779453000,
+      "mentions": [],
+      "score": 45,
+      "sourceLabel": "MEME",
+      "comments": 5
+    },
+    {
+      "id": "cc:https---cointelegraph-com-markets-xrp-adds-4300-new-wallets-in-24-hours-but-why-is-price-stuck",
+      "source": "cryptocompare",
+      "title": "XRP adds 4,300 new wallets in 24 hours, but why is price stuck?",
+      "excerpt": "XRP Ledger activity surges with 4,300 new wallets created in 24 hours, but strong resistance keeps XRP price capped.",
+      "url": "https://cointelegraph.com/markets/xrp-adds-4300-new-wallets-in-24-hours-but-why-is-price-stuck?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779450745,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS13aGF0LWFyZS10aGUtbW9zdC1pbnRlcmVzdGluZy1oYXJkd2FyZS13YWxsZXRzLXRvLXVzZS10aGF0LWhhdmUtZW1lcmdlZC1yZWNlbnRseTMzMzMuanBn.jpg"
+    },
+    {
       "id": "cc:8faa1f25-ca61-4379-9b3a-84790087a874",
       "source": "cryptocompare",
       "title": "Bitcoin left behind in the geopolitical melee",
@@ -13,20 +596,6 @@
       "score": 50,
       "sourceLabel": "CoinDesk",
       "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/2e95f0a867861e80a3d80fd8a304d95ec5451345-5376x3584.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "r:1tkg66u",
-      "source": "reddit",
-      "title": "Would the 10,000 BTC pizza transaction have become as legendary if BTC had stayed cheap for years afterward?",
-      "excerpt": "A lot of people talk about it as “the most expensive pizza ever,” but that only became the dominant story because of what happened to BTC’s price later.\n\nIf BTC had remained a small niche internet currency for much longer, would we still celebrate Pizza Day as a major proof-of-use moment - the first famous example of Bitcoin being exchanged for something real, or would it just be a forgotten forum",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkg66u/would_the_10000_btc_pizza_transaction_have_become/",
-      "publishedAt": 1779449292,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "DISCUSSION",
-      "comments": 7
     },
     {
       "id": "cc:https---cointelegraph-com-news-polymarket-seeks-japan-entry-global-regulatory-scrutiny",
@@ -112,9 +681,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 11,
+      "score": 80,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 39
+      "comments": 119
     },
     {
       "id": "r:1tkdjt5",
@@ -126,23 +695,9 @@
       "mentions": [
         "BNBUSDT"
       ],
-      "score": 1,
+      "score": 5,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 0
-    },
-    {
-      "id": "r:1tkdbv3",
-      "source": "reddit",
-      "title": "Bitcoin Pizza Day Boss Live Now — Challenge It Every Hour at :21 Until 11:21pm UTC",
-      "excerpt": "It’s Bitcoin Pizza Day, so I released the first calendar boss for Bitcoin Block Wars: a 4-phase Pizza Day boss fight that appears in a special warp zone today only.\n\nThe boss appears for 21 minutes every hour on 22 May. Each window opens at :21 past the hour, from 00:21 UTC through the final 23:21 UTC / 11:21pm UTC window.\n\nBitcoin Block Wars started from a simple idea: what if Bitcoin activity wa",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkdbv3/bitcoin_pizza_day_boss_live_now_challenge_it/",
-      "publishedAt": 1779440511,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 1,
-      "sourceLabel": "PROJECT-UPDATE",
-      "comments": 0
+      "comments": 1
     },
     {
       "id": "cc:879a8e9d-05be-4088-bc13-540fd2017fae",
@@ -169,18 +724,6 @@
       "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/1336be5f04368968b919876af2286e534602b7ac-3803x2139.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
     },
     {
-      "id": "r:1tkctji",
-      "source": "reddit",
-      "title": "Crypto Cards Could Change How We Think About Spending Money",
-      "excerpt": "I’ve been using crypto cards since 2021 ever since the CB card came out and during bull markets most times I barely even felt like I was spending money. The counterargument for this is that selling crypto is an every time you want to buy a dougnut could get complicado, but what about stablecoins?\n\nVolumes are exploding past six hundred million a month this spring with March alone hitting records a",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkctji/crypto_cards_could_change_how_we_think_about/",
-      "publishedAt": 1779438769,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "DISCUSSION",
-      "comments": 6
-    },
-    {
       "id": "cc:2286a7ec-77bc-4620-945d-1a7cacb6eed4",
       "source": "cryptocompare",
       "title": "Bitcoin implied volatility drops to 7 month low despite macro risks",
@@ -202,7 +745,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkciw8/south_korea_to_review_22_crypto_tax_repeal/",
       "publishedAt": 1779437777,
       "mentions": [],
-      "score": 1,
+      "score": 4,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 0
     },
@@ -221,32 +764,30 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9ncmVlbmlzaC1ncmVlbi1iaXRjb2luLWdyb3ctdXAtMi5qcGc=.jpg"
     },
     {
-      "id": "r:1tkbox8",
-      "source": "reddit",
-      "title": "Printr launchpad &amp; Cult of Printr",
-      "excerpt": "&amp;#x200B;\n\nRecently printr launched its v2. And a new kind of tech is introduced to the trenches of solana. A staking mechanism for memecoins. Its called the Proof of Belief, in short POB. \n\nThis tech is pretty amazing, what it does is the fees that are made throughout peoples trades on a coin that is launched on printr are send back to the staking people. The more you stake the bigger your cut",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkbox8/printr_launchpad_cult_of_printr/",
-      "publishedAt": 1779434937,
-      "mentions": [
-        "SOLUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "MEME",
-      "comments": 9
-    },
-    {
-      "id": "r:1tkbody",
-      "source": "reddit",
-      "title": "The Strange World of Bitcoin",
-      "excerpt": "Imagine standing in front of a crowd, holding a handful of ordinary dirt, and trying to sell it for the price of pure gold. If someone actually bought it, how would they defend that choice to their friends? They did something clearly foolish, but people hate admitting they made a mistake, so they look for a philosophy to justify it. A dirt buyer could easily borrow a page from the Bitcoin playbook",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkbody/the_strange_world_of_bitcoin/",
-      "publishedAt": 1779434887,
+      "id": "cc:https---cointelegraph-com-news-hamilton-etfs-files-for-leveraged-bitcoin-income-etf-in-canada",
+      "source": "cryptocompare",
+      "title": "Hamilton ETFs files for leveraged Bitcoin income ETF in Canada",
+      "excerpt": "The proposed fund would use covered-call and short-term options strategies designed to generate monthly income alongside Bitcoin exposure through a leveraged structure.",
+      "url": "https://cointelegraph.com/news/hamilton-etfs-files-for-leveraged-bitcoin-income-etf-in-canada?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779433200,
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 0,
-      "sourceLabel": "ANALYSIS",
-      "comments": 9
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1qYXBhbi13aGF0LWlzLWFuLWV0Zi1ob3ctaXQtd29ya3MtYW5kLWl0cy1tZXJpdHMtYW5kLWRlbWVyaXRzLTMuanBn.jpg"
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-uae-backed-ddsc-stablecoin-processes-30m-institutional-transaction",
+      "source": "cryptocompare",
+      "title": "UAE-backed DDSC stablecoin processes $30M institutional transaction",
+      "excerpt": "The transfer was executed on ADI Chain, a layer-2 blockchain designed for institutional payments, treasury operations and trade settlement.",
+      "url": "https://cointelegraph.com/news/uae-backed-ddsc-stablecoin-processes-30m-institutional-transaction?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779433200,
+      "mentions": [],
+      "score": 50,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS11YWUtYW5kLWNyeXB0by1jcnlwdG8uanBn.jpg"
     },
     {
       "id": "cc:https---cointelegraph-com-news-tokenized-stocks-risk-liquidity-and-revenue-fragmentation-research",
@@ -350,30 +891,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1yZWVudHJhbmN5LWF0dGFja3MtaW4tc21hcnQtY29udHJhY3RzLWV4cGxhaW5lZC5qcGc=.jpg"
     },
     {
-      "id": "r:1tk8md5",
-      "source": "reddit",
-      "title": "Dogecoin: A Price History",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tk8md5/dogecoin_a_price_history/",
-      "publishedAt": 1779425263,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "DISCUSSION",
-      "comments": 7
-    },
-    {
-      "id": "r:1tk8cyk",
-      "source": "reddit",
-      "title": "mean reversion algo trading paper testing. Running two paper accounts simultaneously. Here's day 2.",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tk8cyk/mean_reversion_algo_trading_paper_testing_running/",
-      "publishedAt": 1779424481,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "ANALYSIS",
-      "comments": 0
-    },
-    {
       "id": "cc:https---cointelegraph-com-news-us-senators-unveil-new-bitcoin-bill-renewing-strategic-reserve-plans",
       "source": "cryptocompare",
       "title": "US lawmakers renew strategic Bitcoin reserve push with ARMA bill",
@@ -423,9 +940,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 1969,
+      "score": 3580,
       "sourceLabel": "MEME",
-      "comments": 187
+      "comments": 273
     },
     {
       "id": "cc:https---cointelegraph-com-markets-bitcoin-longs-soar-despite-weak-us-macroeconomic-data-is-82k-btc-next",
@@ -442,6 +959,18 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1hLWZvbGxvdy11cC1vbi10ZXNsYS1wdXJjaGFzaW5nLTE1LWluLWJ0Yy13aGF0LWRvZXMtdGhpcy1tZWFuLWZvci10aGUtbWFya2V0LWFuZC1hZG9wdGlvbi0xLmpwZw==.jpg"
     },
     {
+      "id": "r:1tk0w61",
+      "source": "reddit",
+      "title": "Daily Crypto Discussion - May 21, 2026 (GMT+0)",
+      "excerpt": "**Welcome to the Daily Crypto Discussion thread. Please read the disclaimer and rules before participating.**\n\n \n\n# Disclaimer:\n\nConsider all information posted here with several liberal heaps of salt, and always cross check any information you may read on this thread with known sources. Any trade information posted in this open thread may be highly misleading, and could be an attempt to manipulat",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tk0w61/daily_crypto_discussion_may_21_2026_gmt0/",
+      "publishedAt": 1779404446,
+      "mentions": [],
+      "score": 7,
+      "sourceLabel": "r/CryptoCurrency",
+      "comments": 158
+    },
+    {
       "id": "r:1tk09d7",
       "source": "reddit",
       "title": "BTC lightning network issues?",
@@ -451,23 +980,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 11,
+      "score": 15,
       "sourceLabel": "DISCUSSION",
-      "comments": 13
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-harvard-dumps-entire-eth-position-one-quarter",
-      "source": "cryptocompare",
-      "title": "Harvard dumps entire ETH position after just one quarter",
-      "excerpt": "Harvard's endowment fund has become one of the latest high-profile holders to liquidate its ETH as investor sentiment sours during the ongoing bear market.",
-      "url": "https://cointelegraph.com/news/harvard-dumps-entire-eth-position-one-quarter?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779400968,
-      "mentions": [
-        "ETHUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1pbnRlcm5hdGlvbmFsLXJlZ3VsYXRvcnktbWlsZXN0b25lcy1mb3ItY3J5cHRvLWV4Y2hhbmdlcy1ldGhlcmV1bS0xLmpwZw==.jpg"
+      "comments": 16
     },
     {
       "id": "r:1tjxumf",
@@ -477,59 +992,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjxumf/up_down_down_down/",
       "publishedAt": 1779397378,
       "mentions": [],
-      "score": 336,
+      "score": 535,
       "sourceLabel": "MEME",
-      "comments": 29
-    },
-    {
-      "id": "r:1tjxol9",
-      "source": "reddit",
-      "title": "Crypto brokerage Blockchain.com confidentially files for IPO",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjxol9/crypto_brokerage_blockchaincom_confidentially/",
-      "publishedAt": 1779397018,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 3
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-crypto-pac-anchorage-chainlink-2026-candidates-midterms",
-      "source": "cryptocompare",
-      "title": "Crypto PAC backed by Anchorage and Chainlink announces endorsements for 2026 midterms",
-      "excerpt": "Federal Election Commission filings showed only $175,000 in contributions to the hybrid PAC, which could influence US voters through media buys before key elections in several states.",
-      "url": "https://cointelegraph.com/news/crypto-pac-anchorage-chainlink-2026-candidates-midterms?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779396532,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1ibG9ja2NoYWluLWVsZWN0aW9ucy5qcGc=.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-markets-new-bitcoin-lows-look-extremely-slim-as-long-term-holders-add-supply",
-      "source": "cryptocompare",
-      "title": "Chance of new Bitcoin lows ‘extremely slim’ as long-term holders’ supply tops 15M BTC",
-      "excerpt": "Data suggest Bitcoin’s chance of dropping below $60,000 again is slim to none, thanks to longer-term investors holding more than 71% of the asset’s total supply.",
-      "url": "https://cointelegraph.com/markets/new-bitcoin-lows-look-extremely-slim-as-long-term-holders-add-supply?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779395994,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9iaXRjb2luLXByaWNlLW1hcmtldC5qcGc=.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-binance-launches-spacex-linked-perpetual-futures-ahead-of-potential-ipo",
-      "source": "cryptocompare",
-      "title": "Binance launches SpaceX-linked perpetual futures ahead of IPO",
-      "excerpt": "The crypto exchange's new pre-IPO futures product lets traders speculate on SpaceX’s expected public market valuation before the company begins trading on public exchanges.",
-      "url": "https://cointelegraph.com/news/binance-launches-spacex-linked-perpetual-futures-ahead-of-potential-ipo?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779395290,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9wZW9wbGUtc3RyZWV0LWRlZmktMS5qcGc=.jpg"
+      "comments": 39
     },
     {
       "id": "cc:bd8b8918-e20c-420d-a56e-d7b610503df7",
@@ -546,54 +1011,6 @@
       "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/d6fe7e9fcbbd5f8330335bf3b990fa1f61a5ebd9-1280x853.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
     },
     {
-      "id": "r:1tjtxf1",
-      "source": "reddit",
-      "title": "South Carolina gets it",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjtxf1/south_carolina_gets_it/",
-      "publishedAt": 1779389192,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "REGULATIONS",
-      "comments": 1
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-petition-scrap-south-korea-crypto-tax-50k-threshold",
-      "source": "cryptocompare",
-      "title": "Petition to scrap South Korea's crypto tax reaches 50K threshold",
-      "excerpt": "Critics say the new 22% crypto tax, set to take effect in 2027, unfairly favors other asset classes with a much lower tax burden.",
-      "url": "https://cointelegraph.com/news/petition-scrap-south-korea-crypto-tax-50k-threshold?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779389085,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oYW5kLWRvY3VtZW50cy1tYWduaWZpZXItaW5jcmVhc2UuanBn.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-cftc-national-hockey-league-prediction-markets",
-      "source": "cryptocompare",
-      "title": "CFTC signs MOU with National Hockey League over prediction markets",
-      "excerpt": "The financial regulator signed a similar agreement with Major League Baseball in March and continues to file lawsuits against state-level authorities going after prediction market platforms over sports betting.",
-      "url": "https://cointelegraph.com/news/cftc-national-hockey-league-prediction-markets?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779387318,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1qYXBhbi13aGF0LWlzLWFuLWludmVzdG1lbnQtdHJ1c3QtMi5qcGc=.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-blockchaincom-confidentially-submits-ipo-filing-with-sec",
-      "source": "cryptocompare",
-      "title": "Blockchain.com confidentially submits IPO filing with SEC",
-      "excerpt": "The crypto services company began the US IPO process as companies across the digital asset sector weigh public market debuts.",
-      "url": "https://cointelegraph.com/news/blockchaincom-confidentially-submits-ipo-filing-with-sec?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779384631,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS10aGUtcmV2aXZhbC1vZi1nZW5lcmFsLXBhcnRuZXJzaGlwcy1pbi10aGUtYWdlLW9mLXRva2Vub21pY3MtcGFydC0yLTIuanBn.jpg"
-    },
-    {
       "id": "cc:99d75404-27e6-41f0-838e-f41274733cff",
       "source": "cryptocompare",
       "title": "Mark Cuban says he sold most of his Bitcoin after failed hedge narrative 'disappointed' the billionaire",
@@ -608,238 +1025,6 @@
       "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/13614c6c631636dcd785503b67a718c16fee663a-3744x2496.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
     },
     {
-      "id": "cc:e12e458e-c55d-4e03-8e82-d0b1293dd1cb",
-      "source": "cryptocompare",
-      "title": "Ethereum’s identity crisis is deepening after high-profile 'brain drain' frustrates the community",
-      "excerpt": "What began earlier this week as shock over more exits of core figures has now evolved into something more existential, according to some community members.",
-      "url": "https://www.coindesk.com/tech/2026/05/21/ethereum-s-identity-crisis-is-deepening-after-high-profile-brain-drain-frustrates-the-community",
-      "publishedAt": 1779382593,
-      "mentions": [
-        "ETHUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/b72d7af2e1251bed840c07e59aef4cc28bdef013-4066x2711.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-markets-bitcoin-accumulation-trends-weaken-as-realized-losses-jump-to-600m",
-      "source": "cryptocompare",
-      "title": "Bitcoin accumulation trends weaken as realized losses jump to $600M",
-      "excerpt": "Bitcoin whales and investors shift to distribution as realized losses surge past $600 million, as BTC price declines toward $76,000.",
-      "url": "https://cointelegraph.com/markets/bitcoin-accumulation-trends-weaken-as-realized-losses-jump-to-600m?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779380473,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1yZXBvcnQtb24tYml0Y29pbi1tYXJrZXQuanBn.jpg"
-    },
-    {
-      "id": "r:1tjp5pp",
-      "source": "reddit",
-      "title": "Exploring post-quantum + zk privacy in one experimental chain",
-      "excerpt": "I built a from-scratch experimental blockchain to explore some ideas I've been interested in:\n\n– post-quantum signatures (Dilithium)\n\n– custom zk-STARK system (AIR + FRI, written in Rust)\n\n– shielded + anonymous transactions\n\n– simple P2P gossip network\n\nIt’s not production-ready (no persistence, no DoS protection, etc.) — this is purely a learning/research project.\n\nThe most interesting part was ",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjp5pp/exploring_postquantum_zk_privacy_in_one/",
-      "publishedAt": 1779379622,
-      "mentions": [],
-      "score": 6,
-      "sourceLabel": "DISCUSSION",
-      "comments": 9
-    },
-    {
-      "id": "cc:https---cointelegraph-com-markets-bitcoin-due-5-move-as-analysis-stays-bullish-on-btc-price-outlook",
-      "source": "cryptocompare",
-      "title": "Bitcoin due '5%+' move as analysis stays bullish on BTC price outlook",
-      "excerpt": "Bitcoin should shift 5% or more \"soon\" with $77,000 staying the focus amid mixed messages over the latest US-Iran peace deal plans.",
-      "url": "https://cointelegraph.com/markets/bitcoin-due-5-move-as-analysis-stays-bullish-on-btc-price-outlook?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779378616,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1idGMtb3B0aW9ucy1leHBpcmUtd2hhdC13aWxsLWhhcHBlbjItMS5qcGc=.jpg"
-    },
-    {
-      "id": "cc:43ed8c16-328d-4b84-b864-67230416d6eb",
-      "source": "cryptocompare",
-      "title": "Crypto prediction markets are turning into dangerous national security risks, and Congress wants to ban them",
-      "excerpt": "Bubblemaps investigators led by Nicolas Vaiman, discovered 80 bets on Polymarket with a 98% win rate that he said is statistically impossible to achieve.",
-      "url": "https://www.coindesk.com/business/2026/05/21/crypto-prediction-markets-are-turning-into-dangerous-national-security-risks-and-congress-wants-to-ban-them",
-      "publishedAt": 1779377927,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/fcc8b2fefb296b15e64598dd3b6be45febe3ff57-1820x1024.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:5ed93fab-e85f-4ca1-8008-0503ac0fd7d8",
-      "source": "cryptocompare",
-      "title": "U.S. CFTC secures deal with National Hockey League on prediction market safeguards",
-      "excerpt": "A new arrangement has been set between the derivatives regulator and professional hockey, following on the heels of a similar baseball agreement.",
-      "url": "https://www.coindesk.com/policy/2026/05/21/u-s-cftc-secures-deal-with-national-hockey-league-on-prediction-market-safeguards",
-      "publishedAt": 1779376353,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/7330fcbbf3026e2b7036ab7a140cdd7a46cb6832-3271x2181.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:c2696542-5f1a-4559-873e-1ff30dc7db35",
-      "source": "cryptocompare",
-      "title": "Crypto for Advisors: Crypto Products",
-      "excerpt": "Advisors need to assess ETP custody, sponsor profiles, and fees. Read expert advice on bitcoin-backed loans, including margin call risks and when to sell vs. borrow.",
-      "url": "https://www.coindesk.com/coindesk-indices/2026/05/20/crypto-for-advisors-crypto-products",
-      "publishedAt": 1779375600,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/87ba76a24148691504a7e8e4b6821430f3f53503-3574x2010.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-ig-europe-taps-bitpanda-to-expand-crypto-trading-across-the-bloc",
-      "source": "cryptocompare",
-      "title": "IG Europe taps Bitpanda to expand crypto trading across Europe",
-      "excerpt": "IG Group, which launched spot crypto in the UK last year, is bringing the service to European investors through Bitpanda’s infrastructure.",
-      "url": "https://cointelegraph.com/news/ig-europe-taps-bitpanda-to-expand-crypto-trading-across-the-bloc?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779375023,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1iaWctYmFua3MtdGhpbmstbmV3LWZ1cm5pdHVyZS1pcy1pbm5vdmF0aW9uLWJ1dC10aGV5LWFyZS13cm9uZy5qcGc=.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-what-happened-in-crypto-today",
-      "source": "cryptocompare",
-      "title": "Here’s what happened in crypto today",
-      "excerpt": "Need to know what happened in crypto today? Here is the latest news on daily trends and events impacting Bitcoin price, blockchain, DeFi, NFTs, Web3 and crypto regulation.",
-      "url": "https://cointelegraph.com/news/what-happened-in-crypto-today?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779374716,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9hcnRpY2xlLWNvdmVycy0xMTA1ODktd2hhdC1oYXBwZW5lZC1pbi1jcnlwdG8tdG9kYXkuanBn.jpg"
-    },
-    {
-      "id": "cc:27704c7e-b56b-42b9-a410-c3eda42415b1",
-      "source": "cryptocompare",
-      "title": "MoonPay expands into tokenized assets and DeFi markets with new platform for banks",
-      "excerpt": "With MoonPay Trade, the crypto payments firm is building infrastructure for banks, fintechs to access stablecoins, tokenized funds and yield in a one-stop shop.",
-      "url": "https://www.coindesk.com/business/2026/05/21/moonpay-expands-into-tokenized-assets-and-defi-markets-with-new-platform-for-banks",
-      "publishedAt": 1779374536,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/020fe30de9a4fcb7795ee0be6909406373fa1bf8-2048x1150.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:febdfccb-2cdb-4843-9cd9-e6133bcd1785",
-      "source": "cryptocompare",
-      "title": "Peer-to-peer trading startup Variational raises $50 million for real-world perps in funding round led by Dragonfly",
-      "excerpt": "The company is initially offering perpetual futures on real-world assets including oil, silver, copper and gold.",
-      "url": "https://www.coindesk.com/business/2026/05/21/peer-to-peer-trading-startup-variational-raises-usd50-million-for-real-world-perps-in-funding-round-led-by-dragonfly",
-      "publishedAt": 1779371820,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/d7d47ac6a612ed029423fc75e17ef46e8e90de2d-1672x941.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:020470af-7bbd-4782-a75d-f6fbd24cb195",
-      "source": "cryptocompare",
-      "title": "Live markets: Yet another Iran peace deal and Mark Cuban sells his bitcoin",
-      "excerpt": "Hyperliquid's HYPE is the outlier in crypto, rising 16.5% over the past 24 hours to a new record high.",
-      "url": "https://www.coindesk.com/markets/2026/05/21/live-markets-bitcoin-s-flat-action-continues-as-spacex-ipo-nvidia-earnings-capture-news-cycle",
-      "publishedAt": 1779371471,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/dfff6399ca792fdc7f83e003231219f8be9884e5-8256x5504.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:5756986e-e49f-482f-833d-e113fdcaa1f5",
-      "source": "cryptocompare",
-      "title": "Blockchain.com files with SEC for U.S. IPO",
-      "excerpt": "The crypto financial services firm submitted a draft S-1 to the SEC as it explores a public listing amid renewed momentum in digital asset markets.",
-      "url": "https://www.coindesk.com/business/2026/05/21/blockchain-com-files-confidential-paperwork-with-sec-for-u-s-ipo",
-      "publishedAt": 1779371427,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/8347497dc2b40aa2c0918f122e4d7a7ab226ecd4-1406x791.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-markets-hyperliquid-whale-wont-close-hype-short-despite-22-unrealized-loss",
-      "source": "cryptocompare",
-      "title": "Hyperliquid whale won’t close HYPE short despite $22M unrealized loss",
-      "excerpt": "HYPE’s rally is flashing exhaustion near its record-high resistance, raising the risk of a 20% pullback toward the $51.5–$45 support zone.",
-      "url": "https://cointelegraph.com/markets/hyperliquid-whale-wont-close-hype-short-despite-22-unrealized-loss?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779371046,
-      "mentions": [],
-      "score": 57,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS10aGUtaW5jcmVhc2luZ2x5LWFjdXRlLW5lZWQtZm9yLWNyeXB0by1uYXRpdmUtaW5zdXJhbmNlMy5qcGc=.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-kraken-uae-vara-approval-ahead-of-full-region-launch",
-      "source": "cryptocompare",
-      "title": "Kraken moves closer to UAE launch after Dubai regulatory approval",
-      "excerpt": "Kraken’s parent company, Payward, received preliminary approval from Dubai's VARA, paving the way for UAE dirham funding, margin and OTC trading and institutional access via Kraken Prime.",
-      "url": "https://cointelegraph.com/news/kraken-uae-vara-approval-ahead-of-full-region-launch?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779370541,
-      "mentions": [],
-      "score": 100,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy91bml0ZWQtYXJhYi1lbWlyYXRlcy1tYXAtc3RhYmxlY29pbi10ZXRoZXItYXJhYmlhbjEuanBn.jpg"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-us-sanctions-sinaloa-cartel-ethereum-addresses",
-      "source": "cryptocompare",
-      "title": "US sanctions Sinaloa cartel-linked Ethereum addresses",
-      "excerpt": "OFAC sanctioned six Ethereum addresses linked to a Sinaloa Cartel money laundering network allegedly converting drug proceeds into crypto.",
-      "url": "https://cointelegraph.com/news/us-sanctions-sinaloa-cartel-ethereum-addresses?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779369802,
-      "mentions": [
-        "ETHUSDT"
-      ],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9zYW5jdGlvbnMtY29tcGxpYW5jZS1mb3ItdHJhbnNhY3Rpb25zLWluLWZpYXQtYW5kLWNyeXB0b2N1cnJlbmNpZXMtYXJlLXRoZS1zYW1lLXNheXMtb2ZhYy1ldGhlcmV1bS5qcGc=.jpg"
-    },
-    {
-      "id": "cc:ba47ce85-a7d0-4fe5-9da5-8b3440c7023c",
-      "source": "cryptocompare",
-      "title": "Bitcoin's long-term holder supply approaches record high, breaking multi-year downtrend",
-      "excerpt": "Long-term holder supply has surged by more than 2 million coins to 16.3 million BTC during the current bear market.",
-      "url": "https://www.coindesk.com/markets/2026/05/21/bitcoin-s-long-term-holder-supply-approaches-record-high-breaking-multi-year-downtrend",
-      "publishedAt": 1779369780,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/e28bd23aa3ff45104b0c84a5d60b3e062ab259b0-1920x963.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:300c97df-6836-44d7-8ec1-4a51353fb10e",
-      "source": "cryptocompare",
-      "title": "CoinDesk 20 performance update: Internet Computer drops 1.6%, leading index lower",
-      "excerpt": "Hedera (HBAR), down 1.3% from Wednesday, joined Internet Computer (ICP) as an underperformer.",
-      "url": "https://www.coindesk.com/coindesk-indices/2026/05/21/coindesk-20-performance-update-internet-computer-drops-1-6-leading-index-lower",
-      "publishedAt": 1779369372,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/0a413f0494fcc063225f24c8d230b8459228d1e6-640x480.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
       "id": "r:1tjk4aq",
       "source": "reddit",
       "title": "$573M liquidated in 24 hours, treasury yields at 4.55%, feels like crypto is just trading the Fed at this point",
@@ -849,71 +1034,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 70,
+      "score": 79,
       "sourceLabel": "DISCUSSION",
-      "comments": 45
-    },
-    {
-      "id": "cc:https---cointelegraph-com-markets-bitcoins-less-aggressive-demand-may-lead-to-months-of-consolidation-analysis",
-      "source": "cryptocompare",
-      "title": "Bitcoin’s ‘less aggressive demand’ may lead to months of consolidation: Analysis",
-      "excerpt": "Bitcoin demand and ETF flows weaken as BTC struggles below $80,000, raising risks of prolonged consolidation or a drop toward $65,000.",
-      "url": "https://cointelegraph.com/markets/bitcoins-less-aggressive-demand-may-lead-to-months-of-consolidation-analysis?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779367774,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS13aGF0LWFyZS1iaXRjb2luLWNtZS1nYXBzLWFuZC1ob3ctdG8tdHJhZGUtdGhlbS5qcGc=.jpg"
-    },
-    {
-      "id": "cc:bf0e9c07-b8b3-4108-92f9-3052fecf9d1f",
-      "source": "cryptocompare",
-      "title": "Stablecoins retain the edge over tokenized money market funds, JPMorgan says",
-      "excerpt": "The bank said tokenized money market funds account for only about 5% of the broader stablecoin universe despite offering yield.",
-      "url": "https://www.coindesk.com/business/2026/05/21/stablecoins-retain-the-edge-over-tokenized-money-market-funds-jpmorgan-says",
-      "publishedAt": 1779367757,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/3f6583d261d45cb78f830c786e9a0cf1931cdc32-4000x2250.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-jane-street-accused-terra-telegram-backchannel-ust-crash",
-      "source": "cryptocompare",
-      "title": "Jane Street accused of using Terra Telegram backchannel before UST crash",
-      "excerpt": "The private Telegram backchannel allegedly allowed Jane Street to unwind hundreds of millions in potential exposure “mere hours before” the Terra ecosystem’s $40 billion collapse.",
-      "url": "https://cointelegraph.com/news/jane-street-accused-terra-telegram-backchannel-ust-crash?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779367114,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9hcnJlc3QtY3JpbWUtY29wLWhhY2stdGhpZWYtYXJyZXN0ZWQtcG9saWNlMi5qcGc=.jpg"
-    },
-    {
-      "id": "r:1tjiyzq",
-      "source": "reddit",
-      "title": "How to buy crypto without getting restricted",
-      "excerpt": "Ive struggled with this issue for months, from moonpay and okx to coinbase. \n\n  \nI have a legitimate business here in the netherlands and we purchase part of our inventory in crypto, which is the only option from them for now. It's €5-10k a month. \n\n  \nI couldnt open a business crypto account with kraken so for months now i keep using my personal accounts on Coinbase, Okx, Moonpay, etc to send it ",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjiyzq/how_to_buy_crypto_without_getting_restricted/",
-      "publishedAt": 1779366440,
-      "mentions": [],
-      "score": 12,
-      "sourceLabel": "DISCUSSION",
-      "comments": 20
-    },
-    {
-      "id": "cc:https---cointelegraph-com-news-boerse-stuttgart-societe-generale-flatexdegiro-team-up-for-blockchain-securities-settlement-in-eu",
-      "source": "cryptocompare",
-      "title": "Boerse Stuttgart taps SocGen, flatexDEGIRO for EU blockchain settlement push",
-      "excerpt": "Boerse Stuttgart’s Seturion has partnered with Societe Generale, SG-FORGE and flatexDEGIRO to build a pan-European blockchain securities settlement system.",
-      "url": "https://cointelegraph.com/news/boerse-stuttgart-societe-generale-flatexdegiro-team-up-for-blockchain-securities-settlement-in-eu?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779365638,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1vcGVuLXNvdXJjZS1lbnRlcnByaXNlLWJsb2NrY2hhaW4yLmpwZw==.jpg"
+      "comments": 49
     },
     {
       "id": "r:1tjikha",
@@ -923,37 +1046,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjikha/south_carolina_signs_procrypto_anticbdc_bill_into/",
       "publishedAt": 1779365440,
       "mentions": [],
-      "score": 38,
+      "score": 41,
       "sourceLabel": "REGULATIONS",
-      "comments": 10
-    },
-    {
-      "id": "cc:94f90df2-4a7f-4d76-85f7-65698e2c3d2d",
-      "source": "cryptocompare",
-      "title": "It's not all HYPE: Privacy and quantum-resistant coins advance as bitcoin coasts",
-      "excerpt": "Your day-ahead look for May 21, 2026",
-      "url": "https://www.coindesk.com/daybook-us/2026/05/21/it-s-not-all-hype-privacy-and-quantum-resistant-coins-surge-as-bitcoin-marks-time",
-      "publishedAt": 1779362485,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/98c9b0d2ed0f668a8510ba5216d731e35c032f4f-1920x1080.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "cc:2ba433af-c253-42ee-87bc-10073fcc9b4e",
-      "source": "cryptocompare",
-      "title": "The $6 billion expiration countdown: Traders pile into $82,000 bitcoin calls ahead of May 29 expiry",
-      "excerpt": "Deribit’s bitcoin open interest has overtaken BlackRock’s IBIT as traders brace for a showdown between $75K max pain and $80K call positioning.",
-      "url": "https://www.coindesk.com/markets/2026/05/21/bitcoin-caught-between-usd75-000-max-pain-and-usd80-000-call-wall-ahead-of-usd6-25-billion-expiry",
-      "publishedAt": 1779360785,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 50,
-      "sourceLabel": "CoinDesk",
-      "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/09f6f8dd6ce70c60b94142414b39032f9427163a-2400x1200.png?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
+      "comments": 11
     },
     {
       "id": "r:1tjglyo",
@@ -963,45 +1058,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjglyo/human_api_ceo_warns_ai_bot_collusion_could/",
       "publishedAt": 1779360011,
       "mentions": [],
-      "score": 102,
+      "score": 98,
       "sourceLabel": "REGULATIONS",
       "comments": 26
-    },
-    {
-      "id": "r:1tjduff",
-      "source": "reddit",
-      "title": "Missouri Sues CoinFlip, Crypto ATM Operator Calls Lawsuit “Meritless”",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjduff/missouri_sues_coinflip_crypto_atm_operator_calls/",
-      "publishedAt": 1779351050,
-      "mentions": [],
-      "score": 4,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 3
-    },
-    {
-      "id": "r:1tjatgm",
-      "source": "reddit",
-      "title": "37 Banks Back Qivalis Euro Stablecoin Before 2026 Launch",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjatgm/37_banks_back_qivalis_euro_stablecoin_before_2026/",
-      "publishedAt": 1779341251,
-      "mentions": [],
-      "score": 23,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 2
-    },
-    {
-      "id": "r:1tj7gek",
-      "source": "reddit",
-      "title": "What are your thoughts on crypto cards?",
-      "excerpt": "I'm seeing a lot of wallet providers offering them. Curious to know anyone's thoughts. ",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tj7gek/what_are_your_thoughts_on_crypto_cards/",
-      "publishedAt": 1779331689,
-      "mentions": [],
-      "score": 8,
-      "sourceLabel": "DISCUSSION",
-      "comments": 43
     },
     {
       "id": "r:1tj6rls",
@@ -1013,9 +1072,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 536,
+      "score": 555,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 62
+      "comments": 79
     },
     {
       "id": "r:1tj2hrd",
@@ -1025,84 +1084,35 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tj2hrd/the_binance_android_app_is_a_chinese_surveillance/",
       "publishedAt": 1779318925,
       "mentions": [],
-      "score": 316,
+      "score": 315,
       "sourceLabel": "ADVICE",
-      "comments": 71
-    },
-    {
-      "id": "r:1tj24gf",
-      "source": "reddit",
-      "title": "Daily Crypto Discussion - May 20, 2026 (GMT+0)",
-      "excerpt": "**Welcome to the Daily Crypto Discussion thread. Please read the disclaimer and rules before participating.**\n\n \n\n# Disclaimer:\n\nConsider all information posted here with several liberal heaps of salt, and always cross check any information you may read on this thread with known sources. Any trade information posted in this open thread may be highly misleading, and could be an attempt to manipulat",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tj24gf/daily_crypto_discussion_may_20_2026_gmt0/",
-      "publishedAt": 1779318039,
-      "mentions": [],
-      "score": 13,
-      "sourceLabel": "r/CryptoCurrency",
-      "comments": 70
-    },
-    {
-      "id": "r:1tixv96",
-      "source": "reddit",
-      "title": "South Korean Funeral Firm Loses $33 Million on BitMine Ethereum ETF",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tixv96/south_korean_funeral_firm_loses_33_million_on/",
-      "publishedAt": 1779308788,
-      "mentions": [
-        "ETHUSDT"
-      ],
-      "score": 40,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 20
-    },
-    {
-      "id": "r:1tiobrs",
-      "source": "reddit",
-      "title": "Trump orders government, Fed to review crypto firms' access to payment rails",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tiobrs/trump_orders_government_fed_to_review_crypto/",
-      "publishedAt": 1779289290,
-      "mentions": [],
-      "score": 51,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 2
-    },
-    {
-      "id": "r:1tin0p7",
-      "source": "reddit",
-      "title": "Trump just issued an executive order allowing Digital Asset integration to TradFi",
-      "excerpt": "https://preview.redd.it/s049wx75wa2h1.png?width=1200&amp;format=png&amp;auto=webp&amp;s=5d7cfc4ba66a38e76d852c168744202a11531f1c\n\nTrump just issued an executive order that aims to \"foster financial innovation\" by allowing the integration of digital assets into traditional finance services and payment systems. \n\n  \nOne of the largest issues with crypto is the ability to onramp/offramp fiat. It is g",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tin0p7/trump_just_issued_an_executive_order_allowing/",
-      "publishedAt": 1779286548,
-      "mentions": [],
-      "score": 265,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 114
+      "comments": 74
     }
   ],
   "trending": [
     {
       "symbol": "BTCUSDT",
-      "mentions": 29,
+      "mentions": 36,
       "recentTitles": [
-        "Bitcoin left behind in the geopolitical melee",
-        "Would the 10,000 BTC pizza transaction have become as legendary if BTC had stayed cheap for years afterward?",
-        "Crypto majors stuck in tight range as altcoin rotation picks up steam"
+        "Bitcoin 'Pizza Day' was 16 years ago, here's how much that BTC is worth today",
+        "Bitcoin could drop 60% if history repeat.",
+        "Clarity Act passed committee and BTC immediately gave it all back. Why does this keep happening"
       ]
     },
     {
       "symbol": "ETHUSDT",
-      "mentions": 5,
+      "mentions": 3,
       "recentTitles": [
-        "XRP ETFs attract inflows amid wallet surge. bitcoin, ether funds struggle.",
-        "Harvard dumps entire ETH position after just one quarter",
-        "Ethereum’s identity crisis is deepening after high-profile 'brain drain' frustrates the community"
+        "Ethereum is still a good long-term buy, according data: Analyst",
+        "Price predictions 5/22: BTC, ETH, BNB, XRP, SOL, DOGE, HYPE, ADA, ZEC, BCH",
+        "XRP ETFs attract inflows amid wallet surge. bitcoin, ether funds struggle."
       ]
     },
     {
       "symbol": "BNBUSDT",
-      "mentions": 1,
+      "mentions": 2,
       "recentTitles": [
+        "Price predictions 5/22: BTC, ETH, BNB, XRP, SOL, DOGE, HYPE, ADA, ZEC, BCH",
         "BNB Smart Chain Shows Quantum-Safe Crypto Works Despite 50% Throughput Drop"
       ]
     },
@@ -1110,7 +1120,7 @@
       "symbol": "SOLUSDT",
       "mentions": 1,
       "recentTitles": [
-        "Printr launchpad &amp; Cult of Printr"
+        "Price predictions 5/22: BTC, ETH, BNB, XRP, SOL, DOGE, HYPE, ADA, ZEC, BCH"
       ]
     }
   ],
@@ -1118,12 +1128,12 @@
     "fearGreed": {
       "value": 28,
       "classification": "Fear",
-      "observedAt": "2026-05-22T00:00:00.000Z"
+      "observedAt": "2026-05-23T00:00:00.000Z"
     },
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779509991,
+  "fetchedAt": 1779511185,
   "sources": [
     {
       "source": "cryptocompare",
