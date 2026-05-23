@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useMarketStore } from "@/store/market-store";
 import { usePortfolioStore } from "@/store/portfolio-store";
 import type { PaperPositionView } from "@/types/portfolio";
+import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 
 export interface PositionMetrics {
   position: PaperPositionView;
@@ -57,31 +58,34 @@ export function usePositionMetrics(positions: PaperPositionView[]): PortfolioMet
 
     const enriched: PositionMetrics[] = positions.map((p) => {
       const mark = tickers[p.symbol]?.last ?? p.entryPrice;
-      const direction = p.side === "LONG" ? 1 : -1;
-      const u = (mark - p.entryPrice) * p.quantity * direction;
-      unrealizedPnl += u;
+
+      const metrics = computePositionRiskMetrics({
+        side: p.side,
+        entryPrice: Number(p.entryPrice),
+        quantity: Number(p.quantity),
+        leverage: p.leverage,
+        takeProfitPrice: p.takeProfit,
+        stopLossPrice: p.stopLoss,
+        currentPrice: mark,
+      });
+
+      unrealizedPnl += metrics.unrealizedPnl;
       realizedPnl += p.realizedPnl;
-      exposure += p.entryPrice * p.quantity;
-      usedMargin += p.marginUsed;
-
-      const pnlPct = p.marginUsed > 0 ? (u / p.marginUsed) * 100 : 0;
-
-      let riskReward: number | null = null;
-      if (p.takeProfit != null && p.stopLoss != null) {
-        const risk = Math.abs(p.entryPrice - p.stopLoss);
-        const reward = Math.abs(p.takeProfit - p.entryPrice);
-        riskReward = risk > 0 ? reward / risk : null;
-      }
+      exposure += metrics.notionalValue;
+      usedMargin += metrics.marginUsed;
 
       const openedAt = new Date(p.createdAt).getTime();
       return {
-        position: p,
+        position: {
+          ...p,
+          liquidationPrice: metrics.liquidationPrice,
+        },
         mark,
-        unrealizedPnl: u,
-        unrealizedPnlPct: pnlPct,
-        totalPnl: u + p.realizedPnl,
+        unrealizedPnl: metrics.unrealizedPnl,
+        unrealizedPnlPct: metrics.unrealizedPnlPct,
+        totalPnl: metrics.unrealizedPnl + p.realizedPnl,
         durationMs: Math.max(0, now - openedAt),
-        riskReward,
+        riskReward: metrics.riskRewardRatio > 0 ? metrics.riskRewardRatio : null,
       };
     });
 

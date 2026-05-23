@@ -1,23 +1,7 @@
 /**
  * Risk-adjusted position sizing.
- *
- * The formula is the standard institutional one:
- *
- *   notional = (equity * riskPercent) / stopLossDistancePercent
- *
- * Then it's gated by exposure caps (per-symbol, total book, leverage) and
- * by a minimum-expected-profit filter so we don't waste fees on scraps.
- *
- * Each input contributes a multiplier — confidence, setup quality, regime,
- * volatility, strategy type — so an A+ breakout in a trending tape sizes
- * up while a C-grade reversal in choppy gets clipped. The result includes
- * a human-readable `rationale` string ("AI allocated 24% equity — high
- * confidence breakout, low volatility, trending regime") for logs and UI.
- *
- * Shared by both engines (LLM coordinator and rule engine). Callers without
- * a setup grade or regime can omit those fields and we treat them as
- * neutral (multiplier = 1.0).
  */
+import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 
 const QTY_PRECISION_BY_SYMBOL: Record<string, number> = {
   BTCUSDT: 3,
@@ -409,11 +393,20 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
     );
   }
 
-  // P&L expectations from TP / SL distance.
-  const tpDistPct = Math.abs(takeProfitPrice - livePrice) / livePrice;
-  const expectedProfit = finalNotional * tpDistPct;
-  const expectedLoss = finalNotional * stopDistPct;
-  const riskRewardRatio = expectedLoss > 0 ? expectedProfit / expectedLoss : 0;
+  // P&L expectations using the centralized risk metrics engine
+  const riskMetrics = computePositionRiskMetrics({
+    side,
+    entryPrice: livePrice,
+    quantity,
+    leverage: 1, // isolated margin isolated leverage is 1 by default in paper engine
+    takeProfitPrice,
+    stopLossPrice,
+    walletBalance: totalEquity,
+  });
+
+  const expectedProfit = riskMetrics.projectedProfit;
+  const expectedLoss = riskMetrics.projectedLoss;
+  const riskRewardRatio = riskMetrics.riskRewardRatio;
 
   if (expectedProfit < MIN_EXPECTED_PROFIT_USDT) {
     return REJECT(
@@ -426,7 +419,9 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
   // Margin = notional / leverage. Paper engine uses leverage 1, so margin
   // here equals notional; callers can override but the headline number is
   // what they care about.
-  const marginRequired = finalNotional;
+  const marginRequired = riskMetrics.marginUsed;
+  const finalRiskAmount = riskMetrics.projectedLoss;
+  const finalRiskPercent = riskMetrics.riskPercentOfWallet ?? riskPct;
 
   const rationale = buildRationale({
     equityPercent,
@@ -435,8 +430,8 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
     marketRegime,
     decisionType,
     atrPct,
-    riskPct,
-    riskAmount,
+    riskPct: finalRiskPercent,
+    riskAmount: finalRiskAmount,
     expectedProfit,
     riskRewardRatio,
     drawdownMultiplier: mDD,
@@ -446,8 +441,8 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
   return {
     quantity,
     notional: finalNotional,
-    riskAmount,
-    riskPercent: riskPct,
+    riskAmount: finalRiskAmount,
+    riskPercent: finalRiskPercent,
     equityPercent,
     marginRequired,
     expectedProfit,

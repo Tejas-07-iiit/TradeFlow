@@ -1,6 +1,110 @@
 {
   "items": [
     {
+      "id": "r:1tl9omf",
+      "source": "reddit",
+      "title": "$1.26B Bitcoin ETF outflows spark ‘contrarian’ buy signal: Santiment",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl9omf/126b_bitcoin_etf_outflows_spark_contrarian_buy/",
+      "publishedAt": 1779521522,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 1,
+      "sourceLabel": "GENERAL-NEWS",
+      "comments": 0
+    },
+    {
+      "id": "r:1tl9i9c",
+      "source": "reddit",
+      "title": "What's better: paying with crypto through cards or QR through your wallet?",
+      "excerpt": "I'm seeing a lot of card products launching for crypto wallets. If more merchants accepted it via QR direct would that change things? ",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl9i9c/whats_better_paying_with_crypto_through_cards_or/",
+      "publishedAt": 1779520912,
+      "mentions": [],
+      "score": 1,
+      "sourceLabel": "DISCUSSION",
+      "comments": 1
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-bitcoin-etf-outflows-are-a-contrarian-buy-signal-santiment",
+      "source": "cryptocompare",
+      "title": "$1.26B Bitcoin ETF outflows spark ‘contrarian’ buy signal: Santiment",
+      "excerpt": "Ongoing Bitcoin ETF outflows have historically “correlated with conditions favorable for patient accumulation rather than panic,\" according to Santiment.",
+      "url": "https://cointelegraph.com/news/bitcoin-etf-outflows-are-a-contrarian-buy-signal-santiment?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779519308,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 100,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9hcnRpY2xlLWNvdmVycy0yMzcyOTItc3BvdC1iaXRjb2luLWV0Zi1vdXRmbG93LWludmVzdG9ycy1idGMtZHVtcC5qcGc=.jpg"
+    },
+    {
+      "id": "r:1tl8u98",
+      "source": "reddit",
+      "title": "trump just quietly gave himself his kids his businesses and the entire trump organization permanent immunity from tax prosecution",
+      "excerpt": " a one page document signed by the acting attorney general who is also his personal lawyer from his criminal trial and legal experts are saying it violates longstanding DOJ standards and everything like that, the administration’s own policy directives are the opposite of whatever this is.  nobody can do anything about it though because the same guy who would normally stop this is the guy who signe",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl8u98/trump_just_quietly_gave_himself_his_kids_his/",
+      "publishedAt": 1779518753,
+      "mentions": [],
+      "score": 72,
+      "sourceLabel": "DISCUSSION",
+      "comments": 15
+    },
+    {
+      "id": "r:1tl8raz",
+      "source": "reddit",
+      "title": "Every cycle you make the same mistake, why does it keep happening?",
+      "excerpt": "No matter how intelligent your entry is and how hype you stayed waiting for “retail” to pump your bags you end up in the end being the retail that gets dumped on no matter how early you feel, how is the system so rigged from the start that it made us believe with all our heart that a rise from 15k (previous bear market bottom) to 126k wasnt “the real bullmarket”, how was the president of the unite",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl8raz/every_cycle_you_make_the_same_mistake_why_does_it/",
+      "publishedAt": 1779518479,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "PERSPECTIVE",
+      "comments": 8
+    },
+    {
+      "id": "r:1tl7os4",
+      "source": "reddit",
+      "title": "Good guy Shib",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl7os4/good_guy_shib/",
+      "publishedAt": 1779515066,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "ANALYSIS",
+      "comments": 0
+    },
+    {
+      "id": "r:1tl78kn",
+      "source": "reddit",
+      "title": "F2Pool founder who controls 11% of bitcoin's hashrate to lead first SpaceX mission to Mars",
+      "excerpt": "",
+      "url": "https://reddit.com/r/CryptoCurrency/comments/1tl78kn/f2pool_founder_who_controls_11_of_bitcoins/",
+      "publishedAt": 1779513639,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 1,
+      "sourceLabel": "GENERAL-NEWS",
+      "comments": 0
+    },
+    {
+      "id": "cc:https---cointelegraph-com-news-michael-saylor-strategy-mstr-bitcoin-sell-speculation-btc",
+      "source": "cryptocompare",
+      "title": "‘Not unlikely’ Strategy will sell Bitcoin in 2026: Michael Saylor",
+      "excerpt": "Strategy chairman Michael Saylor said the goal is to maximize Strategy’s Bitcoin per share by 2033.",
+      "url": "https://cointelegraph.com/news/michael-saylor-strategy-mstr-bitcoin-sell-speculation-btc?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779510249,
+      "mentions": [
+        "BTCUSDT"
+      ],
+      "score": 0,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1iaXRjb2luLXN1cHBseS1taWNoYWVsLXNheWxvci0xLmpwZw==.jpg"
+    },
+    {
       "id": "r:1tl2boq",
       "source": "reddit",
       "title": "My name is Theo Chino-Tavarez. I am a Bitcoiner and I am running for Congress in the United States. Does anyone here know Will Schweitzer from Blue Vault?",
@@ -41,20 +145,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1mYW1vdXMtcGl6emEtZGF5LXdoZXJlLXlvdS1jb3VsZC1idXktcGl6emEtd2l0aC1idGMtaW4tMjAxOC5qcGc=.jpg"
     },
     {
-      "id": "r:1tkz7sk",
-      "source": "reddit",
-      "title": "Bitcoin could drop 60% if history repeat.",
-      "excerpt": "No emotion here, just data. When we rejected the green zone Bitcoin returned to the purple zone. Those are just fibo levels high time frame. So the perfect buy level is at 30k. Do whatever you want with this info.",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkz7sk/bitcoin_could_drop_60_if_history_repeat/",
-      "publishedAt": 1779491683,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "ANALYSIS",
-      "comments": 31
-    },
-    {
       "id": "cc:https---cointelegraph-com-news-kevin-warsh-sworn-fed-chair-traders-rate-hikes-2026",
       "source": "cryptocompare",
       "title": "Kevin Warsh sworn in as Fed chair, as traders forecast rate hikes in 2026",
@@ -74,9 +164,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkxlhp/iran_reportedly_funneled_billions_through_binance/",
       "publishedAt": 1779487734,
       "mentions": [],
-      "score": 168,
+      "score": 230,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 36
+      "comments": 48
     },
     {
       "id": "r:1tkuiyq",
@@ -88,9 +178,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 21,
+      "score": 26,
       "sourceLabel": "DISCUSSION",
-      "comments": 39
+      "comments": 53
     },
     {
       "id": "r:1tkuh06",
@@ -102,9 +192,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 96,
+      "score": 195,
       "sourceLabel": "LEGACY",
-      "comments": 20
+      "comments": 30
     },
     {
       "id": "r:1tku8z0",
@@ -162,20 +252,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9hbmFseXNpcy1hbmFseXRpY3MtZ2VvbG9naXN0LW11c2V1bS0xLmpwZw==.jpg"
     },
     {
-      "id": "r:1tkt85s",
-      "source": "reddit",
-      "title": "A bitcoin miner spent $860k armouring vehicles for its bosses, a fact for which we have very little context",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkt85s/a_bitcoin_miner_spent_860k_armouring_vehicles_for/",
-      "publishedAt": 1779478014,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "GENERAL-NEWS",
-      "comments": 6
-    },
-    {
       "id": "r:1tkt6i4",
       "source": "reddit",
       "title": "Prediction market trading cards.",
@@ -185,7 +261,7 @@
       "mentions": [],
       "score": 0,
       "sourceLabel": "COMEDY",
-      "comments": 0
+      "comments": 1
     },
     {
       "id": "r:1tkt39u",
@@ -197,9 +273,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 149,
+      "score": 168,
       "sourceLabel": "ANALYSIS",
-      "comments": 93
+      "comments": 102
     },
     {
       "id": "cc:5f562811-ae89-46a9-933e-0ab4d8d234b7",
@@ -271,9 +347,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 109,
+      "score": 125,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 39
+      "comments": 40
     },
     {
       "id": "r:1tknz1d",
@@ -283,7 +359,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tknz1d/house_oversight_chair_launches_probe_into_insider/",
       "publishedAt": 1779467129,
       "mentions": [],
-      "score": 13,
+      "score": 18,
       "sourceLabel": "REGULATIONS",
       "comments": 2
     },
@@ -295,20 +371,8 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tknwip/crypto_market_in_a_nutshell/",
       "publishedAt": 1779466992,
       "mentions": [],
-      "score": 28,
+      "score": 30,
       "sourceLabel": "COMEDY",
-      "comments": 6
-    },
-    {
-      "id": "r:1tknuxo",
-      "source": "reddit",
-      "title": "YOLO $near",
-      "excerpt": "All in on $near",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tknuxo/yolo_near/",
-      "publishedAt": 1779466899,
-      "mentions": [],
-      "score": 0,
-      "sourceLabel": "ADVICE",
       "comments": 7
     },
     {
@@ -364,20 +428,6 @@
       "score": 50,
       "sourceLabel": "CoinDesk",
       "imageUrl": "https://cdn.sanity.io/images/s3y3vcno/production/b25f92f41078a970ccce304a54e556d7b64a206c-1900x1268.jpg?fm=jpg&amp;w=1920&amp;h=1080&amp;crop=focalpoint&amp;fit=clip"
-    },
-    {
-      "id": "r:1tkljzo",
-      "source": "reddit",
-      "title": "What does Crypto Based their Values Upon?",
-      "excerpt": "And why there are so many cryptos? Other than btc what are  other choices that are legit for long term? And why doge coin still held so much value eventhough it does not really have any values? So far Only bitcoin, zcash and ltc make sense to me since they all have limited cap which is not more than 1b. While xrp and others have crazy limited cap like 100b etc ",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tkljzo/what_does_crypto_based_their_values_upon/",
-      "publishedAt": 1779462069,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 0,
-      "sourceLabel": "DISCUSSION",
-      "comments": 21
     },
     {
       "id": "cc:39eaa6aa-9da8-4c79-9a21-32055dc11d88",
@@ -493,9 +543,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 293,
+      "score": 308,
       "sourceLabel": "ANALYSIS",
-      "comments": 83
+      "comments": 85
     },
     {
       "id": "cc:b9a757f7-40a5-41f0-9395-d863735e3c1f",
@@ -567,7 +617,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkhjzu/ffff_uuuuuu/",
       "publishedAt": 1779453000,
       "mentions": [],
-      "score": 45,
+      "score": 48,
       "sourceLabel": "MEME",
       "comments": 5
     },
@@ -681,9 +731,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 80,
+      "score": 92,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 119
+      "comments": 120
     },
     {
       "id": "r:1tkdjt5",
@@ -695,7 +745,7 @@
       "mentions": [
         "BNBUSDT"
       ],
-      "score": 5,
+      "score": 4,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 1
     },
@@ -745,7 +795,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkciw8/south_korea_to_review_22_crypto_tax_repeal/",
       "publishedAt": 1779437777,
       "mentions": [],
-      "score": 4,
+      "score": 5,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 0
     },
@@ -917,20 +967,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1jb2luZmxhcmVzLWV4aXQtYW5kLXRoZS1mdXR1cmUtb2YtY2xvdWQtbWluaW5nLmpwZw==.jpg"
     },
     {
-      "id": "cc:https---cointelegraph-com-markets-bitcoin-liquidity-imbalance-eyes-a-sharp-rally-to-80k-next-heres-why",
-      "source": "cryptocompare",
-      "title": "Bitcoin liquidity balance hints at developing rally toward $80K",
-      "excerpt": "Data show Bitcoin futures traders are pursuing overhead short positions, raising the chance of a rally to $80,000.",
-      "url": "https://cointelegraph.com/markets/bitcoin-liquidity-imbalance-eyes-a-sharp-rally-to-80k-next-heres-why?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779410096,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 100,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1ibG9ja2NoYWluLXBvd2VyZWQtcHJlZGljdGlvbi1tYXJrZXRzLWdvdmVybmFuY2UtYW5kLXVzZXMtYmV5b25kLWRlYXRoLXBvb2xzLWJpdGNvaW4tMS5qcGc=.jpg"
-    },
-    {
       "id": "r:1tk30dl",
       "source": "reddit",
       "title": "This 32 year old Japanese trader spent the last 9 years crypto trading and turned $387,000 into $14,000,000. If he had simply bought BTC and done nothing, he would have over $36,000,000 today, according to math experts.",
@@ -940,23 +976,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 3580,
+      "score": 3680,
       "sourceLabel": "MEME",
-      "comments": 273
-    },
-    {
-      "id": "cc:https---cointelegraph-com-markets-bitcoin-longs-soar-despite-weak-us-macroeconomic-data-is-82k-btc-next",
-      "source": "cryptocompare",
-      "title": "Bitcoin longs soar despite weak US macroeconomic data: Is $82K BTC next?",
-      "excerpt": "Data shows Bitcoin traders cutting short positions and going long despite concerning US macroeconomic data emerging. Is a rally toward $82,000 next?",
-      "url": "https://cointelegraph.com/markets/bitcoin-longs-soar-despite-weak-us-macroeconomic-data-is-82k-btc-next?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779404833,
-      "mentions": [
-        "BTCUSDT"
-      ],
-      "score": 67,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1hLWZvbGxvdy11cC1vbi10ZXNsYS1wdXJjaGFzaW5nLTE1LWluLWJ0Yy13aGF0LWRvZXMtdGhpcy1tZWFuLWZvci10aGUtbWFya2V0LWFuZC1hZG9wdGlvbi0xLmpwZw==.jpg"
+      "comments": 281
     },
     {
       "id": "r:1tk0w61",
@@ -966,9 +988,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tk0w61/daily_crypto_discussion_may_21_2026_gmt0/",
       "publishedAt": 1779404446,
       "mentions": [],
-      "score": 7,
+      "score": 6,
       "sourceLabel": "r/CryptoCurrency",
-      "comments": 158
+      "comments": 159
     },
     {
       "id": "r:1tk09d7",
@@ -980,7 +1002,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 15,
+      "score": 14,
       "sourceLabel": "DISCUSSION",
       "comments": 16
     },
@@ -992,9 +1014,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjxumf/up_down_down_down/",
       "publishedAt": 1779397378,
       "mentions": [],
-      "score": 535,
+      "score": 544,
       "sourceLabel": "MEME",
-      "comments": 39
+      "comments": 41
     },
     {
       "id": "cc:bd8b8918-e20c-420d-a56e-d7b610503df7",
@@ -1039,18 +1061,6 @@
       "comments": 49
     },
     {
-      "id": "r:1tjikha",
-      "source": "reddit",
-      "title": "South Carolina Signs Pro-Crypto, Anti-CBDC Bill Into Law",
-      "excerpt": "",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tjikha/south_carolina_signs_procrypto_anticbdc_bill_into/",
-      "publishedAt": 1779365440,
-      "mentions": [],
-      "score": 41,
-      "sourceLabel": "REGULATIONS",
-      "comments": 11
-    },
-    {
       "id": "r:1tjglyo",
       "source": "reddit",
       "title": "Human API CEO warns AI bot collusion could trigger “machine-speed” market crashes before regulators can react",
@@ -1072,31 +1082,19 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 555,
+      "score": 550,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 79
-    },
-    {
-      "id": "r:1tj2hrd",
-      "source": "reddit",
-      "title": "The Binance Android app is a Chinese surveillance suite with a trading interface bolted on top",
-      "excerpt": "Was setting up a fresh Pixel for a friend getting into crypto. Pulled the APKs of his installed apps through a tracker scanner before handing it back. Binance was the worst by a wide margin.\n\nThe official Binance Android APK ships with SDKs from ByteDance (TikTok parent) and Tencent (WeChat parent), plus more than a dozen other trackers. Checked the AndroidManifest, they're declared at install tim",
-      "url": "https://reddit.com/r/CryptoCurrency/comments/1tj2hrd/the_binance_android_app_is_a_chinese_surveillance/",
-      "publishedAt": 1779318925,
-      "mentions": [],
-      "score": 315,
-      "sourceLabel": "ADVICE",
-      "comments": 74
     }
   ],
   "trending": [
     {
       "symbol": "BTCUSDT",
-      "mentions": 36,
+      "mentions": 35,
       "recentTitles": [
-        "Bitcoin 'Pizza Day' was 16 years ago, here's how much that BTC is worth today",
-        "Bitcoin could drop 60% if history repeat.",
-        "Clarity Act passed committee and BTC immediately gave it all back. Why does this keep happening"
+        "$1.26B Bitcoin ETF outflows spark ‘contrarian’ buy signal: Santiment",
+        "$1.26B Bitcoin ETF outflows spark ‘contrarian’ buy signal: Santiment",
+        "F2Pool founder who controls 11% of bitcoin's hashrate to lead first SpaceX mission to Mars"
       ]
     },
     {
@@ -1133,7 +1131,7 @@
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779511185,
+  "fetchedAt": 1779521687,
   "sources": [
     {
       "source": "cryptocompare",
