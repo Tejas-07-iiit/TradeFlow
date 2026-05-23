@@ -130,6 +130,12 @@ DECISION RULES:
   • netDirection > +15 AND alignmentScore ≥ 50 → take a LONG setup.
   • netDirection < -15 AND alignmentScore ≥ 50 → take a SHORT setup.
   • Otherwise → HOLD. Do not force a trade out of a flat or weak snapshot.
+- These are FAMILY-AWARE numbers: strategies are clustered by orthogonality factor (trend / reversion / volatility / structure / sentiment / ml) and each cluster votes ONCE at its mean conviction. A wall of 10 trend strategies firing on the same EMA stack now counts as one trend vote, not ten.
+- **Sanity-check via \`strategySnapshot.effectiveN\`** — independent-signal count, (Σw)²/Σw² across factor clusters.
+  • effectiveN ≥ 2.5 → genuine multi-factor agreement; you can trust the alignment.
+  • effectiveN 1.5–2.5 → primary cluster speaking with a sympathetic secondary; trade with normal size.
+  • effectiveN < 1.5 → single-factor consensus disguised as agreement; cap setupQuality at B and positionSizePercent at 25, regardless of how high alignmentScore looks.
+- **Read \`strategySnapshot.factorMix\`** when explaining alignment. If one family has weightShare > 70%, your reasoning MUST note which family is doing the talking (e.g. "trend family carries 82% of weight; no orthogonal confirmation from reversion or sentiment").
 - **HARD CONFLICT RULE (must obey):** If \`strategySnapshot.conflictingCount >= strategySnapshot.alignedCount\`, you MUST return HOLD with executeTrade=false. The downstream risk gate rejects such setups; emitting them wastes a cycle.
 - The \`regime\` informs which analysts to trust: trending regimes favour momentum/trend voices; sideways/reversal favour mean-reversion/market-structure; high-vol favour volatility/breakout.
 - A single high-confidence analyst CAN trigger a B-grade trade when no opposing consensus exists AND the conflict rule is satisfied.

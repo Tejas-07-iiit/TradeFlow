@@ -3,6 +3,8 @@ import { ACTIVE_SYMBOLS } from "@/lib/market/symbols";
 import { fetchHistoricalCandles } from "@/services/binance";
 import { calculateIndicators, generateDecision } from "@/lib/signals/signal-engine";
 import { computeRiskAdjustedSize } from "@/lib/trading/position-sizing";
+import { computeDrawdownMultiplier } from "@/lib/risk/drawdown-gate";
+import { computeVolTargetMultiplier } from "@/lib/risk/vol-target";
 import { decisionSide } from "@/services/ai/schemas";
 import { runCandlestickEngine } from "@/lib/candlestick";
 import { saveExplainableSignal } from "@/server/xai-signals";
@@ -21,6 +23,8 @@ import {
 } from "@/server/trading";
 import type { Candle, Ticker24h } from "@/types/market";
 import type { MarketDecision } from "@/services/ai/schemas";
+import { computeRollingCorrelations } from "@/lib/telemetry/correlation";
+import { pruneTelemetryData } from "@/lib/telemetry/retention";
 import type { ManagementIndicators, ManagedPositionContext } from "@/types/trade-management";
 import type { TradeAssessment } from "@/lib/trade-quality";
 import { assessTradeQuality } from "@/lib/trade-quality";
@@ -67,6 +71,7 @@ export class BackgroundRunner {
   private signalInterval: NodeJS.Timeout | null = null;
   private tradeManagerInterval: NodeJS.Timeout | null = null;
   private llmDecisionInterval: NodeJS.Timeout | null = null;
+  private retentionInterval: NodeJS.Timeout | null = null;
 
   // Re-entrancy guards. The setInterval fires every N seconds regardless of
   // whether the previous tick has finished — under load (many PENDING orders,
@@ -146,6 +151,18 @@ export class BackgroundRunner {
         void this.runLlmDecisionForSymbol(symbol);
       }, tickMs);
     }, ACTIVE_SYMBOLS.length * 15000); // Start after initial staggers complete
+
+    // Telemetry Retention Pruning: Run once on startup, then every 24 hours
+    console.info("[BACKGROUND-RUNNER] Initializing telemetry retention pruning (30 days policy)...");
+    void pruneTelemetryData(30).catch((err) => {
+      console.error("[BACKGROUND-RUNNER] Startup telemetry retention prune failed:", err);
+    });
+    this.retentionInterval = setInterval(() => {
+      console.info("[BACKGROUND-RUNNER] Executing daily telemetry retention prune...");
+      void pruneTelemetryData(30).catch((err) => {
+        console.error("[BACKGROUND-RUNNER] Telemetry retention prune failed:", err);
+      });
+    }, 24 * 60 * 60 * 1000);
   }
 
   private connectWebSocket() {
@@ -463,13 +480,30 @@ export class BackgroundRunner {
           const atrPct = last && last.close > 0 && "atrPct" in last ? (last as any).atrPct ?? null : null;
           const ruleGrade = decision.setupQuality === "B" ? "B" : (decision.setupQuality as any);
 
+          const totalEquity =
+            bal + userPositions.reduce((s, p) => s + Number(p.unrealizedPnl ?? 0), 0);
+          // Peak proxy until we add a stored high-water mark: max of current
+          // equity and the paper account's seed balance (60k per Prisma
+          // default). Gate activates once equity dips below the seed.
+          const drawdown = computeDrawdownMultiplier({
+            currentEquity: totalEquity,
+            peakEquity: Math.max(totalEquity, 60_000),
+          });
+          // Continuous vol-target via ATR%-as-daily-vol proxy. atrPct is in
+          // percent (e.g. 1.5 = 1.5%); divide by 100 to get a fraction so
+          // the helper's target/forecast ratio is unit-consistent.
+          const volTarget = computeVolTargetMultiplier({
+            targetDailyVol: 0.015,
+            forecastDailyVol: atrPct != null ? atrPct / 100 : null,
+          });
+
           const sizing = computeRiskAdjustedSize({
             symbol: decision.symbol,
             side,
             livePrice: decision.entryPrice,
             stopLossPrice: decision.stopLoss,
             takeProfitPrice: decision.takeProfit,
-            totalEquity: bal + userPositions.reduce((s, p) => s + Number(p.unrealizedPnl ?? 0), 0),
+            totalEquity,
             availableBalance,
             confidence: decision.confidence,
             setupQuality: ruleGrade,
@@ -482,7 +516,19 @@ export class BackgroundRunner {
               openPositionsCount,
             },
             maxOpenPositions: 5,
+            drawdownMultiplier: drawdown.multiplier,
+            volTargetMultiplier: volTarget.fellBack ? undefined : volTarget.multiplier,
           });
+
+          if (drawdown.haltNewEntries) {
+            console.warn(
+              `[RISK-GATE] User ${userId} ${decision.symbol} halted — ${drawdown.reason}`,
+            );
+          } else if (drawdown.multiplier < 1) {
+            console.info(
+              `[RISK-GATE] User ${userId} ${decision.symbol} ${drawdown.reason}; ${volTarget.reason}`,
+            );
+          }
 
           if (sizing.rejection) {
             console.warn(`[SERVER-SIGNAL-ENGINE] User ${userId} ${decision.symbol} sized-out (${sizing.rejection}) — ${sizing.rationale}`);
@@ -805,6 +851,9 @@ export class BackgroundRunner {
         model: res.model ?? "unknown",
         key: res.key,
         newsValidation: res.newsValidation,
+        strategySnapshot: res.strategySnapshot,
+        fullStrategySnapshot: res.fullStrategySnapshot,
+        source: res.source,
       };
 
       const side = decisionSide(d.decision);
@@ -982,6 +1031,15 @@ export class BackgroundRunner {
         const atrPct = proposal.atrPct;
         const externalSizeMultiplier = news && news.status === "ok" ? news.sizeMultiplier : 1;
 
+        const drawdown = computeDrawdownMultiplier({
+          currentEquity: totalEquity,
+          peakEquity: Math.max(totalEquity, 60_000),
+        });
+        const volTarget = computeVolTargetMultiplier({
+          targetDailyVol: 0.015,
+          forecastDailyVol: atrPct != null ? atrPct / 100 : null,
+        });
+
         const sizing = computeRiskAdjustedSize({
           symbol,
           side,
@@ -1002,7 +1060,15 @@ export class BackgroundRunner {
           },
           maxOpenPositions: 5,
           externalSizeMultiplier,
+          drawdownMultiplier: drawdown.multiplier,
+          volTargetMultiplier: volTarget.fellBack ? undefined : volTarget.multiplier,
         });
+
+        if (drawdown.haltNewEntries) {
+          console.warn(`[RISK-GATE] LLM path ${symbol} halted — ${drawdown.reason}`);
+        } else if (drawdown.multiplier < 1) {
+          console.info(`[RISK-GATE] LLM path ${symbol} ${drawdown.reason}; ${volTarget.reason}`);
+        }
 
         if (sizing.rejection) {
           await this.persistSignalReport({
@@ -1282,13 +1348,66 @@ export class BackgroundRunner {
       const driftBps = assessment.metrics.entryDriftBps;
       const driftPercent = driftBps != null ? driftBps / 100 : 0;
 
+      const projSnapshot = entry.strategySnapshot;
+      const fullSnapshot = entry.fullStrategySnapshot;
+      
+      const effectiveN = fullSnapshot ? fullSnapshot.effectiveN : (projSnapshot ? projSnapshot.effectiveN : null);
+      const familyNetDirection = fullSnapshot ? fullSnapshot.familyNetDirection : (projSnapshot ? projSnapshot.netDirection : null);
+      const familyAlignmentScore = fullSnapshot ? fullSnapshot.familyAlignmentScore : (projSnapshot ? projSnapshot.alignmentScore : null);
+      
+      let familyBreakdown = null;
+      if (fullSnapshot) {
+        familyBreakdown = JSON.parse(JSON.stringify(fullSnapshot.familyBreakdown));
+      } else if (projSnapshot && projSnapshot.factorMix) {
+        familyBreakdown = JSON.parse(JSON.stringify(projSnapshot.factorMix));
+      }
+
+      let strategySignals = null;
+      if (fullSnapshot && Array.isArray(fullSnapshot.ranked)) {
+        strategySignals = fullSnapshot.ranked.map((r: any, idx: number) => ({
+          strategyId: r.output.strategyId,
+          strategyName: r.output.strategyName,
+          category: r.output.category,
+          signal: r.output.signal,
+          rawConfidence: r.output.confidence,
+          weightedScore: r.weightedScore,
+          family: r.output.family ?? r.output.category,
+          regime: fullSnapshot.regime,
+          timestamp: new Date().toISOString(),
+          barIndex: idx,
+          signalSourceVersion: "1.0"
+        }));
+      } else if (projSnapshot && Array.isArray(projSnapshot.topStrategies)) {
+        strategySignals = projSnapshot.topStrategies.map((ts: any, idx: number) => ({
+          strategyId: ts.strategyId,
+          strategyName: ts.strategyName,
+          category: ts.category,
+          signal: ts.signal,
+          rawConfidence: ts.confidence,
+          weightedScore: ts.weightedScore,
+          family: ts.family ?? ts.category,
+          regime: projSnapshot.regime,
+          timestamp: new Date().toISOString(),
+          barIndex: idx,
+          signalSourceVersion: "1.0"
+        }));
+      }
+
+      let finalExecutionResult = executionResult || null;
+      const isFallback = entry.source === "local-fallback" || entry.model === "fallback-engine";
+      if (isFallback) {
+        finalExecutionResult = finalExecutionResult 
+          ? `local-fallback: ${finalExecutionResult}`
+          : "local-fallback: Groq API key/model exhaustion or timeout triggered local fallback engine";
+      }
+
       await saveExplainableSignal({
         symbol,
         side: decisionSide(entry.decision.decision) ?? "NONE",
         status,
         confidence: entry.decision.confidence,
         finalAction: entry.decision.decision,
-        executionResult: executionResult || null,
+        executionResult: finalExecutionResult,
         
         emaAlignment,
         rsi: indicators.rsi14,
@@ -1303,6 +1422,17 @@ export class BackgroundRunner {
         candlestickPatterns: candlestickPatterns ? JSON.parse(JSON.stringify(candlestickPatterns)) : null,
         newsValidation: newsVal ? JSON.parse(JSON.stringify(newsVal)) : null,
         reasoning: JSON.parse(JSON.stringify(reasoning)),
+
+        effectiveN,
+        familyNetDirection,
+        familyAlignmentScore,
+        familyBreakdown,
+        strategySignals,
+
+        fusionVersion: "1.0-family-decorrelated",
+        regimeVersion: "1.0-macro-adx",
+        sizingVersion: "1.1-vol-target-drawdown",
+        orchestrationVersion: "2.0-async-runner",
 
         slPrice: entry.decision.stopLoss,
         tpPrice: entry.decision.takeProfit,
@@ -1334,8 +1464,13 @@ export class BackgroundRunner {
         liquidityChecks: "Passed (deep orderbook)",
         newsVetoResult
       }, {
-        source: entry.model === "fallback-engine" ? "local-fallback" : "llm",
+        source: entry.source || (entry.model === "fallback-engine" ? "local-fallback" : "llm"),
         alignmentScore: undefined,
+      });
+
+      // Asynchronously run correlation telemetry out-of-band so it does not block the hot path
+      void computeRollingCorrelations(100).catch((err) => {
+        console.error("[CORRELATION-TELEMETRY-ERROR] Failed to compute rolling correlation diagnostics:", err);
       });
     } catch (err) {
       console.error("[SERVER-LLM-DECISION] Failed to save explainable signal:", err);

@@ -285,6 +285,19 @@ model ExplainableSignal {
   sizeAdjustment      String?
   positionSizing      Json?   // risk amount, notional, equity %, multiples
 
+  // Family-Aware & Telemetry Extensions
+  effectiveN           Float?
+  familyNetDirection   Float?
+  familyAlignmentScore Float?
+  familyBreakdown      Json?
+  strategySignals      Json?
+
+  // Versioning Tags
+  fusionVersion        String?
+  regimeVersion        String?
+  sizingVersion        String?
+  orchestrationVersion String?
+
   // Execution Validator
   entryDrift         Float?   // drift percentage (0% to 100%)
   spreadValidation   String?

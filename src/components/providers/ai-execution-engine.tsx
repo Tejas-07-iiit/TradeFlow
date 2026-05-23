@@ -11,6 +11,8 @@ import {
 } from "@/lib/trade-quality";
 import { calculateIndicators } from "@/lib/signals/signal-engine";
 import { computeRiskAdjustedSize } from "@/lib/trading/position-sizing";
+import { computeDrawdownMultiplier } from "@/lib/risk/drawdown-gate";
+import { computeVolTargetMultiplier } from "@/lib/risk/vol-target";
 import { closePaperPosition, createPaperOrder } from "@/server/trading";
 import { decisionSide, type MarketDecision } from "@/services/ai/schemas";
 import type { NewsValidationResult } from "@/services/news/validator-types";
@@ -720,6 +722,15 @@ export function AiExecutionEngine() {
 
         let sizing = null;
         try {
+          const drawdown = computeDrawdownMultiplier({
+            currentEquity: totalEquity,
+            peakEquity: Math.max(totalEquity, 60_000),
+          });
+          const volTarget = computeVolTargetMultiplier({
+            targetDailyVol: 0.015,
+            forecastDailyVol: atrPct != null ? atrPct / 100 : null,
+          });
+
           sizing = computeRiskAdjustedSize({
             symbol,
             side,
@@ -740,6 +751,8 @@ export function AiExecutionEngine() {
             },
             maxOpenPositions: MAX_OPEN_POSITIONS,
             externalSizeMultiplier,
+            drawdownMultiplier: drawdown.multiplier,
+            volTargetMultiplier: volTarget.fellBack ? undefined : volTarget.multiplier,
           });
         } catch (err) {
           console.warn("[XAI-INTEGRATION] Failed to compute risk adjusted size:", err);

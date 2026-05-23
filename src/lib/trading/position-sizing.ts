@@ -82,6 +82,22 @@ export interface SizingInput {
    * caller error and rejected.
    */
   externalSizeMultiplier?: number;
+  /**
+   * Optional drawdown gate multiplier from `lib/risk/drawdown-gate`. When
+   * supplied, replaces no logic — it stacks as a new factor in the
+   * multiplier chain. A value of 0 triggers a clean `zero_risk_budget`
+   * rejection (the gate's kill-switch path). Callers that don't compute
+   * drawdown leave this undefined and get unchanged behaviour.
+   */
+  drawdownMultiplier?: number;
+  /**
+   * Optional volatility-target multiplier from `lib/risk/vol-target`. When
+   * supplied, *replaces* the discrete-bucket ATR multiplier — the two are
+   * different formulations of the same idea and stacking both would
+   * double-count. When absent, the existing discrete-bucket vol multiplier
+   * stays active (backward compatible).
+   */
+  volTargetMultiplier?: number;
 }
 
 export type SizingRejection =
@@ -116,6 +132,12 @@ export interface SizingResult {
     regime: number;
     volatility: number;
     strategy: number;
+    /** 1.0 when no drawdown gate supplied; bucket multiplier otherwise. */
+    drawdown: number;
+    /** 1.0 when no vol-target supplied; ratio multiplier otherwise. When
+     *  vol-target is active, `volatility` (the discrete bucket) is forced
+     *  to 1.0 to avoid double-counting the same effect. */
+    volTarget: number;
   };
   /** One-line human-readable explanation. */
   rationale: string;
@@ -220,6 +242,8 @@ const REJECT = (
     regime: 0,
     volatility: 0,
     strategy: 0,
+    drawdown: 0,
+    volTarget: 0,
   },
   rationale,
   rejection: reason,
@@ -279,13 +303,33 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
     return REJECT("invalid_stop", "SHORT: stop must be above entry");
   }
 
+  // Drawdown kill-switch — if the gate is in halt mode, reject cleanly
+  // before doing any other math. This is the mechanical equivalent of
+  // "stop trading after a -20% account hit".
+  if (input.drawdownMultiplier != null && input.drawdownMultiplier <= 0) {
+    return REJECT(
+      "zero_risk_budget",
+      "Drawdown kill-switch engaged — new entries halted",
+    );
+  }
+
   // Multiplier stack.
   const baseRiskPct = baseRiskFromConfidence(confidence);
   const mQ = qualityMultiplier(setupQuality);
   const mR = regimeMultiplier(marketRegime);
-  const mV = volatilityMultiplier(atrPct);
+  // Vol target supersedes the discrete bucket when supplied. We zero the
+  // bucket (mV → 1.0) so we don't multiply both representations of the
+  // same volatility effect into the size.
+  const useVolTarget =
+    input.volTargetMultiplier != null && Number.isFinite(input.volTargetMultiplier);
+  const mV = useVolTarget ? 1 : volatilityMultiplier(atrPct);
+  const mVT = useVolTarget ? (input.volTargetMultiplier as number) : 1;
   const mS = strategyMultiplier(decisionType);
-  const riskPct = baseRiskPct * mQ * mR * mV * mS;
+  const mDD =
+    input.drawdownMultiplier != null && Number.isFinite(input.drawdownMultiplier)
+      ? input.drawdownMultiplier
+      : 1;
+  const riskPct = baseRiskPct * mQ * mR * mV * mVT * mS * mDD;
 
   if (riskPct <= 0) {
     return REJECT("zero_risk_budget", "Risk budget zeroed by multipliers");
@@ -395,6 +439,8 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
     riskAmount,
     expectedProfit,
     riskRewardRatio,
+    drawdownMultiplier: mDD,
+    volTargetMultiplier: useVolTarget ? mVT : undefined,
   });
 
   return {
@@ -414,6 +460,8 @@ export function computeRiskAdjustedSize(input: SizingInput): SizingResult {
       regime: mR,
       volatility: mV,
       strategy: mS,
+      drawdown: mDD,
+      volTarget: mVT,
     },
     rationale,
     externalSizeMultiplier: extM,
@@ -438,6 +486,8 @@ function buildRationale(p: {
   riskAmount: number;
   expectedProfit: number;
   riskRewardRatio: number;
+  drawdownMultiplier: number;
+  volTargetMultiplier?: number;
 }): string {
   const parts: string[] = [];
   parts.push(`${p.equityPercent.toFixed(1)}% equity`);
@@ -451,6 +501,15 @@ function buildRationale(p: {
   if (p.atrPct != null) {
     if (p.atrPct < 1.5) parts.push("low vol");
     else if (p.atrPct > 5) parts.push("high vol");
+  }
+  // Surface the risk-gate multipliers when they actually moved the size,
+  // so the rationale string explains *why* it ended up smaller than the
+  // base formula would suggest.
+  if (p.drawdownMultiplier < 1) {
+    parts.push(`DD×${p.drawdownMultiplier.toFixed(2)}`);
+  }
+  if (p.volTargetMultiplier != null && Math.abs(p.volTargetMultiplier - 1) > 0.05) {
+    parts.push(`volTgt×${p.volTargetMultiplier.toFixed(2)}`);
   }
   const head = `AI allocated ${parts.join(", ")}`;
   const tail =

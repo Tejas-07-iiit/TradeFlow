@@ -22,6 +22,33 @@ export type StrategyCategory =
   | "statistical"
   | "sentiment";
 
+/**
+ * Orthogonality cluster a strategy belongs to. Multiple `StrategyCategory`
+ * labels collapse into a single `StrategyFamily` because the categories are
+ * descriptive (what the strategy *is*) while families capture the underlying
+ * latent factor (what the strategy *measures*).
+ *
+ * Why this matters: the fusion engine de-correlates within families before
+ * combining across families, so 10 trend-following strategies firing at once
+ * count as one trend "voice", not ten. Without this, weighted voting double-
+ * counts the trend factor whenever the market is trending — the single
+ * largest source of false consensus in the legacy fusion math.
+ *
+ * Most strategies inherit a default family from their category (see
+ * `defaultFamilyForCategory`); strategies whose latent factor differs from
+ * their descriptive category (e.g. Lorentzian Classification is categorised
+ * as "momentum" but is really a non-parametric ML model) may override via
+ * `StrategyDefinition.family`.
+ */
+export type StrategyFamily =
+  | "trend"
+  | "reversion"
+  | "volatility"
+  | "structure"
+  | "sentiment"
+  | "arbitrage"
+  | "ml";
+
 export type StrategySignal = "BUY" | "SELL" | "HOLD";
 
 export type StrategyRisk = "Low" | "Medium" | "High";
@@ -179,6 +206,12 @@ export interface StrategyDefinition {
   evaluate: (ctx: StrategyContext) => StrategyOutput;
   /** When false, the registry skips this strategy. */
   enabled: boolean;
+  /**
+   * Optional override — if absent, the family is derived from `category` via
+   * `defaultFamilyForCategory`. Set explicitly when the descriptive category
+   * doesn't match the latent factor (e.g. a "momentum"-categorised ML model).
+   */
+  family?: StrategyFamily;
 }
 
 /**
@@ -252,6 +285,36 @@ export interface StrategySnapshot {
   relatedPrinciples: StrategyMetadata[];
   /** Structured candlestick intelligence used by the LLM and chart overlay. */
   candlestickIntel?: CandlestickIntelligence;
+  /**
+   * Family-aware diagnostics. These exist *alongside* `netDirection` /
+   * `alignmentScore` so consumers can migrate at their own pace. The legacy
+   * fields treat each strategy as one vote; the family-aware fields treat
+   * each cluster of correlated strategies as one vote.
+   *
+   * Migration plan: once these are observed in production to be sensible,
+   * the legacy fields will be re-pointed to the family-aware computation
+   * and the duplicate fields removed.
+   */
+  familyNetDirection: number;
+  familyAlignmentScore: number;
+  /** (Σw)² / Σw² across family contributions — independent-signal count. */
+  effectiveN: number;
+  familyBreakdown: FamilyBreakdownEntry[];
+}
+
+/**
+ * One row per family present in the current snapshot. `netContribution` is
+ * the family's signed share of the total directional vote (positive = the
+ * family voted with the dominant direction); `weightShare` is the family's
+ * share of total absolute weight (how loud the family is, regardless of
+ * direction). `members` is the count of strategies that contributed.
+ */
+export interface FamilyBreakdownEntry {
+  family: StrategyFamily;
+  members: number;
+  netContribution: number;
+  weightShare: number;
+  dominantSignal: StrategySignal;
 }
 
 export interface RankedStrategyOutput {

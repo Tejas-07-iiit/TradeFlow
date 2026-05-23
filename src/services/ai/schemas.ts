@@ -223,10 +223,57 @@ export const CandlestickIntelligenceSchema = z.object({
 });
 export type CandlestickIntelligenceInput = z.infer<typeof CandlestickIntelligenceSchema>;
 
+/**
+ * Compact factor-mix entry. One row per orthogonality cluster present in the
+ * snapshot. `weightShare` is the family's share of total absolute weight;
+ * `netContribution` is its signed contribution to the directional vote;
+ * `dominantSignal` is which way the family as a whole voted.
+ *
+ * The LLM uses this to detect single-factor consensus: when `weightShare` of
+ * one family is > 70% and others are small, "high alignment" actually means
+ * "one factor speaking" rather than genuine multi-factor agreement.
+ */
+const FactorMixEntrySchema = z.object({
+  family: z.enum([
+    "trend",
+    "reversion",
+    "volatility",
+    "structure",
+    "sentiment",
+    "arbitrage",
+    "ml",
+  ]),
+  members: z.number().int().nonnegative(),
+  weightShare: z.number(),
+  netContribution: z.number(),
+  dominantSignal: z.enum(["BUY", "SELL", "HOLD"]),
+});
+
 export const StrategySnapshotInputSchema = z.object({
   regime: z.string(),
+  /**
+   * Family-aware directional vote on a -100..+100 scale. Each orthogonality
+   * cluster contributes the mean signed weight of its member strategies, so
+   * a flock of 10 correlated trend strategies counts as one trend vote at
+   * its mean conviction — NOT ten independent votes.
+   */
   netDirection: z.number().min(-100).max(100),
+  /**
+   * Family-aware alignment as the share of total cluster weight that voted
+   * with the dominant direction. Differs from the legacy count-based
+   * alignment in that one family with 9 members and one family with 1
+   * member each count as one vote regardless of size.
+   */
   alignmentScore: z.number().min(0).max(100),
+  /**
+   * (Σw)² / Σw² across family contributions. Effective independent-signal
+   * count. 1.0 = single factor speaking. ≥ 3.0 = genuinely multi-factor.
+   * The LLM should down-weight conviction when effectiveN < 1.5 regardless
+   * of how high alignmentScore looks.
+   */
+  effectiveN: z.number().nonnegative(),
+  /** Top families by weightShare, descending. Capped at 4 for token budget. */
+  factorMix: z.array(FactorMixEntrySchema).max(4),
   aggregateMomentumScore: z.number(),
   aggregateTrendScore: z.number(),
   aggregateVolatilityScore: z.number(),

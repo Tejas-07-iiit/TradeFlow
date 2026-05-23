@@ -30,6 +30,8 @@ export interface DecisionResponse {
   error?: string;
   /** Optional snapshot returned to the client so the UI can render alignment. */
   strategySnapshot?: StrategySnapshotInput;
+  /** Full raw unprojected snapshot for server-side telemetry. */
+  fullStrategySnapshot?: StrategySnapshot;
   /**
    * Where the decision came from.
    *   llm            — normal provider-chain answer.
@@ -136,6 +138,22 @@ export async function getStrategyDecision(
     sentiment,
   });
 
+  // Surface legacy-vs-family-aware fusion reads side by side. When effectiveN
+  // collapses toward 1 while legacy alignment looks high, the suite is
+  // double-counting a single factor (typically trend) — that's the bug the
+  // family-aware math is meant to catch. We log both for the duration of the
+  // migration window so the divergence is visible before any threshold flip.
+  const topFamily = snapshot.familyBreakdown[0];
+  console.info(
+    `[STRATEGY-FUSION] ${symbol} @${timeframe} regime=${snapshot.regime}` +
+      ` | legacy: netDir=${signed(snapshot.netDirection)} align=${snapshot.alignmentScore}` +
+      ` | family: netDir=${signed(snapshot.familyNetDirection)} align=${snapshot.familyAlignmentScore}` +
+      ` effN=${snapshot.effectiveN.toFixed(1)}` +
+      (topFamily
+        ? ` top=${topFamily.family}(${topFamily.weightShare.toFixed(0)}%, ${topFamily.dominantSignal})`
+        : ""),
+  );
+
   const lastClose = candles.at(-1)?.close;
   if (lastClose == null || lastClose <= 0) {
     return { ok: false, error: "no valid last close in candle window" };
@@ -199,6 +217,7 @@ export async function getStrategyDecision(
     key: llmResult.key,
     decision: llmResult.decision,
     strategySnapshot: decisionInput.strategySnapshot,
+    fullStrategySnapshot: snapshot,
     source: llmResult.source,
     newsValidation,
   };
@@ -263,10 +282,23 @@ function projectCandlestickForPrompt(
  *     scores in the snapshot header already convey direction)
  */
 function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotInput {
+  // The projected `netDirection` / `alignmentScore` carry the FAMILY-AWARE
+  // values. The legacy weighted-vote numbers remain on `snapshot` for
+  // server-side comparison logging but are no longer surfaced to the LLM,
+  // prefilter, priority engine, or local-fallback — they were all
+  // double-counting the trend factor whenever the market was trending.
   return {
     regime: snapshot.regime,
-    netDirection: snapshot.netDirection,
-    alignmentScore: snapshot.alignmentScore,
+    netDirection: snapshot.familyNetDirection,
+    alignmentScore: snapshot.familyAlignmentScore,
+    effectiveN: snapshot.effectiveN,
+    factorMix: snapshot.familyBreakdown.slice(0, 4).map((f) => ({
+      family: f.family,
+      members: f.members,
+      weightShare: f.weightShare,
+      netContribution: f.netContribution,
+      dominantSignal: f.dominantSignal,
+    })),
     aggregateMomentumScore: snapshot.aggregateMomentumScore,
     aggregateTrendScore: snapshot.aggregateTrendScore,
     aggregateVolatilityScore: snapshot.aggregateVolatilityScore,
@@ -309,4 +341,8 @@ function projectSnapshotForPrompt(snapshot: StrategySnapshot): StrategySnapshotI
 
 export async function getLiveOrchestratorStats(model?: string) {
   return getOrchestratorStats(model);
+}
+
+function signed(n: number): string {
+  return n > 0 ? `+${n}` : `${n}`;
 }

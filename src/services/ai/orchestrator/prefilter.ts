@@ -13,6 +13,14 @@ const NO_TREND_ADX_THRESHOLD = 12;
 const NEUTRAL_RSI_MIN = 45;
 const NEUTRAL_RSI_MAX = 55;
 const MIN_ATR_PCT = 0.15; // low volatility floor in %
+/**
+ * Below this effective-N, "consensus" is actually one orthogonality cluster
+ * speaking (typically trend) and the alignment score is meaningless. Reject
+ * regardless of how high `alignmentScore` looks. 1.3 admits a primary
+ * family with a sympathetic but quieter secondary family; anything tighter
+ * than that is single-factor and we should sit out.
+ */
+const MIN_EFFECTIVE_N = 1.3;
 
 export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
   const snap = input.strategySnapshot;
@@ -61,6 +69,23 @@ export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
     };
   }
 
+  // 3b. Reject single-factor consensus: even if alignment looks strong, when
+  // effectiveN < 1.3 the agreement is coming from one orthogonality cluster
+  // (typically the trend family — 10 EMA/Supertrend variants firing at once
+  // on the same latent factor). That's not consensus, that's one signal in
+  // ten costumes. Sit out.
+  if (snap.effectiveN < MIN_EFFECTIVE_N) {
+    return {
+      skip: true,
+      reason: `single-factor consensus (effectiveN=${snap.effectiveN.toFixed(2)} < ${MIN_EFFECTIVE_N})`,
+      syntheticDecision: buildSyntheticHold(
+        price,
+        regime,
+        `Skipped LLM: Apparent consensus is single-factor (effectiveN=${snap.effectiveN.toFixed(2)}). One family is speaking; no orthogonal confirmation.`,
+      ),
+    };
+  }
+
   // 4. Reject setups in sideways chop with no trend (low ADX + neutral RSI).
   const adx = input.indicators.adx14;
   const rsi = input.indicators.rsi14;
@@ -85,12 +110,18 @@ export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
     };
   }
 
-  // 6. Premium Routing for Elite Setups
-  if (snap.alignmentScore >= 75 && Math.abs(snap.netDirection) >= 25) {
+  // 6. Premium Routing for Elite Setups. Only promote to the heavyweight
+  // model when alignment is high AND it's coming from multiple orthogonal
+  // clusters — otherwise the spend is on theatre.
+  if (
+    snap.alignmentScore >= 75 &&
+    Math.abs(snap.netDirection) >= 25 &&
+    snap.effectiveN >= 2.0
+  ) {
     return {
       skip: false,
       tier: "premium",
-      reason: `elite setup (align=${snap.alignmentScore.toFixed(0)}, netDir=${snap.netDirection.toFixed(0)})`,
+      reason: `elite setup (align=${snap.alignmentScore.toFixed(0)}, netDir=${snap.netDirection.toFixed(0)}, effN=${snap.effectiveN.toFixed(2)})`,
     };
   }
 

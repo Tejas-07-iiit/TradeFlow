@@ -11,7 +11,9 @@
  *                         or near-SL distance (price within 0.4 × ATR of SL).
  *   POSITION_MGMT       — open position, no immediate crisis. Still
  *                         higher than any new-setup work.
- *   ELITE_SETUP         — alignment ≥ 80 AND |netDirection| ≥ 30.
+ *   ELITE_SETUP         — alignment ≥ 80 AND |netDirection| ≥ 30 AND
+ *                         effectiveN ≥ 2.0 (genuine multi-factor agreement,
+ *                         not one cluster pretending to be consensus).
  *   NEW_SETUP           — alignment ≥ 50 with directional bias.
  *   ROUTINE_SCAN        — default for everything else.
  *   RECHECK             — explicitly requested low-pri refresh (not used
@@ -39,7 +41,15 @@ export function computeDecisionPriority(input: DecisionInput): JobPriority {
 
   if (!snap) return JobPriority.ROUTINE_SCAN;
 
-  if (snap.alignmentScore >= 80 && Math.abs(snap.netDirection) >= 30) {
+  // Elite routing only when at least two orthogonal clusters concur. Without
+  // the effectiveN gate, a 10-strategy trend stack firing on the same EMA
+  // factor would pass the alignment + netDirection thresholds and burn the
+  // premium-model quota on a false-consensus setup.
+  if (
+    snap.alignmentScore >= 80 &&
+    Math.abs(snap.netDirection) >= 30 &&
+    snap.effectiveN >= 2.0
+  ) {
     return JobPriority.ELITE_SETUP;
   }
 

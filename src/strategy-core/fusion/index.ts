@@ -1,11 +1,15 @@
 import type {
+  FamilyBreakdownEntry,
   MarketRegime,
   RankedStrategyOutput,
   StrategyCategory,
+  StrategyFamily,
   StrategyMetadata,
   StrategyOutput,
+  StrategySignal,
   StrategySnapshot,
 } from "../types";
+import { familyForOutput } from "./families";
 
 /**
  * Fusion engine.
@@ -14,10 +18,23 @@ import type {
  * library matches). Output: a single `StrategySnapshot` that the LLM
  * coordinator consumes.
  *
- * Direction is a weighted vote: each non-HOLD output contributes its
- * `weightedScore` with sign equal to its signal. `netDirection` is the
- * normalised sum on a -100…+100 scale. `alignmentScore` is the share of
- * actionable strategies that agree with the net direction.
+ * Two parallel directional reads are produced:
+ *
+ *   1. Legacy weighted vote — `netDirection`, `alignmentScore`. Each non-HOLD
+ *      output contributes its `weightedScore` with sign equal to its signal.
+ *      This double-counts correlated strategies (e.g. 10 trend strategies all
+ *      firing on the same EMA stack will register as 10 independent votes).
+ *
+ *   2. Family-aware vote — `familyNetDirection`, `familyAlignmentScore`,
+ *      `effectiveN`, `familyBreakdown`. Strategies are clustered by latent
+ *      factor (trend / reversion / volatility / structure / sentiment / ml /
+ *      arbitrage). Within a family, scores are averaged (1/N) so a cluster
+ *      of N correlated strategies behaves as one vote of cluster-mean
+ *      conviction. Family contributions are then summed across families.
+ *
+ * Both reads are emitted so the LLM prompt, prefilter, and priority engines
+ * can be migrated to the family-aware numbers at their own pace and we can
+ * observe the divergence in audit logs before flipping live thresholds.
  */
 export function fuseStrategies(args: {
   symbol: string;
@@ -31,6 +48,7 @@ export function fuseStrategies(args: {
 }): StrategySnapshot {
   const { ranked, regime } = args;
 
+  // ── Legacy weighted vote ───────────────────────────────────────────────
   const actionable = ranked.filter((r) => r.output.signal !== "HOLD");
   const totalWeight = actionable.reduce((sum, r) => sum + r.weightedScore, 0);
   let directionalSum = 0;
@@ -65,6 +83,9 @@ export function fuseStrategies(args: {
   const aggregateTrendScore = mean(ranked.map((r) => r.output.trendScore));
   const aggregateVolatilityScore = mean(ranked.map((r) => r.output.volatilityScore));
 
+  // ── Family-aware vote ─────────────────────────────────────────────────
+  const family = computeFamilyAggregate(actionable);
+
   return {
     symbol: args.symbol,
     timeframe: args.timeframe,
@@ -83,6 +104,140 @@ export function fuseStrategies(args: {
     aggregateVolatilityScore: roundN(aggregateVolatilityScore),
     skipped: args.skipped,
     relatedPrinciples: args.relatedPrinciples ?? [],
+    familyNetDirection: family.familyNetDirection,
+    familyAlignmentScore: family.familyAlignmentScore,
+    effectiveN: family.effectiveN,
+    familyBreakdown: family.familyBreakdown,
+  };
+}
+
+interface FamilyAggregate {
+  familyNetDirection: number;
+  familyAlignmentScore: number;
+  effectiveN: number;
+  familyBreakdown: FamilyBreakdownEntry[];
+}
+
+interface FamilyBucket {
+  signedWeight: number;
+  absWeight: number;
+  members: number;
+  buys: number;
+  sells: number;
+}
+
+/**
+ * Cluster actionable outputs by family, then:
+ *   - per family: directional contribution = mean(signed weight)  (this is
+ *     the 1/N within-family de-correlation — N near-duplicate strategies
+ *     count as one vote at their mean conviction)
+ *   - per family: absolute "loudness" = mean(abs weight)
+ *   - across families: sum directional and absolute contributions to derive
+ *     a -100..+100 net direction
+ *
+ * `effectiveN` uses the standard concentration formula (Σw)² / Σw² applied
+ * to the per-family *absolute* contributions. Equal-weight across F families
+ * yields effectiveN = F; one family dominating drops it toward 1. This is
+ * the diagnostic that exposes "high consensus but only one factor speaking".
+ */
+function computeFamilyAggregate(
+  actionable: RankedStrategyOutput[],
+): FamilyAggregate {
+  if (actionable.length === 0) {
+    return {
+      familyNetDirection: 0,
+      familyAlignmentScore: 0,
+      effectiveN: 0,
+      familyBreakdown: [],
+    };
+  }
+
+  const buckets = new Map<StrategyFamily, FamilyBucket>();
+  for (const r of actionable) {
+    const fam = familyForOutput(r.output);
+    const sign = r.output.signal === "BUY" ? 1 : -1;
+    const w = r.weightedScore;
+    const bucket = buckets.get(fam) ?? {
+      signedWeight: 0,
+      absWeight: 0,
+      members: 0,
+      buys: 0,
+      sells: 0,
+    };
+    bucket.signedWeight += sign * w;
+    bucket.absWeight += w;
+    bucket.members += 1;
+    if (sign > 0) bucket.buys += 1;
+    else bucket.sells += 1;
+    buckets.set(fam, bucket);
+  }
+
+  // Family-level contribution = mean across members (1/N within-family).
+  type FamilyContribution = {
+    family: StrategyFamily;
+    signed: number;
+    abs: number;
+    members: number;
+    dominantSignal: StrategySignal;
+  };
+  const contributions: FamilyContribution[] = [];
+  for (const [fam, b] of buckets) {
+    const meanSigned = b.signedWeight / b.members;
+    const meanAbs = b.absWeight / b.members;
+    const dominantSignal: StrategySignal =
+      b.buys === b.sells
+        ? meanSigned > 0
+          ? "BUY"
+          : meanSigned < 0
+          ? "SELL"
+          : "HOLD"
+        : b.buys > b.sells
+        ? "BUY"
+        : "SELL";
+    contributions.push({
+      family: fam,
+      signed: meanSigned,
+      abs: meanAbs,
+      members: b.members,
+      dominantSignal,
+    });
+  }
+
+  const totalAbs = contributions.reduce((s, c) => s + c.abs, 0);
+  const totalSigned = contributions.reduce((s, c) => s + c.signed, 0);
+
+  const familyNetDirection =
+    totalAbs === 0 ? 0 : Math.round((totalSigned / totalAbs) * 100);
+
+  const dominantSign = Math.sign(familyNetDirection);
+  let alignedAbs = 0;
+  for (const c of contributions) {
+    const sign = Math.sign(c.signed);
+    if (dominantSign === 0 || sign === dominantSign) alignedAbs += c.abs;
+  }
+  const familyAlignmentScore =
+    totalAbs === 0 ? 0 : Math.round((alignedAbs / totalAbs) * 100);
+
+  // Effective N across families: (Σw)² / Σw² on absolute contributions.
+  const sumW = contributions.reduce((s, c) => s + c.abs, 0);
+  const sumW2 = contributions.reduce((s, c) => s + c.abs * c.abs, 0);
+  const effectiveN = sumW2 === 0 ? 0 : roundN((sumW * sumW) / sumW2);
+
+  const familyBreakdown: FamilyBreakdownEntry[] = contributions
+    .map((c) => ({
+      family: c.family,
+      members: c.members,
+      netContribution: roundN(totalAbs === 0 ? 0 : (c.signed / totalAbs) * 100),
+      weightShare: roundN(totalAbs === 0 ? 0 : (c.abs / totalAbs) * 100),
+      dominantSignal: c.dominantSignal,
+    }))
+    .sort((a, b) => b.weightShare - a.weightShare);
+
+  return {
+    familyNetDirection,
+    familyAlignmentScore,
+    effectiveN,
+    familyBreakdown,
   };
 }
 

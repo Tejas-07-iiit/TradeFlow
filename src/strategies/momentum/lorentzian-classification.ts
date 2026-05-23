@@ -186,6 +186,10 @@ export const LorentzianClassification: StrategyDefinition = {
   timeframes: ["intraday", "short-term"],
   preferredRegimes: ["Trending Up", "Trending Down", "Breakout", "High Volatility"],
   minCandles: 80,
+  // Stand-alone family: it's the only non-parametric classifier in the suite,
+  // so it shouldn't share the reversion bucket with Bollinger mean-reversion
+  // or get rolled into the trend bucket alongside EMA crosses.
+  family: "ml",
   evaluate,
   enabled: true,
 };
