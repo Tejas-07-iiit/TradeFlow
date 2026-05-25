@@ -1,10 +1,15 @@
 "use client";
 
+import { useState, useMemo } from "react";
+import { isAfter, subDays, startOfDay, isSameDay, parseISO } from "date-fns";
+
 import {
   BarChart3,
   Coins,
   ShieldCheck,
   Target,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 
 import { AccountSummary } from "@/components/shared/account-summary";
@@ -18,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
 import { useMarketStore } from "@/store/market-store";
-import type { PaperPositionView } from "@/types/portfolio";
+import type { PaperPositionView, TradeHistoryView } from "@/types/portfolio";
 import { computePositionRiskMetrics } from "@/lib/risk/metrics";
 
 /**
@@ -31,10 +36,12 @@ export function LivePortfolioPage({
   walletBalance,
   usedMargin,
   positions,
+  tradeHistory,
 }: {
   walletBalance: number;
   usedMargin: number;
   positions: PaperPositionView[];
+  tradeHistory?: TradeHistoryView[];
 }) {
   const tickers = useMarketStore((state) => state.tickers);
   const btcPrice = tickers.BTCUSDT?.last ?? 0;
@@ -69,6 +76,44 @@ export function LivePortfolioPage({
   const denom = Math.max(totalEquity, 1);
   const marginPct = Math.max(0, Math.min(100, (usedMargin / denom) * 100));
   const cashPct = Math.max(0, Math.min(100, (availableBalance / denom) * 100));
+
+  const [filter, setFilter] = useState<"ALL" | "TODAY" | "7D" | "30D" | "CUSTOM">("ALL");
+  const [customDate, setCustomDate] = useState<string>("");
+
+  const { totalProfit, totalLoss, netProfit } = useMemo(() => {
+    if (!tradeHistory) return { totalProfit: 0, totalLoss: 0, netProfit: 0 };
+
+    let filtered = tradeHistory;
+
+    if (filter === "CUSTOM" && customDate) {
+      const targetDate = parseISO(customDate);
+      filtered = tradeHistory.filter((t) => isSameDay(new Date(t.closedAt), targetDate));
+    } else if (filter !== "ALL") {
+      const now = new Date();
+      let cutoff: Date | null = null;
+      if (filter === "TODAY") cutoff = startOfDay(now);
+      else if (filter === "7D") cutoff = subDays(now, 7);
+      else if (filter === "30D") cutoff = subDays(now, 30);
+
+      if (cutoff) {
+        filtered = tradeHistory.filter((t) => isAfter(new Date(t.closedAt), cutoff!));
+      }
+    }
+
+    let tProfit = 0;
+    let tLoss = 0;
+    
+    filtered.forEach(t => {
+      if (t.pnl >= 0) tProfit += t.pnl;
+      else tLoss += Math.abs(t.pnl);
+    });
+
+    return {
+      totalProfit: tProfit,
+      totalLoss: tLoss,
+      netProfit: tProfit - tLoss,
+    };
+  }, [tradeHistory, filter, customDate]);
 
   return (
     <PageShell
@@ -112,48 +157,56 @@ export function LivePortfolioPage({
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Equity vs Wallet</CardTitle>
-            <StatusBadge tone={unrealizedPnl >= 0 ? "bull" : "bear"}>
-              {unrealizedPnl >= 0 ? "Positive" : "Negative"} PnL
-            </StatusBadge>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[280px] rounded-lg border border-[var(--border)] bg-[linear-gradient(180deg,var(--accent-soft),transparent)] p-5">
-              <div className="flex h-full items-end justify-between gap-2">
-                {[
-                  { label: "Wallet", value: walletBalance },
-                  { label: "Avail", value: availableBalance },
-                  { label: "Margin", value: usedMargin },
-                  { label: "Equity", value: totalEquity },
-                ].map((bar) => (
-                  <div
-                    key={bar.label}
-                    className="flex flex-1 flex-col items-center gap-2"
-                  >
-                    <div
-                      className="w-full rounded-t bg-[var(--accent)]/75"
-                      style={{
-                        height: `${Math.max(
-                          8,
-                          (Math.max(bar.value, 0) / Math.max(totalEquity, walletBalance, 1)) *
-                            90,
-                        )}%`,
-                      }}
-                    />
-                    <span className="text-[10px] text-[var(--fg-subtle)]">
-                      {bar.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between mt-10 mb-4">
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--fg)]">Historical Performance</h2>
+        <div className="flex items-center gap-2">
+          {filter === "CUSTOM" && (
+            <input 
+              type="date"
+              value={customDate}
+              onChange={(e) => setCustomDate(e.target.value)}
+              className="h-8 text-xs rounded-md bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--fg)] px-2 focus:outline-none focus:border-[var(--accent)]"
+            />
+          )}
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value as any)}
+            className="w-[140px] h-8 text-xs rounded-md bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--fg)] px-2 focus:outline-none focus:border-[var(--accent)]"
+          >
+            <option value="ALL">All Time</option>
+            <option value="TODAY">Today</option>
+            <option value="7D">Last 7 Days</option>
+            <option value="30D">Last 30 Days</option>
+            <option value="CUSTOM">Custom Date</option>
+          </select>
+        </div>
+      </div>
 
-        <aside className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+        <MetricCard
+          label="Total Profit"
+          value={formatCurrency(totalProfit)}
+          detail="Sum of winning trades"
+          icon={TrendingUp}
+          tone="bull"
+        />
+        <MetricCard
+          label="Total Loss"
+          value={formatCurrency(totalLoss)}
+          detail="Sum of losing trades"
+          icon={TrendingDown}
+          tone="bear"
+        />
+        <MetricCard
+          label="Net Profit"
+          value={formatCurrency(netProfit)}
+          detail="Profit minus Loss"
+          icon={Coins}
+          tone={netProfit >= 0 ? "bull" : "bear"}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader>
               <CardTitle>Allocation</CardTitle>
@@ -210,7 +263,6 @@ export function LivePortfolioPage({
               />
             </CardContent>
           </Card>
-        </aside>
       </div>
     </PageShell>
   );

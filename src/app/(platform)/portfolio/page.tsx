@@ -9,15 +9,19 @@ export default async function PortfolioPage() {
   const session = await auth();
   const userId = session?.user?.id;
 
-  const [wallet, positions] = userId
+  const [wallet, positions, tradeHistoryRecords] = userId
     ? await Promise.all([
         prisma.paperWallet.findUnique({ where: { userId } }),
         prisma.paperPosition.findMany({
           where: { userId, status: { in: ["OPEN", "PARTIALLY_CLOSED"] } },
           orderBy: { createdAt: "desc" },
         }),
+        prisma.tradeHistory.findMany({
+          where: { userId },
+          orderBy: { closedAt: "desc" },
+        }),
       ])
-    : [null, []];
+    : [null, [], []];
 
   return (
     <LivePortfolioPage
@@ -52,6 +56,25 @@ export default async function PortfolioPage() {
           createdAt: position.createdAt.toISOString(),
           closedAt: position.closedAt ? position.closedAt.toISOString() : null,
         }),
+      )}
+      tradeHistory={tradeHistoryRecords.map(
+        (trade) =>
+          ({
+            id: trade.id,
+            positionId: trade.positionId,
+            symbol: trade.symbol,
+            side: trade.side,
+            quantity: Number(trade.quantity),
+            entryPrice: Number(trade.entryPrice),
+            exitPrice: Number(trade.exitPrice),
+            pnl: Number(trade.pnl),
+            closeReason: trade.closeReason,
+            decisionSource: trade.decisionSource,
+            openedAt: trade.openedAt.toISOString(),
+            closedAt: trade.closedAt.toISOString(),
+            durationMs: Number(trade.durationMs),
+            riskReward: trade.riskReward ? Number(trade.riskReward) : null,
+          }) as any,
       )}
     />
   );
