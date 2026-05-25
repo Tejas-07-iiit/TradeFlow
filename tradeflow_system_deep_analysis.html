@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradeFlow System Deep Analysis</title>
+    <style>
+        :root {
+            --bg-dark: #0a0e17;
+            --bg-panel: #111827;
+            --bg-accent: #1f2937;
+            --text-main: #e5e7eb;
+            --text-muted: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --border-color: #374151;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --font-sans: 'Inter', 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        header {
+            background-color: var(--bg-panel);
+            padding: 2rem 4rem;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1, h2, h3 {
+            color: #ffffff;
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        nav {
+            width: 280px;
+            padding: 2rem 1rem;
+            height: calc(100vh - 80px);
+            position: sticky;
+            top: 80px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+        }
+
+        nav a {
+            display: block;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            transition: all 0.2s;
+        }
+
+        nav a:hover {
+            background-color: var(--bg-accent);
+            color: #fff;
+        }
+
+        main {
+            flex: 1;
+            padding: 2rem 4rem;
+        }
+
+        .section {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--accent-blue);
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+
+        .section-content {
+            margin-top: 1.5rem;
+            display: block;
+        }
+
+        .collapsed .section-content {
+            display: none;
+        }
+
+        .collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #a78bfa;
+        }
+
+        pre {
+            background-color: rgba(0, 0, 0, 0.4);
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: #e5e7eb;
+        }
+
+        .highlight-green { color: var(--accent-green); font-weight: 500; }
+        .highlight-red { color: var(--accent-red); font-weight: 500; }
+
+        .diagram {
+            background-color: var(--bg-accent);
+            padding: 1.5rem;
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            white-space: pre;
+            overflow-x: auto;
+            color: #d1d5db;
+            margin: 1rem 0;
+            border: 1px dashed var(--border-color);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: rgba(59, 130, 246, 0.2);
+            color: var(--accent-blue);
+            margin-right: 5px;
+        }
+        
+        input#search {
+            background-color: var(--bg-accent);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            width: 250px;
+            font-family: var(--font-sans);
+        }
+        input#search:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg> TradeFlow Intelligence</h1>
+    <input type="text" id="search" placeholder="Search analysis..." onkeyup="filterSections()">
+</header>
+
+<div class="container">
+    <nav id="sidebar">
+        <a href="#overview">1. System Overview</a>
+        <a href="#lifecycle">2. Full Trade Lifecycle</a>
+        <a href="#strategy">3. Strategy Engine</a>
+        <a href="#confidence">4. Confidence System</a>
+        <a href="#tpsl">5. TP/SL Engine</a>
+        <a href="#management">6. Dynamic Trade Management</a>
+        <a href="#risk">7. Risk Management System</a>
+        <a href="#ai">8. AI Orchestration</a>
+        <a href="#regime">9. Regime Detection</a>
+        <a href="#telemetry">10. Telemetry & Analytics</a>
+        <a href="#db">11. Database & Persistence</a>
+        <a href="#ui">12. Frontend/UI Logic</a>
+        <a href="#weaknesses">13. Current Weaknesses</a>
+        <a href="#strengths">14. Current Strengths</a>
+        <a href="#assessment">15. Final Assessment</a>
+    </nav>
+
+    <main id="content">
+        <!-- 1. System Overview -->
+        <div class="section" id="overview">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>1. System Overview</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>TradeFlow is a highly sophisticated, institutional-grade automated paper trading system that integrates multi-strategy technical analysis, Large Language Model (LLM) orchestration, and robust dynamic risk management.</p>
+                
+                <h3>Core Modules</h3>
+                <ul>
+                    <li><span class="pill">Trading Engine</span> <code>src/server/background-runner.ts</code>: Orchestrator polling Binance WS.</li>
+                    <li><span class="pill">Strategy Engine</span> <code>src/strategy-core/*</code>: Multi-factor pipeline grouped into Orthogonal Families.</li>
+                    <li><span class="pill">Fusion Engine</span> <code>src/strategy-core/fusion/index.ts</code>: Computes Herfindahl-Hirschman derived <code>effectiveN</code>.</li>
+                    <li><span class="pill">AI Orchestrator</span> <code>src/services/ai/orchestrator/pipeline.ts</code>: Groq-powered cognitive arbiter.</li>
+                    <li><span class="pill">Trade Manager</span> <code>src/services/trade-manager/*</code>: Dynamic R-multiple TP/SL adjustments.</li>
+                </ul>
+
+                <div class="diagram">
+[Binance WS] ──> [BackgroundRunner] ──> [Strategy Pipeline] ──> [Fusion Engine]
+                                                                        │
+                                                                        ▼
+[Trade Manager] <── [Risk / Sizing Gate] <── [LLM Orchestrator (StrategySnapshot)]
+      │
+      └──> [Prisma DB: PaperWallet / PaperPosition]
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Full Trade Lifecycle -->
+        <div class="section" id="lifecycle">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>2. Full Trade Lifecycle</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>The exact execution flow traces as follows:</p>
+                <ol>
+                    <li><strong>Ingestion:</strong> Binance WS streams 5m klines to cache.</li>
+                    <li><strong>Evaluation:</strong> <code>runStrategyPipeline</code> computes shared indicators and evaluates 30+ strategies.</li>
+                    <li><strong>Fusion:</strong> <code>fuseStrategies</code> clusters strategies by family to calculate <code>familyNetDirection</code> and <code>effectiveN</code>.</li>
+                    <li><strong>AI Validation:</strong> <code>getStrategyDecision</code> passes the snapshot to the LLM for setup quality and confidence scoring. Rate-limits trigger <code>localFallbackDecision</code>.</li>
+                    <li><strong>Risk Gating:</strong> <code>computeRiskAdjustedSize</code> applies vol-targeting and peak drawdown scaling.</li>
+                    <li><strong>Execution:</strong> <code>createPaperOrderInternal</code> creates pending orders; matched instantly via Prisma transaction, reserving <code>marginUsed</code>.</li>
+                    <li><strong>Management:</strong> <code>runAiTradeManagerLoop</code> triggers early AI exits or adjusts SL/TP using R-multiples and health scores.</li>
+                    <li><strong>Exit:</strong> Position closes, atomically returning Realized PnL to the wallet balance.</li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- 3. Strategy Engine -->
+        <div class="section" id="strategy">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>3. Strategy Engine</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>The strategy engine evaluates independent market anomalies using the crucial concept of <strong>Orthogonality Clusters (Families)</strong>.</p>
+                <h3>Family-Aware Logic</h3>
+                <p>Legacy systems suffer from false consensus by double-counting correlated strategies (e.g., 10 MA crossovers firing simultaneously). TradeFlow clusters strategies by latent factor (<code>trend</code>, <code>reversion</code>, <code>volatility</code>, etc.).</p>
+                <p><strong>Formulas:</strong></p>
+                <pre><code>// Family-level contribution = mean across members (1/N within-family)
+meanSigned = bucket.signedWeight / bucket.members;
+
+// Effective N: (Σw)² / Σw² on absolute contributions
+effectiveN = (sumW * sumW) / sumW2;</code></pre>
+                <p>If <code>effectiveN</code> approaches 1, the LLM is warned that despite high alignment, only one latent factor is driving the signal.</p>
+            </div>
+        </div>
+
+        <!-- 4. Confidence System -->
+        <div class="section" id="confidence">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>4. Confidence System</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>Confidence is a multi-layered aggregate:</p>
+                <ul>
+                    <li><strong>Strategy Level:</strong> Base confidence generated by deterministic rules.</li>
+                    <li><strong>Regime Weight:</strong> Multiplier (0-1) adjusting confidence based on <code>MarketRegime</code> fit.</li>
+                    <li><strong>Family Alignment:</strong> Percentage of absolute weight agreeing with the net direction.</li>
+                    <li><strong>LLM Validation:</strong> Final confidence generated by the AI reasoning engine.</li>
+                    <li><strong>Dynamic Confidence:</strong> Active trades experience confidence decay via <code>calculateDynamicConfidence</code> (factoring consecutive adverse candles and momentum breakdown).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 5. TP/SL Engine -->
+        <div class="section" id="tpsl">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>5. Take Profit / Stop Loss Engine</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>TradeFlow abandons static targets for a living risk perimeter (<code>dynamic-levels.ts</code>).</p>
+                <ul>
+                    <li><strong>Initial:</strong> SL = <code>ATR * 2</code>, TP = <code>SL * 1.8</code></li>
+                    <li><strong>Break-even:</strong> Triggers when PnL reaches threshold OR if confidence decays to 50-59%. SL moves to entry ± buffer.</li>
+                    <li><strong>Profit Protection:</strong> 
+                        <br/> - <code>+1R</code> locks in 0.25R.
+                        <br/> - <code>+2R</code> locks in 1.0R.
+                        <br/> - <code>+3R</code> locks in 2.0R.
+                    </li>
+                    <li><strong>Trailing Stops:</strong> 
+                        <br/> - Volatility Regime: 4.0x ATR
+                        <br/> - Trend Regime: 3.5x ATR
+                        <br/> - Choppy Regime: 2.0x ATR
+                        <br/> Tightens automatically for late-stage trends (>25 candles).
+                    </li>
+                </ul>
+                <p><strong>Safety Guards:</strong> Adjustments are clamped to 15% of the remaining distance to price to prevent noise stop-outs. SL modifications are strictly monotonic (can only tighten).</p>
+            </div>
+        </div>
+
+        <!-- 6. Dynamic Trade Management -->
+        <div class="section" id="management">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>6. Dynamic Trade Management</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>The <code>evaluatePosition</code> background loop runs every 30s.</p>
+                <h3>Exit Intelligence</h3>
+                <p>Aggregates technical anomalies into an exit confidence score:</p>
+                <ul>
+                    <li>EMA Crosses (0.25 weight)</li>
+                    <li>Regime Shifts (0.20 weight)</li>
+                    <li>MACD Collapse (0.15 weight)</li>
+                    <li>Candlestick Pattern Reversals (0.15 weight)</li>
+                    <li>News Shock (+25% absolute boost)</li>
+                </ul>
+                <p>Exits trigger at confidence >= 70 but require <strong>Candle Confirmation Gate</strong> (e.g., 3 consecutive adverse candles, scaled by volatility) unless overridden by a Liquidation Move.</p>
+            </div>
+        </div>
+
+        <!-- 7. Risk Management System -->
+        <div class="section" id="risk">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>7. Risk Management System</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p><code>computeRiskAdjustedSize</code> standardizes risk before execution.</p>
+                <pre><code>// 1. Volatility Target Multiplier
+volTargetMultiplier = 0.015 / (atrPct / 100);
+
+// 2. Drawdown Gate
+drawdownPct = (peakEquity - currentEquity) / peakEquity;
+drawdownMultiplier = Math.pow(1 - (drawdownPct / maxDrawdown), exponent);
+
+// 3. Final Size
+riskAmount = totalEquity * baseRiskPct * volTargetMultiplier * drawdownMultiplier;</code></pre>
+                <p>Additionally, hard exposure limits veto trades if a single symbol exceeds the maximum open positions notional cap.</p>
+            </div>
+        </div>
+
+        <!-- 8. AI Orchestration -->
+        <div class="section" id="ai">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>8. AI / LLM Orchestration</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>The LLM operates as the strategic arbiter via <code>executeDecisionJob</code>.</p>
+                <ul>
+                    <li><strong>Routing:</strong> Dynamically selects <code>llama-3.3-70b-versatile</code> for execution-critical jobs.</li>
+                    <li><strong>Fail-Fast Degradation:</strong> Instantly downgrades to <code>qwen3-32b</code> on 429 limits or un-availability.</li>
+                    <li><strong>Local Fallback Engine:</strong> If all providers fail, <code>localFallbackDecision</code> takes over. It caps sizing to 25% and enforces strict entry thresholds (<code>alignmentScore >= 70</code>).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 9. Regime Detection -->
+        <div class="section" id="regime">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>9. Regime Detection</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>Classifies market state using ADX, ATR, and MA slopes.</p>
+                <p>States: <code>Trending Up</code>, <code>Trending Down</code>, <code>Choppy</code>, <code>High Volatility</code>.</p>
+                <p>Directly alters execution by zeroing out <code>regimeWeight</code> for trend strategies in choppy markets, and dynamically scaling the trailing stop ATR multipliers.</p>
+            </div>
+        </div>
+
+        <!-- 10. Telemetry & Analytics -->
+        <div class="section" id="telemetry">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>10. Telemetry & Analytics</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p><code>saveExplainableSignal</code> records the exact technical variables, LLM JSON reasoning, strategy snapshots, and candlestick anomalies for every accepted or rejected decision.</p>
+                <p><code>TradeManagementEvent</code> logs every dynamic SL/TP modification with the health score context.</p>
+            </div>
+        </div>
+
+        <!-- 11. Database -->
+        <div class="section" id="db">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>11. Database & Persistence</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>Prisma models mimic Binance isolated margin accounts.</p>
+                <p><code>PaperWallet</code> tracks <code>balance</code> and <code>usedMargin</code>. <code>PaperPosition</code> tracks entry, exits, and PnL. The system prevents double-closing via CAS (Compare-and-Swap) updates.</p>
+            </div>
+        </div>
+
+        <!-- 12. Frontend -->
+        <div class="section" id="ui">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>12. Frontend / UI Logic</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>Server actions push live PnL and trade events to the client. The frontend charts dynamically render the audit trail of `TradeManagementEvent` logs, visualising trailing stops and health adjustments over time.</p>
+            </div>
+        </div>
+
+        <!-- 13. Weaknesses -->
+        <div class="section" id="weaknesses">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>13. Current Weaknesses</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <ul>
+                    <li><strong>Polling Over-reliance:</strong> Dependent on the 1s and 30s loops; intra-tick volatility relies on backfill.</li>
+                    <li><strong>Backfill Slippage Gap:</strong> Startup backfills assume execution at exact SL prices, ignoring realistic market slippage during downtime.</li>
+                    <li><strong>Over-parameterization:</strong> <code>dynamic-levels.ts</code> has dense rule branching that may conflict during extreme volatility bursts.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 14. Strengths -->
+        <div class="section" id="strengths">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>14. Current Strengths</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <ul>
+                    <li><strong>Institutional Fusion:</strong> <code>effectiveN</code> family-aware decorrelation prevents false consensus.</li>
+                    <li><strong>Safety Abstractions:</strong> The local fallback engine and strict Prisma CAS ensure robust, non-blocking execution.</li>
+                    <li><strong>Living Risk Management:</strong> Transitioning from static TP/SL to R-multiple and health-based tracking mimics real desk execution.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 15. Assessment -->
+        <div class="section" id="assessment">
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>15. Final System Assessment</h2>
+                <span class="toggle-icon">▼</span>
+            </div>
+            <div class="section-content">
+                <p>TradeFlow is a mature, production-ready quantitative platform. Its blend of deterministic technical engines with qualitative AI arbitration represents institutional-grade architecture. The statistical realism of its risk scaling and the robustness of its execution orchestrator make it highly resilient.</p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    function toggleSection(element) {
+        const section = element.parentElement;
+        section.classList.toggle('collapsed');
+    }
+
+    function filterSections() {
+        const input = document.getElementById('search');
+        const filter = input.value.toLowerCase();
+        const sections = document.querySelectorAll('.section');
+
+        sections.forEach(section => {
+            const text = section.innerText.toLowerCase();
+            if (text.includes(filter)) {
+                section.style.display = "";
+            } else {
+                section.style.display = "none";
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

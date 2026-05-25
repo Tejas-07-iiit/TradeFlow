@@ -1,0 +1,69 @@
+{
+  "system": "TradeFlow",
+  "version": "Production",
+  "architecture": {
+    "orchestrator": "BackgroundRunner",
+    "database": "Prisma (PostgreSQL)",
+    "market_data": "Binance WebSocket & REST"
+  },
+  "modules": {
+    "background_runner": {
+      "file": "src/server/background-runner.ts",
+      "responsibilities": [
+        "WebSocket ingestion (5m klines, 24hr tickers)",
+        "Matching loop for pending orders and TP/SL execution",
+        "AI signal loop for strategy evaluation",
+        "AI trade manager loop for dynamic position management"
+      ]
+    },
+    "strategy_engine": {
+      "path": "src/strategy-core/",
+      "components": {
+        "fusion": "fuseStrategies (calculates effectiveN and familyNetDirection)",
+        "families": ["trend", "reversion", "volatility", "structure", "sentiment", "arbitrage", "ml"]
+      }
+    },
+    "ai_orchestration": {
+      "path": "src/services/ai/orchestrator/",
+      "components": {
+        "pipeline": "Handles model routing, fail-fast degradation, and LLM budget protection",
+        "local_fallback": "Deterministic engine used when all LLMs are rate-limited"
+      }
+    },
+    "trade_management": {
+      "path": "src/services/trade-manager/",
+      "components": {
+        "dynamic_levels": "Adjusts TP based on health, adjusts SL based on R-multiples and trailing regimes",
+        "exit_intelligence": "Aggregates technical anomalies into an exit confidence score",
+        "health_scorer": "Computes real-time positional health based on consecutive adverse candles and momentum"
+      }
+    },
+    "risk_management": {
+      "path": "src/lib/risk/",
+      "components": {
+        "position_sizing": "computeRiskAdjustedSize (base risk * vol_mult * dd_mult)",
+        "vol_target": "Normalizes position size against a 1.5% target daily volatility",
+        "drawdown_gate": "Scales down exposure when equity dips below peak high-water mark"
+      }
+    }
+  },
+  "execution_flow": {
+    "step_1": "Ingest Market Data (WebSocket)",
+    "step_2": "Calculate Shared Indicators (EMA, RSI, ATR, etc.)",
+    "step_3": "Evaluate 30+ Strategies",
+    "step_4": "Fuse Strategies (cluster by Family, output StrategySnapshot)",
+    "step_5": "LLM Arbitrates Snapshot & News (Outputs MarketDecision)",
+    "step_6": "Compute Risk-Adjusted Position Size",
+    "step_7": "Execute Atomic Prisma Transaction (Reserve Margin, Open Position)",
+    "step_8": "Background Manager Monitors Health",
+    "step_9": "Dynamic SL/TP Adjustments or Early AI Exit",
+    "step_10": "Close Position and Return PnL to Wallet"
+  },
+  "key_formulas": {
+    "effectiveN": "(Σw)² / Σw² (Herfindahl-Hirschman Index derived decorrelation)",
+    "volatility_multiplier": "TARGET_DAILY_VOL (0.015) / FORECAST_VOL (ATR%)",
+    "drawdown_multiplier": "Math.pow(1 - (drawdownPct / MAX_DRAWDOWN), exponent)",
+    "r_multiple_profit": "unrealizedProfit / initialRisk",
+    "trailing_stop_distance": "ATR * RegimeMultiplier (2.0 to 4.0)"
+  }
+}
