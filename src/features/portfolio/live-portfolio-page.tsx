@@ -79,15 +79,20 @@ export function LivePortfolioPage({
 
   const [filter, setFilter] = useState<"ALL" | "TODAY" | "7D" | "30D" | "CUSTOM">("ALL");
   const [customDate, setCustomDate] = useState<string>("");
+  const [sideFilter, setSideFilter] = useState<"ALL" | "LONG" | "SHORT">("ALL");
 
   const { totalProfit, totalLoss, netProfit } = useMemo(() => {
     if (!tradeHistory) return { totalProfit: 0, totalLoss: 0, netProfit: 0 };
 
     let filtered = tradeHistory;
 
+    if (sideFilter !== "ALL") {
+      filtered = filtered.filter((t) => t.side === sideFilter);
+    }
+
     if (filter === "CUSTOM" && customDate) {
       const targetDate = parseISO(customDate);
-      filtered = tradeHistory.filter((t) => isSameDay(new Date(t.closedAt), targetDate));
+      filtered = filtered.filter((t) => isSameDay(new Date(t.closedAt), targetDate));
     } else if (filter !== "ALL") {
       const now = new Date();
       let cutoff: Date | null = null;
@@ -96,7 +101,7 @@ export function LivePortfolioPage({
       else if (filter === "30D") cutoff = subDays(now, 30);
 
       if (cutoff) {
-        filtered = tradeHistory.filter((t) => isAfter(new Date(t.closedAt), cutoff!));
+        filtered = filtered.filter((t) => isAfter(new Date(t.closedAt), cutoff!));
       }
     }
 
@@ -168,6 +173,15 @@ export function LivePortfolioPage({
               className="h-8 text-xs rounded-md bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--fg)] px-2 focus:outline-none focus:border-[var(--accent)]"
             />
           )}
+          <select
+            value={sideFilter}
+            onChange={(e) => setSideFilter(e.target.value as any)}
+            className="w-[100px] h-8 text-xs rounded-md bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--fg)] px-2 focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+          >
+            <option value="ALL">All Sides</option>
+            <option value="LONG">Long</option>
+            <option value="SHORT">Short</option>
+          </select>
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as any)}

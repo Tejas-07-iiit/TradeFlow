@@ -1,6 +1,18 @@
 {
   "items": [
     {
+      "id": "cc:https---cointelegraph-com-news-sec-postpones-plan-allowing-innovation-exemption-for-tokenized-stocks-report",
+      "source": "cryptocompare",
+      "title": "SEC postpones plan allowing 'innovation exemption' for tokenized stocks: Report",
+      "excerpt": "The SEC has reportedly delayed releasing a proposal permitting tokenized stock trading after receiving industry concerns.",
+      "url": "https://cointelegraph.com/news/sec-postpones-plan-allowing-innovation-exemption-for-tokenized-stocks-report?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
+      "publishedAt": 1779680713,
+      "mentions": [],
+      "score": 0,
+      "sourceLabel": "Cointelegraph",
+      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS13aHktcmVndWxhdGlvbi1pcy10aGUtYmVzdC10aGluZy1mb3ItY3J5cHRvLXNlYy5qcGc=.jpg"
+    },
+    {
       "id": "r:1tmrdxu",
       "source": "reddit",
       "title": "Why do I need to pay Coinbase to protect my money!??",
@@ -8,9 +20,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tmrdxu/why_do_i_need_to_pay_coinbase_to_protect_my_money/",
       "publishedAt": 1779664439,
       "mentions": [],
-      "score": 6,
+      "score": 4,
       "sourceLabel": "DISCUSSION",
-      "comments": 35
+      "comments": 36
     },
     {
       "id": "cc:https---cointelegraph-com-news-soaring-bond-prices-structural-shift-bitcoin-supercycle",
@@ -76,7 +88,7 @@
       "mentions": [
         "ETHUSDT"
       ],
-      "score": 5,
+      "score": 6,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 4
     },
@@ -114,7 +126,7 @@
       "mentions": [
         "ETHUSDT"
       ],
-      "score": 92,
+      "score": 96,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 65
     },
@@ -244,9 +256,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tm9b1h/iran_moved_billions_through_binance_to_fund/",
       "publishedAt": 1779621199,
       "mentions": [],
-      "score": 362,
+      "score": 361,
       "sourceLabel": "GENERAL-NEWS",
-      "comments": 200
+      "comments": 202
     },
     {
       "id": "cc:https---cointelegraph-com-news-blockchain-researcher-defends-ethereum-foundation-says-its-exactly-doing-its-job",
@@ -270,7 +282,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tm72sb/70_of_all_crypto_wrench_attacks_happen_in_france/",
       "publishedAt": 1779613760,
       "mentions": [],
-      "score": 250,
+      "score": 244,
       "sourceLabel": "🛡️ SECURITY",
       "comments": 41
     },
@@ -308,7 +320,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tm30ij/binance_is_a_scam/",
       "publishedAt": 1779600314,
       "mentions": [],
-      "score": 14,
+      "score": 12,
       "sourceLabel": "🛡️ SECURITY",
       "comments": 16
     },
@@ -334,7 +346,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tlxkc6/brazilian_gang_raid_reveals_a_new_cryptocrime/",
       "publishedAt": 1779584463,
       "mentions": [],
-      "score": 34,
+      "score": 40,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 8
     },
@@ -346,7 +358,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tlx659/binance_denies_new_wsj_report_alleging_850m_in/",
       "publishedAt": 1779583328,
       "mentions": [],
-      "score": 40,
+      "score": 38,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 12
     },
@@ -370,7 +382,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tluw8r/daily_crypto_discussion_may_23_2026_gmt0/",
       "publishedAt": 1779577250,
       "mentions": [],
-      "score": 14,
+      "score": 10,
       "sourceLabel": "r/CryptoCurrency",
       "comments": 77
     },
@@ -412,7 +424,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 59,
+      "score": 55,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 10
     },
@@ -440,7 +452,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 69,
+      "score": 71,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 65
     },
@@ -464,7 +476,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tlodf5/iran_moved_billions_through_binance_to_fund/",
       "publishedAt": 1779561289,
       "mentions": [],
-      "score": 10,
+      "score": 11,
       "sourceLabel": "ANALYSIS",
       "comments": 2
     },
@@ -490,7 +502,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tlksxg/bug_hunter_saved_ecosystem_from_a_massive_800m/",
       "publishedAt": 1779553089,
       "mentions": [],
-      "score": 958,
+      "score": 960,
       "sourceLabel": "DISCUSSION",
       "comments": 49
     },
@@ -504,7 +516,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 4,
+      "score": 5,
       "sourceLabel": "DISCUSSION",
       "comments": 13
     },
@@ -530,7 +542,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 212,
+      "score": 211,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 20
     },
@@ -542,7 +554,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tli0kp/washington_is_betting_on_a_very_american_version/",
       "publishedAt": 1779546563,
       "mentions": [],
-      "score": 10,
+      "score": 7,
       "sourceLabel": "ANALYSIS",
       "comments": 4
     },
@@ -580,7 +592,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 98,
+      "score": 102,
       "sourceLabel": "SPECULATION",
       "comments": 21
     },
@@ -616,7 +628,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tlda7l/ecb_rejects_euro_stablecoin_push_warning_of_risks/",
       "publishedAt": 1779533754,
       "mentions": [],
-      "score": 15,
+      "score": 18,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 13
     },
@@ -670,9 +682,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tl8u98/trump_just_quietly_gave_himself_his_kids_his/",
       "publishedAt": 1779518753,
       "mentions": [],
-      "score": 1379,
+      "score": 1384,
       "sourceLabel": "DISCUSSION",
-      "comments": 247
+      "comments": 249
     },
     {
       "id": "r:1tl8raz",
@@ -682,7 +694,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tl8raz/every_cycle_you_make_the_same_mistake_why_does_it/",
       "publishedAt": 1779518479,
       "mentions": [],
-      "score": 55,
+      "score": 58,
       "sourceLabel": "PERSPECTIVE",
       "comments": 67
     },
@@ -748,7 +760,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkxlhp/iran_reportedly_funneled_billions_through_binance/",
       "publishedAt": 1779487734,
       "mentions": [],
-      "score": 322,
+      "score": 325,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 52
     },
@@ -762,9 +774,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 481,
+      "score": 486,
       "sourceLabel": "LEGACY",
-      "comments": 48
+      "comments": 49
     },
     {
       "id": "cc:1456bcb2-4a4b-41d6-980a-127d1cc8be63",
@@ -819,7 +831,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 214,
+      "score": 216,
       "sourceLabel": "ANALYSIS",
       "comments": 120
     },
@@ -990,18 +1002,6 @@
       "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1ob3ctdG8tcmVjb3Zlci1hLWNyeXB0by13YWxsZXQtd2l0aC1vci13aXRob3V0LXNlZWQtcGhyYXNlLmpwZw==.jpg"
     },
     {
-      "id": "cc:https---cointelegraph-com-features-defi-hacks-institutional-confidence-risks-outpace-yields",
-      "source": "cryptocompare",
-      "title": "DeFi hacks shake institutional confidence as risks outpace yields",
-      "excerpt": "Repeated bridge exploits and shrinking yields are making institutions question whether DeFi’s risks still justify the returns, says Symbiotic’s Putiatin.",
-      "url": "https://cointelegraph.com/features/defi-hacks-institutional-confidence-risks-outpace-yields?utm_source=rss_feed&utm_medium=rss&utm_campaign=rss_partner_inbound",
-      "publishedAt": 1779457913,
-      "mentions": [],
-      "score": 50,
-      "sourceLabel": "Cointelegraph",
-      "imageUrl": "https://images.cointelegraph.com/images/528_aHR0cHM6Ly9zMy1pbWFnZXMuY3RtZWRpYS5pby9tZWRpYS9hcnRpY2xlLWNvdmVycy9oaS1kZWZpLWV4cGVyaW1lbnRzLWFyZS1jYXVzaW5nLWEtbG90LW9mLXBlb3BsZS10by1sb29zZS10aGVpci1tb25leS1kby1jcmVhdG9ycy1vZi1kZWZpLXByb2plY3RzLXVuZGVyc3RhbmQtdGhhdC0yLmpwZw==.jpg"
-    },
-    {
       "id": "cc:b9a757f7-40a5-41f0-9395-d863735e3c1f",
       "source": "cryptocompare",
       "title": "IREN co-founder says AI’s biggest bottleneck is infrastructure, not chips",
@@ -1134,7 +1134,7 @@
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779682491,
+  "fetchedAt": 1779683977,
   "sources": [
     {
       "source": "cryptocompare",
