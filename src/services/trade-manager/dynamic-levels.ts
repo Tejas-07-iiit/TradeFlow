@@ -197,12 +197,12 @@ export function calculateDynamicLevels(
       const timeframeMs = 5 * 60 * 1000; // default 5m
       const candlesElapsed = Math.floor(timeElapsed / timeframeMs);
       if (candlesElapsed >= 25) {
-        trailAtrMult = Math.min(trailAtrMult, 1.8); // tighten trailing stops for late-stage trends
+        trailAtrMult = Math.min(trailAtrMult, 2.2); // tighten trailing stops for late-stage trends
       }
 
       // 3R aggressive trailing protection
       if (profitR >= 3.0) {
-        trailAtrMult = Math.min(trailAtrMult, 1.5); // very tight trailing for massive winners
+        trailAtrMult = Math.min(trailAtrMult, 1.8); // very tight trailing for massive winners
       }
 
       const trailDistance = atr * trailAtrMult;

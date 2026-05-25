@@ -8,19 +8,18 @@ export interface DecisionPrefilter {
   syntheticDecision?: MarketDecision;
 }
 
-const FLAT_ALIGNMENT_THRESHOLD = 35;
-const NO_TREND_ADX_THRESHOLD = 12;
+const FLAT_ALIGNMENT_THRESHOLD = 65;
+const NO_TREND_ADX_THRESHOLD = 20;
 const NEUTRAL_RSI_MIN = 45;
 const NEUTRAL_RSI_MAX = 55;
-const MIN_ATR_PCT = 0.15; // low volatility floor in %
+const MIN_ATR_PCT = 0.35; // low volatility floor in %
 /**
  * Below this effective-N, "consensus" is actually one orthogonality cluster
  * speaking (typically trend) and the alignment score is meaningless. Reject
- * regardless of how high `alignmentScore` looks. 1.3 admits a primary
- * family with a sympathetic but quieter secondary family; anything tighter
- * than that is single-factor and we should sit out.
+ * regardless of how high `alignmentScore` looks. 1.8 ensures confirmation
+ * across multiple independent strategy families.
  */
-const MIN_EFFECTIVE_N = 1.3;
+const MIN_EFFECTIVE_N = 1.8;
 
 export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
   const snap = input.strategySnapshot;
@@ -109,6 +108,26 @@ export function prefilterDecision(input: DecisionInput): DecisionPrefilter {
       syntheticDecision: buildSyntheticHold(price, regime, `Skipped LLM: Volatility is too low to cover slippage and fees.`),
     };
   }
+
+  // 5b. Suppress entries during Choppy, Sideways, and Low Volatility regimes unless setup is exceptional.
+  if (regime) {
+    const rLower = regime.toLowerCase();
+    const isChopOrLowVol = rLower.includes("choppy") || rLower.includes("low volatility") || rLower.includes("sideways");
+    if (isChopOrLowVol) {
+      if (snap.alignmentScore < 80) {
+        return {
+          skip: true,
+          reason: `suppressed entry in chop/low-vol regime (regime=${regime}, alignment=${snap.alignmentScore.toFixed(0)} < 80)`,
+          syntheticDecision: buildSyntheticHold(
+            price,
+            regime,
+            `Skipped LLM: Suppressed entry in ${regime} regime (requires >=80% strategy alignment to trade in choppy/low-vol markets).`,
+          ),
+        };
+      }
+    }
+  }
+
 
   // 6. Premium Routing for Elite Setups. Only promote to the heavyweight
   // model when alignment is high AND it's coming from multiple orthogonal

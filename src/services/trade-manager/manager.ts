@@ -44,9 +44,13 @@ export function evaluatePosition(
     timeframe
   );
 
-  // Override health.overall and health.smoothedScore with dynamic confidence
-  health.overall = dynamicConfidence;
-  health.smoothedScore = dynamicConfidence;
+  // Blend health.overall and health.smoothedScore with dynamic confidence
+  // to avoid noise spikes causing premature trailing stop-loss adjustments
+  // and take-profit reductions, while keeping the multi-factor health checks active.
+  const blendedHealth = Math.round(0.6 * health.overall + 0.4 * dynamicConfidence);
+  health.overall = blendedHealth;
+  health.smoothedScore = blendedHealth;
+
 
   // 2. Prepare the base management metadata updates
   const meta: TradeManagementMeta = position.managementMeta ?? { ...DEFAULT_MANAGEMENT_META };

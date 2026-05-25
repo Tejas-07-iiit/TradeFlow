@@ -186,6 +186,19 @@ export function checkEarlyExit(
     newsBoost = true;
   }
 
+  // Calculate emergency flags early
+  const trendState = position.managementMeta?.currentTrendState || classifyTrendState(position, indicators, closedCandles);
+  const isLiquidation = trendState === "LIQUIDATION_MOVE";
+  const isEmergency = isLiquidation || isCriticalNews;
+
+  // ─── Consensus-Aware Scaling ──────────────
+  // Scale down exit confidence if weightSum is low to require multiple signals (consensus)
+  // or a major signal before exiting.
+  if (!isEmergency && weightSum < 0.35) {
+    const scalingFactor = weightSum / 0.35;
+    aggregateConfidence = Math.round(aggregateConfidence * scalingFactor);
+  }
+
   // Exit trigger threshold is 70
   let triggerExit = aggregateConfidence >= 70;
 
@@ -207,10 +220,6 @@ export function checkEarlyExit(
     }
 
     // 2. Check for emergency overrides (Liquidation state or critical news)
-    const trendState = position.managementMeta?.currentTrendState || classifyTrendState(position, indicators, closedCandles);
-    const isLiquidation = trendState === "LIQUIDATION_MOVE";
-    const isEmergency = isLiquidation || isCriticalNews;
-
     if (!isEmergency) {
       const consecutiveAdverse = position.managementMeta?.consecutiveAdverseCandles ?? calculateConsecutiveAdverseCandles(closedCandles, position.side);
       if (consecutiveAdverse < requiredAdverse) {

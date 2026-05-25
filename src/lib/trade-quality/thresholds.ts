@@ -16,9 +16,9 @@ import type { Thresholds } from "./types";
  */
 export const DEFAULT_THRESHOLDS: Thresholds = {
   minExpectedProfitPercent: 0,
-  minRiskRewardRatio: 0.9,
+  minRiskRewardRatio: 1.4,
   preferredRiskRewardRatio: 2.0,
-  minConfidence: 58,
+  minConfidence: 72,
   maxRiskPerTradePercent: 1,
   maxVolatilityThreshold: 10,
   maxOpenPositions: 4,
@@ -35,25 +35,29 @@ export const DEFAULT_THRESHOLDS: Thresholds = {
  */
 export const REGIME_OVERRIDES: Record<string, Partial<Thresholds>> = {
   Trending: {
-    minRiskRewardRatio: 0.9,
-    minConfidence: 55,
+    minRiskRewardRatio: 1.3,
+    minConfidence: 70,
   },
   Sideways: {
-    minRiskRewardRatio: 0.9,
-    minConfidence: 58,
+    minRiskRewardRatio: 1.5,
+    minConfidence: 72,
   },
   Compression: {
-    minRiskRewardRatio: 0.9,
-    minConfidence: 60,
+    minRiskRewardRatio: 1.5,
+    minConfidence: 72,
   },
   Choppy: {
-    minRiskRewardRatio: 1.0,
-    minConfidence: 62,
+    minRiskRewardRatio: 1.8,
+    minConfidence: 75,
   },
   "High Volatility": {
-    minRiskRewardRatio: 1.0,
-    minConfidence: 65,
+    minRiskRewardRatio: 1.5,
+    minConfidence: 72,
     maxVolatilityThreshold: 9,
+  },
+  "Low Volatility": {
+    minRiskRewardRatio: 1.8,
+    minConfidence: 75,
   },
 };
 
