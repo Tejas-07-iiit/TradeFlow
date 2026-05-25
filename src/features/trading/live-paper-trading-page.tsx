@@ -10,7 +10,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { formatDistanceToNowStrict } from "date-fns";
+import { formatDistanceToNowStrict, format } from "date-fns";
 
 import { AccountSummary } from "@/components/shared/account-summary";
 import {
@@ -637,6 +637,8 @@ export function LivePaperTradingPage() {
                               <span>RR {trade.riskReward.toFixed(2)}</span>
                             </>
                           )}
+                          <span className="text-[var(--fg-subtle)]/60">·</span>
+                          <span>{format(new Date(trade.closedAt), "MMM d, yyyy")}</span>
                         </div>
                       </div>
                     </div>

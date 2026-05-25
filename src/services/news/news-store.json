@@ -48,9 +48,9 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tl8u98/trump_just_quietly_gave_himself_his_kids_his/",
       "publishedAt": 1779518753,
       "mentions": [],
-      "score": 95,
+      "score": 108,
       "sourceLabel": "DISCUSSION",
-      "comments": 20
+      "comments": 22
     },
     {
       "id": "r:1tl8raz",
@@ -178,7 +178,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 24,
+      "score": 23,
       "sourceLabel": "DISCUSSION",
       "comments": 54
     },
@@ -192,9 +192,9 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 196,
+      "score": 200,
       "sourceLabel": "LEGACY",
-      "comments": 31
+      "comments": 32
     },
     {
       "id": "r:1tku8z0",
@@ -273,7 +273,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 167,
+      "score": 172,
       "sourceLabel": "ANALYSIS",
       "comments": 102
     },
@@ -347,7 +347,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 124,
+      "score": 125,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 40
     },
@@ -359,7 +359,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tknz1d/house_oversight_chair_launches_probe_into_insider/",
       "publishedAt": 1779467129,
       "mentions": [],
-      "score": 16,
+      "score": 18,
       "sourceLabel": "REGULATIONS",
       "comments": 2
     },
@@ -371,7 +371,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tknwip/crypto_market_in_a_nutshell/",
       "publishedAt": 1779466992,
       "mentions": [],
-      "score": 35,
+      "score": 29,
       "sourceLabel": "COMEDY",
       "comments": 8
     },
@@ -543,7 +543,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 305,
+      "score": 313,
       "sourceLabel": "ANALYSIS",
       "comments": 85
     },
@@ -617,7 +617,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tkhjzu/ffff_uuuuuu/",
       "publishedAt": 1779453000,
       "mentions": [],
-      "score": 48,
+      "score": 46,
       "sourceLabel": "MEME",
       "comments": 5
     },
@@ -731,7 +731,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 94,
+      "score": 98,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 122
     },
@@ -745,7 +745,7 @@
       "mentions": [
         "BNBUSDT"
       ],
-      "score": 5,
+      "score": 6,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 1
     },
@@ -976,7 +976,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 3687,
+      "score": 3694,
       "sourceLabel": "MEME",
       "comments": 282
     },
@@ -1002,7 +1002,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 13,
+      "score": 14,
       "sourceLabel": "DISCUSSION",
       "comments": 16
     },
@@ -1014,7 +1014,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjxumf/up_down_down_down/",
       "publishedAt": 1779397378,
       "mentions": [],
-      "score": 548,
+      "score": 549,
       "sourceLabel": "MEME",
       "comments": 41
     },
@@ -1056,7 +1056,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 83,
+      "score": 80,
       "sourceLabel": "DISCUSSION",
       "comments": 49
     },
@@ -1068,7 +1068,7 @@
       "url": "https://reddit.com/r/CryptoCurrency/comments/1tjglyo/human_api_ceo_warns_ai_bot_collusion_could/",
       "publishedAt": 1779360011,
       "mentions": [],
-      "score": 98,
+      "score": 97,
       "sourceLabel": "REGULATIONS",
       "comments": 26
     },
@@ -1082,7 +1082,7 @@
       "mentions": [
         "BTCUSDT"
       ],
-      "score": 548,
+      "score": 553,
       "sourceLabel": "GENERAL-NEWS",
       "comments": 79
     }
@@ -1131,7 +1131,7 @@
     "redditMood": "neutral",
     "newsMood": "neutral"
   },
-  "fetchedAt": 1779522856,
+  "fetchedAt": 1779681500,
   "sources": [
     {
       "source": "cryptocompare",
